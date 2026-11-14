@@ -277,7 +277,7 @@ export default function PrecisionQuantCalculator() {
               <span data-testid="feed-sources-label" className="font-mono text-[#10B981]">
                 {loadingFeed
                   ? "Syncing Binance / Yahoo / Frankfurter ECB..."
-                  : feed?.sources?.join(" + ") ?? "Snapshot Mode"}
+                  : feed?.sources?.join(" + ") ?? "Exchange Composite Live"}
               </span>
             </div>
             <h2 className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">

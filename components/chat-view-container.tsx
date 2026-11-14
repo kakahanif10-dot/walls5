@@ -27,7 +27,7 @@ export default function ChatViewContainer({ initialFloor = "discord" }: ChatView
               <WhopBadge size="xs" />
             </div>
             <p className="text-muted text-[11px] mt-0.5">
-              NWS AI reasoning on the left (as an option) with the 1,840+ member Community Chat on the right.
+              NWS AI reasoning on the left (as an option) with the 1,100+ member Community Chat on the right.
             </p>
           </div>
         </div>
@@ -101,7 +101,7 @@ export default function ChatViewContainer({ initialFloor = "discord" }: ChatView
             <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/[0.05] px-3 py-1.5">
               <span className="font-mono text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5 text-emerald-400" />
-                Community Chat Floor (1,840+ Traders · Right)
+                Community Chat Floor (1,100+ Traders · Right)
               </span>
               <button
                 type="button"

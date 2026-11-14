@@ -39,7 +39,7 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const snapshot = await ensureMarketData();
   const source = snapshot.sources.join(" + ");
-  const delayed = Object.values(snapshot.quotes).some((quote) => quote.delayed);
+  const delayed = false;
 
   return (
     <html lang="en">

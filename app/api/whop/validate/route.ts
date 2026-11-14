@@ -4,17 +4,10 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json().catch(() => ({}));
     const { licenseKey, email, action = "activate" } = body;
-    const apiKey = process.env.WHOP_API_KEY || "apik_eWRCf0lftmjTF_C8084004_C_cf237b27a78109d5330509f806c9b82a5aa6f4bafd5291e954911df721907d";
+    const apiKey = process.env.WHOP_API_KEY;
 
-    if (!apiKey) {
-      return NextResponse.json(
-        { success: false, error: "Whop API Key is not configured." },
-        { status: 500 }
-      );
-    }
-
-    // If a licenseKey or email is provided, attempt live verification with Whop v2 API
-    if (licenseKey || email) {
+    // If a licenseKey or email is provided and WHOP_API_KEY is configured, attempt live verification with Whop v2 API
+    if (apiKey && (licenseKey || email)) {
       try {
         const queryParam = email ? `?email=${encodeURIComponent(email)}` : "";
         const whopRes = await fetch(`https://api.whop.com/api/v2/memberships${queryParam}`, {
@@ -67,25 +60,27 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET() {
-  const apiKey = process.env.WHOP_API_KEY || "apik_eWRCf0lftmjTF_C8084004_C_cf237b27a78109d5330509f806c9b82a5aa6f4bafd5291e954911df721907d";
+  const apiKey = process.env.WHOP_API_KEY;
 
-  try {
-    const res = await fetch("https://api.whop.com/api/v2/experiences", {
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-      },
-    });
-
-    if (res.ok) {
-      const data = await res.json();
-      return NextResponse.json({
-        connected: true,
-        experienceId: "exp_hP5JV9s0L8iMXA",
-        experiences: data.data || [],
+  if (apiKey) {
+    try {
+      const res = await fetch("https://api.whop.com/api/v2/experiences", {
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+        },
       });
+
+      if (res.ok) {
+        const data = await res.json();
+        return NextResponse.json({
+          connected: true,
+          experienceId: "exp_hP5JV9s0L8iMXA",
+          experiences: data.data || [],
+        });
+      }
+    } catch (err) {
+      console.warn("Whop experiences error:", err);
     }
-  } catch (err) {
-    console.warn("Whop experiences error:", err);
   }
 
   return NextResponse.json({

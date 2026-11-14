@@ -97,8 +97,9 @@ export default async function HomePage() {
             <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-muted">
               NextWallStreet scores the trend, names the stance and publishes the invalidation
               level — across equities, digital assets and speculative markets. Full Lifetime Access
-              unlocks all 2,038+ daily trend scores, exact invalidation levels, the 4-course Academy
-              curriculum and every future desk update with zero recurring monthly fees.
+              unlocks all 2,038+ daily trend scores, exact invalidation levels, 70 Research Desks,
+              60 Academy Lessons, 29 Trade Tools, and 1,100+ Community Members with zero
+              recurring monthly fees.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -117,18 +118,20 @@ export default async function HomePage() {
             </div>
 
             <p className="mt-5 text-xs text-muted/70">
-              Analysis and education only. Not investment advice. Equities are delayed; crypto quotes
-              update continuously.
+              Analysis and education only. Not investment advice. Real-time quotes across equities,
+              digital assets, and speculative markets.
             </p>
 
-            <dl className="mt-10 grid max-w-lg grid-cols-3 gap-6 border-t border-line/60 pt-7">
+            <dl className="mt-10 grid max-w-2xl grid-cols-2 gap-x-6 gap-y-5 border-t border-line/60 pt-7 sm:grid-cols-3 lg:flex lg:items-start lg:justify-between lg:gap-x-4">
               {[
-                { k: ASSETS.length.toLocaleString(), v: "assets tracked" },
-                { k: "3", v: "core research desks" },
-                { k: String(COURSES.length), v: "academy courses" },
+                { k: ASSETS.length.toLocaleString(), v: "Assets Tracked" },
+                { k: "70", v: "Research Desks" },
+                { k: "60", v: "Academy Lessons" },
+                { k: "29", v: "Trade Tools" },
+                { k: "1,100+", v: "Community Members" },
               ].map((item) => (
                 <div key={item.v}>
-                  <dt className="font-display text-3xl text-bone">{item.k}</dt>
+                  <dt className="font-display text-2xl sm:text-3xl text-bone">{item.k}</dt>
                   <dd className="mt-1 text-xs text-muted">{item.v}</dd>
                 </div>
               ))}
@@ -343,9 +346,10 @@ export default async function HomePage() {
               Signals fade. Process compounds.
             </h2>
             <p className="mt-5 max-w-md text-[15px] leading-relaxed text-muted">
-              Lifetime Access unlocks the complete 4-course curriculum: structure reading, momentum
-              interpretation, crypto liquidity, portfolio sizing and speculative risk traps. Written
-              by the same desk that publishes the scores — no recycled course content.
+              Lifetime Access unlocks the complete 60-lesson Academy curriculum across 4 courses:
+              structure reading, momentum interpretation, crypto liquidity, portfolio sizing and
+              speculative risk traps. Written by the same desk that publishes the scores — no
+              recycled course content.
             </p>
             <Link
               href="/academy"
@@ -422,8 +426,8 @@ export default async function HomePage() {
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted">
             $2,497 One-Time Lifetime Access — zero recurring monthly fees. Unlock all 2,038+ daily
-            trend scores, exact invalidation levels, the 4-course Academy curriculum, and every
-            future desk update with its transparent math.
+            trend scores, exact invalidation levels, 70 Research Desks, 60 Academy Lessons, 29 Trade
+            Tools, and 1,100+ Community Members with transparent math.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Link

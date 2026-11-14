@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   AlertTriangle,
   ArrowDownRight,
@@ -33,6 +33,7 @@ import {
   simulateWhatIfScore,
   sortAuditRows,
 } from "@/lib/execution-risk-terminal";
+import { useQuotes } from "@/components/live-prices";
 
 const CAPITAL_PRESETS = [
   { label: "$10k", value: 10000 },
@@ -41,7 +42,34 @@ const CAPITAL_PRESETS = [
   { label: "$250k", value: 250000 },
 ];
 
+function withLiveTerminalMetrics(base: TerminalAsset, livePrice?: number): TerminalAsset {
+  if (!livePrice || livePrice <= 0 || base.price <= 0) return base;
+  const scale = livePrice / base.price;
+  const round = (v: number) => Number(v.toFixed(base.priceDecimals));
+  return {
+    ...base,
+    price: livePrice,
+    invalidationPrice: round(base.invalidationPrice * scale),
+    pillars: {
+      ...base.pillars,
+      structure: {
+        ...base.pillars.structure,
+        smas: base.pillars.structure.smas.map((s) => ({
+          ...s,
+          value: round(s.value * scale),
+        })),
+      },
+      risk: {
+        ...base.pillars.risk,
+        low52w: round(base.pillars.risk.low52w * scale),
+        high52w: round(base.pillars.risk.high52w * scale),
+      },
+    },
+  };
+}
+
 export default function ExecutionRiskTerminal() {
+  const liveQuotes = useQuotes();
   const [selectedSymbol, setSelectedSymbol] = useState<string>("NVDA");
   const [themeMode, setThemeMode] = useState<"dark" | "light">("dark");
 
@@ -49,10 +77,11 @@ export default function ExecutionRiskTerminal() {
   const [portfolioCapital, setPortfolioCapital] = useState<number>(50000);
   const [maxRiskPct, setMaxRiskPct] = useState<number>(1.0);
   const [entryPriceInput, setEntryPriceInput] = useState<string>("138.40");
+  const [hasCustomEntry, setHasCustomEntry] = useState<boolean>(false);
   const [customStopEnabled, setCustomStopEnabled] = useState<boolean>(false);
   const [stopPriceInput, setStopPriceInput] = useState<string>("126.50");
 
-  // Panel 2: What-If Simulator State
+  // Panel 2: What-If Scenario State
   const [whatIfDeltaPct, setWhatIfDeltaPct] = useState<number>(0);
 
   // Panel 3: Audit Trail Sort & Export State
@@ -61,15 +90,26 @@ export default function ExecutionRiskTerminal() {
   const [copiedPlan, setCopiedPlan] = useState<boolean>(false);
   const [exportedCsv, setExportedCsv] = useState<boolean>(false);
 
-  const asset: TerminalAsset = useMemo(
-    () => TERMINAL_ASSETS.find((item) => item.symbol === selectedSymbol) ?? TERMINAL_ASSETS[0],
-    [selectedSymbol],
-  );
+  const asset: TerminalAsset = useMemo(() => {
+    const base = TERMINAL_ASSETS.find((item) => item.symbol === selectedSymbol) ?? TERMINAL_ASSETS[0];
+    return withLiveTerminalMetrics(base, liveQuotes[base.symbol]?.price);
+  }, [selectedSymbol, liveQuotes]);
+
+  useEffect(() => {
+    if (!hasCustomEntry) {
+      setEntryPriceInput(asset.price.toFixed(asset.priceDecimals));
+    }
+    if (!customStopEnabled) {
+      setStopPriceInput(asset.invalidationPrice.toFixed(asset.priceDecimals));
+    }
+  }, [asset.price, asset.invalidationPrice, asset.priceDecimals, hasCustomEntry, customStopEnabled]);
 
   const handleSelectAsset = (next: TerminalAsset) => {
-    setSelectedSymbol(next.symbol);
-    setEntryPriceInput(next.price.toFixed(next.priceDecimals));
-    setStopPriceInput(next.invalidationPrice.toFixed(next.priceDecimals));
+    const liveAsset = withLiveTerminalMetrics(next, liveQuotes[next.symbol]?.price);
+    setSelectedSymbol(liveAsset.symbol);
+    setHasCustomEntry(false);
+    setEntryPriceInput(liveAsset.price.toFixed(liveAsset.priceDecimals));
+    setStopPriceInput(liveAsset.invalidationPrice.toFixed(liveAsset.priceDecimals));
     setCustomStopEnabled(false);
     setWhatIfDeltaPct(0);
     setCopiedPlan(false);
@@ -267,10 +307,11 @@ export default function ExecutionRiskTerminal() {
         {/* Asset Selector Bar across the 3 Frameworks */}
         <div
           role="tablist"
-          aria-label="Sample assets across frameworks"
+          aria-label="Live assets across frameworks"
           className="mt-4 grid gap-3 md:grid-cols-3"
         >
-          {TERMINAL_ASSETS.map((item) => {
+          {TERMINAL_ASSETS.map((baseItem) => {
+            const item = withLiveTerminalMetrics(baseItem, liveQuotes[baseItem.symbol]?.price);
             const active = item.symbol === asset.symbol;
             return (
               <button
@@ -279,7 +320,7 @@ export default function ExecutionRiskTerminal() {
                 role="tab"
                 aria-selected={active}
                 data-testid={`asset-selector-${item.symbol}`}
-                onClick={() => handleSelectAsset(item)}
+                onClick={() => handleSelectAsset(baseItem)}
                 className={`rounded-xl border p-3.5 text-left transition-all ${
                   active
                     ? isDark
@@ -511,7 +552,10 @@ export default function ExecutionRiskTerminal() {
                     min={0}
                     step={asset.priceDecimals > 2 ? 0.0000001 : 0.01}
                     value={entryPriceInput}
-                    onChange={(e) => setEntryPriceInput(e.target.value)}
+                    onChange={(e) => {
+                      setHasCustomEntry(true);
+                      setEntryPriceInput(e.target.value);
+                    }}
                     className={`mt-1.5 w-full rounded-lg border px-3 py-2 font-mono text-sm font-semibold tabular-nums outline-none transition-colors ${inputSurface}`}
                   />
                 </div>
@@ -712,7 +756,7 @@ export default function ExecutionRiskTerminal() {
               <div className="flex items-end justify-between gap-3">
                 <div>
                   <div className={`text-xs ${mutedText}`}>
-                    {whatIfDeltaPct === 0 ? "Live Composite Score" : "Simulated Composite Score"}
+                    {whatIfDeltaPct === 0 ? "Live Composite Score" : "Scenario Composite Score"}
                   </div>
                   <div className="mt-1 flex items-baseline gap-1.5">
                     <span
@@ -906,7 +950,7 @@ export default function ExecutionRiskTerminal() {
                 {whatIfDeltaPct.toFixed(1)}% move
               </span>
               <span data-testid="whatif-simulated-price" className="font-bold">
-                Simulated Price: {formatAssetPrice(whatIf.simulatedPrice, asset.priceDecimals)}
+                Scenario Price: {formatAssetPrice(whatIf.simulatedPrice, asset.priceDecimals)}
               </span>
             </div>
 

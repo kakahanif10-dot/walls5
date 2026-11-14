@@ -11,7 +11,8 @@ export type InstitutionalToolSlug =
   | "messari-research"
   | "nansen-arkham"
   | "defillama-terminal"
-  | "coinmetrics-kaiko";
+  | "coinmetrics-kaiko"
+  | "crypto-fear-greed";
 
 export interface InstitutionalToolSpec {
   slug: InstitutionalToolSlug;
@@ -145,6 +146,17 @@ export const INSTITUTIONAL_TOOL_SPECS: InstitutionalToolSpec[] = [
     tagline:
       "Normalized cross-exchange Level 2 order book depth across Binance, Coinbase, and Kraken with slippage & spread dispersion.",
     freeApis: ["Binance L2 Depth API", "Coinbase Exchange L2 Book", "Kraken Public Depth API"],
+  },
+  {
+    slug: "crypto-fear-greed",
+    href: "/tools/crypto-fear-greed",
+    label: "Crypto Fear & Greed Index",
+    shortLabel: "Fear & Greed",
+    stack: "digital",
+    equivalentPlatforms: "Alternative.me · Coinglass Sentiment",
+    tagline:
+      "Real-time 0–100 crypto market sentiment gauge, 90-day extreme regime history, Z-score dispersion, and live BTC/ETH/SOL leverage & dominance context.",
+    freeApis: ["Alternative.me F&G API", "Binance Spot & Perps", "CoinGecko Global"],
   },
 ];
 

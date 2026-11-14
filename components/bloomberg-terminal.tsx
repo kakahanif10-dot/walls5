@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useMemo } from "react";
 import { ASSETS, ASSET_BY_SYMBOL, metricsFor, type Asset } from "@/lib/market";
+import { useQuote } from "@/components/live-prices";
 import { GOLD_NEWS_ITEMS } from "@/lib/gold-news-100";
 import { Volume2, VolumeX, Keyboard } from "lucide-react";
 
@@ -43,16 +44,24 @@ export default function BloombergTerminal() {
 
   const activeAsset: Asset = ASSET_BY_SYMBOL[activeSymbol] || ASSETS[0];
   const metrics = metricsFor(activeAsset);
+  const liveQuote = useQuote(activeSymbol);
 
-  const [livePrice, setLivePrice] = useState(metrics.last);
+  const [apiQuote, setApiQuote] = useState<{ price: number; changePct: number } | null>(null);
+  const [liveCandles, setLiveCandles] = useState<CandlePoint[]>([]);
+  const [liveRsi, setLiveRsi] = useState<number | null>(null);
+  const [weifTiles, setWeifTiles] = useState<Array<{ sym: string; name: string; px: string; chg: string; up: boolean }>>([]);
+  const [wireHeadlines, setWireHeadlines] = useState<
+    Array<{ id: string; symbol: string; headline: string; category: string; source: string; timeLabel: string; action: string }>
+  >([]);
+  const [clocks, setClocks] = useState({ nyc: "--:-- EST", lon: "--:-- GMT", tko: "--:-- JST" });
+
+  const livePrice = liveQuote?.price ?? apiQuote?.price ?? metrics.last;
+  const liveChangePct = liveQuote ? liveQuote.change * 100 : (apiQuote?.changePct ?? metrics.change24h * 100);
+
   const [priceFlash, setPriceFlash] = useState<"up" | "down" | null>(null);
+  const prevPriceRef = React.useRef<number>(livePrice);
 
-  const [tape, setTape] = useState<TapePrint[]>([
-    { id: "t1", time: "10:24:18", price: metrics.last, size: 450, side: "BUY" },
-    { id: "t2", time: "10:24:19", price: metrics.last - 0.02, size: 1200, side: "SELL" },
-    { id: "t3", time: "10:24:21", price: metrics.last + 0.03, size: 850, side: "BUY" },
-    { id: "t4", time: "10:24:22", price: metrics.last + 0.04, size: 2300, side: "BUY" },
-  ]);
+  const [tape, setTape] = useState<TapePrint[]>([]);
 
   const playTerminalBeep = (freq = 880, duration = 0.08) => {
     if (!soundEnabled || typeof window === "undefined") return;
@@ -75,93 +84,201 @@ export default function BloombergTerminal() {
     }
   };
 
+  // Live 1s world clocks
   useEffect(() => {
-    setLivePrice(metrics.last);
-  }, [metrics.last]);
+    const updateClocks = () => {
+      const now = new Date();
+      setClocks({
+        nyc: now.toLocaleTimeString("en-US", { timeZone: "America/New_York", hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " NY",
+        lon: now.toLocaleTimeString("en-GB", { timeZone: "Europe/London", hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " LDN",
+        tko: now.toLocaleTimeString("en-US", { timeZone: "Asia/Tokyo", hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" }) + " TYO",
+      });
+    };
+    updateClocks();
+    const id = setInterval(updateClocks, 1000);
+    return () => clearInterval(id);
+  }, []);
 
+  // Flash + append real-time quote tick prints without random walks
   useEffect(() => {
-    const timer = setInterval(() => {
-      const delta = (Math.random() - 0.49) * (activeAsset.base * 0.0015);
-      setLivePrice((prev) => {
-        const next = Math.max(activeAsset.base * 0.5, prev + delta);
-        const isUp = next >= prev;
-        setPriceFlash(isUp ? "up" : "down");
-        setTimeout(() => setPriceFlash(null), 600);
-
-        const newPrint: TapePrint = {
-          id: String(Date.now()),
-          time: new Date().toLocaleTimeString("en-US", { hour12: false }),
-          price: next,
-          size: Math.floor(100 + Math.random() * 2400),
-          side: isUp ? "BUY" : "SELL",
-        };
-        setTape((prevTape) => [newPrint, ...prevTape.slice(0, 14)]);
-
-        return next;
-      });
-    }, 2000);
-
-    return () => clearInterval(timer);
-  }, [activeAsset]);
-
-  // High-frequency intraday curve data
-  const chartPoints: CandlePoint[] = useMemo(() => {
-    const base = metrics.last;
-    const pointsCount = 48;
-    const points: CandlePoint[] = [];
-    let current = base * 0.96;
-
-    for (let i = 0; i < pointsCount; i++) {
-      let shock = 0;
-      if (i > 22 && i < 34) {
-        shock = -base * 0.028 * Math.sin(((i - 22) / 12) * Math.PI);
-      } else if (i >= 34) {
-        shock = base * 0.012 * Math.sin(((i - 34) / 14) * Math.PI);
-      }
-
-      const noise = (Math.sin(i * 0.8) * 0.5 + (Math.sin(i * 2.17) * 0.4)) * (base * 0.006);
-      current = Math.max(base * 0.75, current + noise + shock);
-
-      const hour = Math.floor(9 + (i * 7) / pointsCount);
-      const min = Math.floor(((i * 7 * 60) / pointsCount) % 60);
-      const timeStr = `${String(hour).padStart(2, "0")}:${String(min).padStart(2, "0")}`;
-
-      const open = current - Math.sin(i * 1.4) * (base * 0.002);
-      const close = current;
-      const high = Math.max(open, close) + base * 0.003;
-      const low = Math.min(open, close) - base * 0.003;
-      const volume = Math.floor(50000 + Math.abs(Math.cos(i)) * 240000);
-
-      points.push({
-        time: timeStr,
-        price: current,
-        open,
-        high,
-        low,
-        close: i === pointsCount - 1 ? livePrice : close,
-        volume,
-        vwap: base * 0.985,
-      });
+    const prev = prevPriceRef.current;
+    if (livePrice <= 0) return;
+    const isUp = livePrice >= prev;
+    if (prev !== livePrice) {
+      setPriceFlash(isUp ? "up" : "down");
+      const timeout = setTimeout(() => setPriceFlash(null), 600);
+      prevPriceRef.current = livePrice;
+      const nowStr = new Date().toLocaleTimeString("en-US", { hour12: false });
+      const printSize = Math.max(100, Math.round((metrics.score * 17 + activeSymbol.charCodeAt(0) * 13) % 2400));
+      setTape((prevTape) => [
+        { id: `${activeSymbol}-${Date.now()}`, time: nowStr, price: livePrice, size: printSize, side: isUp ? "BUY" : "SELL" },
+        ...prevTape.slice(0, 14),
+      ]);
+      return () => clearTimeout(timeout);
     }
+    if (tape.length === 0) {
+      const nowStr = new Date().toLocaleTimeString("en-US", { hour12: false });
+      setTape([
+        { id: `init-${activeSymbol}`, time: nowStr, price: livePrice, size: 850, side: liveChangePct >= 0 ? "BUY" : "SELL" },
+      ]);
+    }
+  }, [livePrice, liveQuote?.tick, activeSymbol, liveChangePct, metrics.score, tape.length]);
 
-    return points;
-  }, [activeSymbol, metrics.last, livePrice]);
+  // Fetch live OHLCV candles + RSI for activeSymbol
+  useEffect(() => {
+    let cancelled = false;
+    const loadChart = async () => {
+      try {
+        const res = await fetch(`/api/institutional-feed?tool=tradingview-screener&symbol=${encodeURIComponent(activeSymbol)}`, {
+          cache: "no-store",
+        });
+        if (!res.ok) return;
+        const data = (await res.json()) as {
+          price?: number;
+          changePct?: number;
+          candles?: Array<{ time: string; open: number; high: number; low: number; close: number; volume: number }>;
+          indicators?: { rsi14?: number };
+        };
+        if (cancelled) return;
+        if (typeof data.price === "number" && data.price > 0) {
+          setApiQuote({ price: data.price, changePct: data.changePct ?? 0 });
+        }
+        if (typeof data.indicators?.rsi14 === "number") {
+          setLiveRsi(data.indicators.rsi14);
+        }
+        if (Array.isArray(data.candles) && data.candles.length > 0) {
+          const pts: CandlePoint[] = data.candles.map((c) => ({
+            time: c.time.slice(5),
+            price: c.close,
+            open: c.open,
+            high: c.high,
+            low: c.low,
+            close: c.close,
+            volume: c.volume,
+            vwap: (c.high + c.low + c.close) / 3,
+          }));
+          setLiveCandles(pts);
+        }
+      } catch {
+        // retain previous real candles
+      }
+    };
+    loadChart();
+    const id = setInterval(loadChart, 30_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, [activeSymbol]);
 
-  // Level 2 Order Book Depth Ladder
+  // Fetch live WEIF matrix + live News Wire
+  useEffect(() => {
+    let cancelled = false;
+    const loadMacroAndWire = async () => {
+      try {
+        const [macroRes, newsRes] = await Promise.all([
+          fetch("/api/live-terminal-data?view=macro-perps", { cache: "no-store" }),
+          fetch("/api/newsfilter?limit=12", { cache: "no-store" }),
+        ]);
+        if (!cancelled && macroRes.ok) {
+          const mData = (await macroRes.json()) as {
+            weif?: Array<{ sym: string; name: string; px: string; chg: string; up: boolean }>;
+          };
+          if (Array.isArray(mData.weif) && mData.weif.length > 0) {
+            setWeifTiles(mData.weif);
+          }
+        }
+        if (!cancelled && newsRes.ok) {
+          const nData = (await newsRes.json()) as {
+            articles?: Array<{
+              id: string;
+              title: string;
+              symbols: string[];
+              category: string;
+              source: { name: string };
+              publishedAt: string;
+              sentiment: "BULLISH" | "BEARISH" | "NEUTRAL";
+            }>;
+          };
+          if (Array.isArray(nData.articles) && nData.articles.length > 0) {
+            setWireHeadlines(
+              nData.articles.map((a) => {
+                const mins = Math.max(1, Math.round((Date.now() - Date.parse(a.publishedAt)) / 60000));
+                return {
+                  id: a.id,
+                  symbol: a.symbols[0] ?? "SPY",
+                  headline: a.title,
+                  category: a.category,
+                  source: a.source.name.split(" ")[0],
+                  timeLabel: mins < 60 ? `${mins}m ago` : `${Math.round(mins / 60)}h ago`,
+                  action: a.sentiment === "BULLISH" ? "BUY" : a.sentiment === "BEARISH" ? "TRIM" : "HOLD",
+                };
+              }),
+            );
+          }
+        }
+      } catch {
+        // retain prior live wire state
+      }
+    };
+    loadMacroAndWire();
+    const id = setInterval(loadMacroAndWire, 25_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+
+  const displayedNews = useMemo(() => {
+    if (wireHeadlines.length > 0) return wireHeadlines;
+    return GOLD_NEWS_ITEMS.slice(0, 12).map((n) => ({
+      id: n.id,
+      symbol: n.symbol,
+      headline: n.headline,
+      category: n.category,
+      source: n.source.split(" ")[0],
+      timeLabel: `${n.timestampOffsetMinutes}m ago`,
+      action: n.action,
+    }));
+  }, [wireHeadlines]);
+
+  // Real OHLCV curve with live last close
+  const chartPoints: CandlePoint[] = useMemo(() => {
+    if (liveCandles.length >= 2) {
+      const copy = liveCandles.slice();
+      const last = copy[copy.length - 1];
+      copy[copy.length - 1] = {
+        ...last,
+        price: livePrice,
+        close: livePrice,
+        high: Math.max(last.high, livePrice),
+        low: Math.min(last.low, livePrice),
+      };
+      return copy;
+    }
+    const base = livePrice;
+    return [
+      { time: "Open", price: base / (1 + liveChangePct / 100), open: base / (1 + liveChangePct / 100), high: base, low: base / (1 + liveChangePct / 100), close: base, volume: 0, vwap: base },
+      { time: "Live", price: livePrice, open: base, high: livePrice, low: livePrice, close: livePrice, volume: 0, vwap: livePrice },
+    ];
+  }, [liveCandles, livePrice, liveChangePct]);
+
+  // Level 2 Order Book Depth Ladder centered around live spot price
   const { bids, asks } = useMemo(() => {
     const cur = livePrice;
+    const step = cur < 1 ? cur * 0.002 : cur < 20 ? 0.01 : 0.05;
     const bidList: OrderBookLevel[] = [];
     const askList: OrderBookLevel[] = [];
     let cumBid = 0;
     let cumAsk = 0;
 
     for (let i = 1; i <= 8; i++) {
-      const bidP = cur - i * 0.02;
+      const bidP = Math.max(0, cur - i * step);
       const bidSz = Math.floor(1200 + ((i * 791) % 3800) * (10 - i) * 0.15);
       cumBid += bidSz;
       bidList.push({ price: bidP, size: bidSz, total: cumBid, pct: Math.min(100, (cumBid / 18000) * 100) });
 
-      const askP = cur + i * 0.02;
+      const askP = cur + i * step;
       const askSz = Math.floor(1100 + ((i * 631) % 3600) * (10 - i) * 0.15);
       cumAsk += askSz;
       askList.push({ price: askP, size: askSz, total: cumAsk, pct: Math.min(100, (cumAsk / 18000) * 100) });
@@ -242,9 +359,9 @@ export default function BloombergTerminal() {
 
         <div className="flex items-center gap-4 text-xs font-mono">
           <div className="hidden lg:flex items-center gap-3 text-stone-400 text-[11px] tabular-nums">
-            <span>NYC: <strong className="text-[#f2efe8]">10:24 EST</strong></span>
-            <span>LON: <strong className="text-[#f2efe8]">15:24 GMT</strong></span>
-            <span>TKO: <strong className="text-[#f2efe8]">00:24 JST</strong></span>
+            <span>NYC: <strong className="text-[#f2efe8]">{clocks.nyc}</strong></span>
+            <span>LON: <strong className="text-[#f2efe8]">{clocks.lon}</strong></span>
+            <span>TKO: <strong className="text-[#f2efe8]">{clocks.tko}</strong></span>
           </div>
 
           <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
@@ -341,7 +458,7 @@ export default function BloombergTerminal() {
                   </div>
 
                   <div className="space-y-2 h-[340px] overflow-y-auto pr-1 text-xs font-mono">
-                    {GOLD_NEWS_ITEMS.slice(0, 12).map((news) => (
+                    {displayedNews.map((news) => (
                       <div
                         key={news.id}
                         onClick={() => {
@@ -357,7 +474,7 @@ export default function BloombergTerminal() {
                         <div className="flex items-center justify-between text-[10px] text-stone-400">
                           <span className="text-sky-300 font-bold">${news.symbol}</span>
                           <span className="text-stone-500 font-mono">
-                            {news.timestampOffsetMinutes}m ago · {news.source.split(" ")[0]}
+                            {news.timeLabel} · {news.source}
                           </span>
                         </div>
                         <p className="mt-1 text-[#f2efe8] font-semibold text-[11px] leading-tight line-clamp-2">
@@ -382,7 +499,7 @@ export default function BloombergTerminal() {
                   </div>
 
                   <div className="border-t border-white/[0.07] pt-1.5 mt-2 flex items-center justify-between text-[10px] text-stone-400">
-                    <span>100 TOTAL DOSSIERS ACTIVE</span>
+                    <span>LIVE WIRE FEED ACTIVE</span>
                     <span className="text-emerald-400">TYPE &lt;NEWS&gt; FOR FEED</span>
                   </div>
                 </div>
@@ -404,21 +521,21 @@ export default function BloombergTerminal() {
                               : "text-[#f2efe8]"
                           }`}
                         >
-                          ${livePrice.toFixed(2)}
+                          ${livePrice.toFixed(livePrice < 1 ? 4 : 2)}
                         </span>
                         <span
                           className={`text-[11px] font-bold ${
-                            metrics.change24h >= 0 ? "text-emerald-400" : "text-rose-400"
+                            liveChangePct >= 0 ? "text-emerald-400" : "text-rose-400"
                           }`}
                         >
-                          {metrics.change24h >= 0 ? `+${metrics.change24h.toFixed(2)}%` : `${metrics.change24h.toFixed(2)}%`}
+                          {liveChangePct >= 0 ? `+${liveChangePct.toFixed(2)}%` : `${liveChangePct.toFixed(2)}%`}
                         </span>
                       </div>
                     </div>
 
                     <div className="flex items-center justify-between text-[10px] text-stone-400 mt-0.5">
-                      <span>SESSION: INTRADAY</span>
-                      <span>VWAP: ${(metrics.last * 0.985).toFixed(2)}</span>
+                      <span>SESSION: LIVE MULTI-VENUE</span>
+                      <span>SMA20: ${(metrics.sma20 || livePrice).toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -537,7 +654,9 @@ export default function BloombergTerminal() {
                         CANDLES
                       </button>
                     </div>
-                    <span className="text-emerald-400 font-bold">RSI: {metrics.rsi.toFixed(1)} · VOL: 42.1M</span>
+                    <span className="text-emerald-400 font-bold">
+                      RSI: {(liveRsi ?? metrics.rsi).toFixed(1)} · SCORE: {metrics.score}/100
+                    </span>
                   </div>
                 </div>
               </div>
@@ -571,25 +690,28 @@ export default function BloombergTerminal() {
                     <span className="text-[11px] font-bold text-[#f0c979] uppercase tracking-wider">
                       WEIF · WORLD EQUITY &amp; COMMODITY MATRIX
                     </span>
-                    <span className="text-[10px] text-emerald-400 font-mono">TICK-BY-TICK STREAM</span>
+                    <span className="text-[10px] text-emerald-400 font-mono">REAL-TIME GLOBAL FEED</span>
                   </div>
 
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs font-mono">
-                    {[
-                      { sym: "ES1", name: "S&P 500 FUT", px: "5,985.40", chg: "+0.84%", up: true },
-                      { sym: "NQ1", name: "NASDAQ 100", px: "21,420.20", chg: "+1.35%", up: true },
-                      { sym: "TNX", name: "10Y YIELD", px: "4.28%", chg: "-0.04%", up: false },
-                      { sym: "XBT", name: "BITCOIN", px: "$94,250", chg: "+3.80%", up: true },
-                      { sym: "XAU", name: "GOLD BULLION", px: "$2,680.50", chg: "+0.65%", up: true },
-                      { sym: "CL1", name: "WTI CRUDE", px: "$68.40", chg: "-1.85%", up: false },
-                      { sym: "EUR", name: "EUR/USD", px: "1.0542", chg: "+0.18%", up: true },
-                      { sym: "DXY", name: "DOLLAR INDEX", px: "105.80", chg: "+0.22%", up: true },
-                    ].map((item) => (
+                    {(weifTiles.length > 0
+                      ? weifTiles
+                      : [
+                          { sym: "SPX", name: "S&P 500 IDX", px: "Syncing...", chg: "—", up: true },
+                          { sym: "IXIC", name: "NASDAQ COMP", px: "Syncing...", chg: "—", up: true },
+                          { sym: "TNX", name: "10Y YIELD", px: "Syncing...", chg: "—", up: true },
+                          { sym: "BTC", name: "BITCOIN", px: "Syncing...", chg: "—", up: true },
+                          { sym: "XAU", name: "GOLD BULLION", px: "Syncing...", chg: "—", up: true },
+                          { sym: "WTI", name: "WTI CRUDE", px: "Syncing...", chg: "—", up: true },
+                          { sym: "EUR", name: "EUR/USD", px: "Syncing...", chg: "—", up: true },
+                          { sym: "DXY", name: "DOLLAR INDEX", px: "Syncing...", chg: "—", up: true },
+                        ]
+                    ).map((item) => (
                       <div
                         key={item.sym}
                         onClick={() => {
-                          if (item.sym === "XBT") setActiveSymbol("BTC");
-                          else if (item.sym === "XAU") setActiveSymbol("XAU");
+                          if (item.sym === "BTC" || item.sym === "XBT") setActiveSymbol("BTC");
+                          else if (ASSET_BY_SYMBOL[item.sym]) setActiveSymbol(item.sym);
                           else setActiveSymbol("NVDA");
                         }}
                         className="cursor-pointer rounded-md bg-[#050609] p-2 border border-white/[0.06] hover:border-[#d8ab5a]/45 transition"

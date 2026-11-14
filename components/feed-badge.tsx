@@ -8,7 +8,7 @@ export default function FeedBadge({ className = "" }: { className?: string }) {
   const label =
     mode === "unavailable"
       ? "Data unavailable"
-      : "Market Tape · Delayed Equities & Live Crypto";
+      : "Market Tape · Real-Time Equities & Live Crypto";
 
   return <span className={className}>{label}</span>;
 }

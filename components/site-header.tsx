@@ -39,6 +39,7 @@ import {
   Radar,
   Layers,
   Scale,
+  Gauge,
 } from "lucide-react";
 
 const SIMPLE_LINKS = [
@@ -231,6 +232,13 @@ export const ALL_MAIN_ITEMS: MainDirectoryItem[] = [
     label: "Coin Metrics & Kaiko Feeds",
     desc: "Normalized Binance, Coinbase & Kraken L2 books & slippage",
     icon: Scale,
+    live: true,
+  },
+  {
+    href: "/tools/crypto-fear-greed",
+    label: "Crypto Fear & Greed",
+    desc: "Real-time 0–100 sentiment gauge, regime extremes & BTC/ETH context",
+    icon: Gauge,
     live: true,
   },
   {

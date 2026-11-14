@@ -3906,7 +3906,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
     "premium": true,
     "tickers": [
       "PNUT",
-      "FARTO"
+      "PUMP"
     ],
     "body": [
       {
@@ -3919,7 +3919,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
       },
       {
         "type": "p",
-        "text": "Unlike subjective sentiment or lagging fundamental ratios, our 5-factor scoring engine measures the slope of moving averages (20, 50, and 200 SMA), 30-session rate of change, and RSI stretch. When PNUT, FARTO trigger momentum persistence above the 66-threshold, positioning transitions from accumulation to trend expansion."
+        "text": "Unlike subjective sentiment or lagging fundamental ratios, our 5-factor scoring engine measures the slope of moving averages (20, 50, and 200 SMA), 30-session rate of change, and RSI stretch. When PNUT, PUMP trigger momentum persistence above the 66-threshold, positioning transitions from accumulation to trend expansion."
       },
       {
         "type": "quote",
@@ -3970,7 +3970,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
     "premium": true,
     "tickers": [
       "MOODENG",
-      "GRIF"
+      "GRIFFAIN"
     ],
     "body": [
       {
@@ -3983,7 +3983,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
       },
       {
         "type": "p",
-        "text": "Unlike subjective sentiment or lagging fundamental ratios, our 5-factor scoring engine measures the slope of moving averages (20, 50, and 200 SMA), 30-session rate of change, and RSI stretch. When MOODENG, GRIF trigger momentum persistence above the 66-threshold, positioning transitions from accumulation to trend expansion."
+        "text": "Unlike subjective sentiment or lagging fundamental ratios, our 5-factor scoring engine measures the slope of moving averages (20, 50, and 200 SMA), 30-session rate of change, and RSI stretch. When MOODENG, GRIFFAIN trigger momentum persistence above the 66-threshold, positioning transitions from accumulation to trend expansion."
       },
       {
         "type": "quote",
@@ -4034,7 +4034,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
     "premium": true,
     "tickers": [
       "POPCAT",
-      "CHILL"
+      "CHILLGUY"
     ],
     "body": [
       {
@@ -4047,7 +4047,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
       },
       {
         "type": "p",
-        "text": "Unlike subjective sentiment or lagging fundamental ratios, our 5-factor scoring engine measures the slope of moving averages (20, 50, and 200 SMA), 30-session rate of change, and RSI stretch. When POPCAT, CHILL trigger momentum persistence above the 66-threshold, positioning transitions from accumulation to trend expansion."
+        "text": "Unlike subjective sentiment or lagging fundamental ratios, our 5-factor scoring engine measures the slope of moving averages (20, 50, and 200 SMA), 30-session rate of change, and RSI stretch. When POPCAT, CHILLGUY trigger momentum persistence above the 66-threshold, positioning transitions from accumulation to trend expansion."
       },
       {
         "type": "quote",
@@ -4161,7 +4161,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
     ],
     "premium": true,
     "tickers": [
-      "FARTO",
+      "PUMP",
       "SHIB"
     ],
     "body": [
@@ -4175,7 +4175,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
       },
       {
         "type": "p",
-        "text": "Unlike subjective sentiment or lagging fundamental ratios, our 5-factor scoring engine measures the slope of moving averages (20, 50, and 200 SMA), 30-session rate of change, and RSI stretch. When FARTO, SHIB trigger momentum persistence above the 66-threshold, positioning transitions from accumulation to trend expansion."
+        "text": "Unlike subjective sentiment or lagging fundamental ratios, our 5-factor scoring engine measures the slope of moving averages (20, 50, and 200 SMA), 30-session rate of change, and RSI stretch. When PUMP, SHIB trigger momentum persistence above the 66-threshold, positioning transitions from accumulation to trend expansion."
       },
       {
         "type": "quote",
@@ -4204,7 +4204,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
       },
       {
         "type": "p",
-        "text": "For subscribers actively tracking FARTO and related sector peers, review your exposure against the hard sector caps: maximum 20% portfolio allocation in equities, 8% in major crypto, and a strict 2% ceiling in meme tokens."
+        "text": "For subscribers actively tracking PUMP and related sector peers, review your exposure against the hard sector caps: maximum 20% portfolio allocation in equities, 8% in major crypto, and a strict 2% ceiling in meme tokens."
       }
     ]
   },
@@ -4225,7 +4225,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
     ],
     "premium": true,
     "tickers": [
-      "GRIF",
+      "GRIFFAIN",
       "PEPE"
     ],
     "body": [
@@ -4239,7 +4239,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
       },
       {
         "type": "p",
-        "text": "Unlike subjective sentiment or lagging fundamental ratios, our 5-factor scoring engine measures the slope of moving averages (20, 50, and 200 SMA), 30-session rate of change, and RSI stretch. When GRIF, PEPE trigger momentum persistence above the 66-threshold, positioning transitions from accumulation to trend expansion."
+        "text": "Unlike subjective sentiment or lagging fundamental ratios, our 5-factor scoring engine measures the slope of moving averages (20, 50, and 200 SMA), 30-session rate of change, and RSI stretch. When GRIFFAIN, PEPE trigger momentum persistence above the 66-threshold, positioning transitions from accumulation to trend expansion."
       },
       {
         "type": "quote",
@@ -4268,7 +4268,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
       },
       {
         "type": "p",
-        "text": "For subscribers actively tracking GRIF and related sector peers, review your exposure against the hard sector caps: maximum 20% portfolio allocation in equities, 8% in major crypto, and a strict 2% ceiling in meme tokens."
+        "text": "For subscribers actively tracking GRIFFAIN and related sector peers, review your exposure against the hard sector caps: maximum 20% portfolio allocation in equities, 8% in major crypto, and a strict 2% ceiling in meme tokens."
       }
     ]
   },
@@ -4289,7 +4289,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
     ],
     "premium": true,
     "tickers": [
-      "CHILL",
+      "CHILLGUY",
       "WIF"
     ],
     "body": [
@@ -4303,7 +4303,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
       },
       {
         "type": "p",
-        "text": "Unlike subjective sentiment or lagging fundamental ratios, our 5-factor scoring engine measures the slope of moving averages (20, 50, and 200 SMA), 30-session rate of change, and RSI stretch. When CHILL, WIF trigger momentum persistence above the 66-threshold, positioning transitions from accumulation to trend expansion."
+        "text": "Unlike subjective sentiment or lagging fundamental ratios, our 5-factor scoring engine measures the slope of moving averages (20, 50, and 200 SMA), 30-session rate of change, and RSI stretch. When CHILLGUY, WIF trigger momentum persistence above the 66-threshold, positioning transitions from accumulation to trend expansion."
       },
       {
         "type": "quote",
@@ -4332,7 +4332,7 @@ export const RESEARCH_DECKS_70: ResearchDeck[] = [
       },
       {
         "type": "p",
-        "text": "For subscribers actively tracking CHILL and related sector peers, review your exposure against the hard sector caps: maximum 20% portfolio allocation in equities, 8% in major crypto, and a strict 2% ceiling in meme tokens."
+        "text": "For subscribers actively tracking CHILLGUY and related sector peers, review your exposure against the hard sector caps: maximum 20% portfolio allocation in equities, 8% in major crypto, and a strict 2% ceiling in meme tokens."
       }
     ]
   },

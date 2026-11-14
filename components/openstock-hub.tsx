@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Globe,
   Clock,
@@ -24,6 +24,7 @@ import {
   type SocialSentimentRadar,
 } from "@/lib/openstock-platform";
 import { ASSETS, ASSET_BY_SYMBOL, fmtPrice, fmtPct, metricsFor, series, stanceColor } from "@/lib/market";
+import { useQuotes } from "@/components/live-prices";
 import WhopBadge from "@/components/whop-badge";
 import TrendChart from "@/components/trend-chart";
 
@@ -34,6 +35,10 @@ function getAssetPrice(symbol: string, fallback = 187.4): number {
 }
 
 export default function OpenStockHub() {
+  const liveQuotes = useQuotes();
+  const livePriceOf = (symbol: string, fallback = 187.4): number =>
+    liveQuotes[symbol]?.price ?? getAssetPrice(symbol, fallback);
+
   const [selectedRegionId, setSelectedRegionId] = useState<string>("us");
   const currentRegion =
     OPENSTOCK_GLOBAL_MARKETS.find((r) => r.id === selectedRegionId) || OPENSTOCK_GLOBAL_MARKETS[0];
@@ -47,6 +52,27 @@ export default function OpenStockHub() {
   const [showSMA20, setShowSMA20] = useState(true);
   const [showSMA50, setShowSMA50] = useState(true);
 
+  // Live SPDR sector performance overlay
+  const [liveSectors, setLiveSectors] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/live-terminal-data?view=market-center", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!active || !Array.isArray(data?.sectors)) return;
+        const map: Record<string, number> = {};
+        for (const s of data.sectors as Array<{ name: string; change1d: number }>) {
+          map[s.name] = s.change1d;
+        }
+        setLiveSectors(map);
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
   // Price Alerts Manager
   const [alerts, setAlerts] = useState<OpenStockAlert[]>(INITIAL_OPENSTOCK_ALERTS);
   const [newAlertSymbol, setNewAlertSymbol] = useState("NVDA");
@@ -56,8 +82,22 @@ export default function OpenStockHub() {
 
   const activeAsset = ASSET_BY_SYMBOL[activeTabSymbol] || ASSETS[0];
   const activeMetrics = metricsFor(activeAsset);
+  const activeLive = liveQuotes[activeAsset.symbol];
+  const activeSpotPrice = activeLive?.price ?? activeMetrics.last;
+  const activeChange24h = activeLive?.change ?? activeMetrics.change24h;
   const activeSentiment: SocialSentimentRadar = getSocialSentimentFor(activeTabSymbol);
   const activeSeries = series(activeAsset);
+
+  const mergedSectors = useMemo(
+    () =>
+      OPENSTOCK_SECTORS.map((sec) => {
+        const liveMatch = Object.entries(liveSectors).find(([name]) =>
+          name.toLowerCase().includes(sec.sector.toLowerCase().split(" ")[0]),
+        );
+        return liveMatch ? { ...sec, changePct: liveMatch[1] } : sec;
+      }),
+    [liveSectors]
+  );
 
   const handleAddTab = (symbol: string) => {
     const sym = symbol.toUpperCase().trim();
@@ -83,7 +123,7 @@ export default function OpenStockHub() {
     const target = parseFloat(newAlertTarget);
     if (!target || isNaN(target)) return;
 
-    const cur = getAssetPrice(newAlertSymbol);
+    const cur = livePriceOf(newAlertSymbol);
     const newAlert: OpenStockAlert = {
       id: `alt-${Date.now()}`,
       symbol: newAlertSymbol,
@@ -209,8 +249,7 @@ export default function OpenStockHub() {
           <div className="flex flex-wrap items-center gap-1.5 overflow-x-auto pb-1">
             {openTabs.map((sym) => {
               const isActive = sym === activeTabSymbol;
-              const a = ASSET_BY_SYMBOL[sym];
-              const p = a ? metricsFor(a).last : 187.4;
+              const p = livePriceOf(sym);
               return (
                 <div
                   key={sym}
@@ -284,18 +323,18 @@ export default function OpenStockHub() {
           </div>
 
           <div className="text-left lg:text-right font-mono tabular-nums">
-            <div className="text-3xl font-bold text-[#f2efe8]">{fmtPrice(activeMetrics.last)}</div>
+            <div className="text-3xl font-bold text-[#f2efe8]">{fmtPrice(activeSpotPrice)}</div>
             <div
               className={`mt-1 text-sm font-bold flex items-center gap-1 lg:justify-end ${
-                activeMetrics.change24h >= 0 ? "text-emerald-400" : "text-rose-400"
+                activeChange24h >= 0 ? "text-emerald-400" : "text-rose-400"
               }`}
             >
-              {activeMetrics.change24h >= 0 ? (
+              {activeChange24h >= 0 ? (
                 <ArrowUpRight className="h-4 w-4" />
               ) : (
                 <ArrowDownRight className="h-4 w-4" />
               )}
-              <span>{fmtPct(activeMetrics.change24h)} today</span>
+              <span>{fmtPct(activeChange24h)} today</span>
             </div>
             <div className="mt-1 text-[11px] text-stone-500">
               52W Range: {fmtPrice(activeMetrics.low52)} &ndash; {fmtPrice(activeMetrics.high52)}
@@ -384,7 +423,7 @@ export default function OpenStockHub() {
             <span className="text-stone-400 text-[10px] uppercase tracking-wider">200-Day Structural SMA</span>
             <p className="mt-1 text-xl font-bold text-[#f2efe8]">${activeMetrics.sma200.toFixed(2)}</p>
             <span className="text-[10px] text-stone-500">
-              {activeMetrics.last > activeMetrics.sma200 ? "Above 200-SMA" : "Below 200-SMA"}
+              {activeSpotPrice > activeMetrics.sma200 ? "Above 200-SMA" : "Below 200-SMA"}
             </span>
           </div>
         </div>
@@ -494,7 +533,7 @@ export default function OpenStockHub() {
           </div>
 
           <div className="space-y-2 font-mono text-xs tabular-nums">
-            {OPENSTOCK_SECTORS.map((sec) => (
+            {mergedSectors.map((sec) => (
               <div
                 key={sec.sector}
                 className="flex items-center justify-between rounded-lg bg-[#050609] px-3 py-2 border border-white/[0.06] hover:border-[#d8ab5a]/35 transition"
@@ -556,13 +595,13 @@ export default function OpenStockHub() {
                 value={newAlertSymbol}
                 onChange={(e) => {
                   setNewAlertSymbol(e.target.value);
-                  setNewAlertTarget(getAssetPrice(e.target.value).toString());
+                  setNewAlertTarget(livePriceOf(e.target.value).toString());
                 }}
                 className="w-full rounded-lg border border-white/15 bg-[#090c12] px-3 py-2 text-[#f2efe8]"
               >
                 {ASSETS.slice(0, 16).map((a) => (
                   <option key={a.symbol} value={a.symbol}>
-                    ${a.symbol} ({a.name}) &mdash; {fmtPrice(metricsFor(a).last)}
+                    ${a.symbol} ({a.name}) &mdash; {fmtPrice(livePriceOf(a.symbol))}
                   </option>
                 ))}
               </select>
@@ -613,7 +652,8 @@ export default function OpenStockHub() {
             </span>
             <div className="space-y-2 max-h-[300px] overflow-y-auto pr-1">
               {alerts.map((alt) => {
-                const cur = getAssetPrice(alt.symbol, alt.currentPrice);
+                const cur = livePriceOf(alt.symbol, alt.currentPrice);
+                const isTriggered = alt.direction === "ABOVE" ? cur >= alt.targetPrice : cur <= alt.targetPrice;
                 return (
                   <div
                     key={alt.id}
@@ -639,7 +679,7 @@ export default function OpenStockHub() {
                     </div>
 
                     <div className="flex items-center gap-3">
-                      {alt.triggered ? (
+                      {isTriggered ? (
                         <span className="rounded bg-emerald-500/15 text-emerald-400 border border-emerald-400/35 px-2 py-0.5 text-[10px] font-bold">
                           TRIGGERED
                         </span>

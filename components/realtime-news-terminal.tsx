@@ -45,87 +45,44 @@ export default function RealtimeNewsTerminal() {
 
   const { has } = useWatchlist();
 
-  // Simulated live incoming stream updates every 14 seconds when streaming is active
+  // Live /api/newsfilter polling every 20 seconds when streaming is active
   useEffect(() => {
-    if (!isStreaming) return;
+    let cancelled = false;
 
-    const interval = setInterval(() => {
-      setLatencyMs(Math.floor(10 + Math.random() * 8));
+    const pullLiveWire = async () => {
+      const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
+      try {
+        const res = await fetch("/api/newsfilter?limit=30", { cache: "no-store" });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as { articles?: NewsArticle[] };
+        const elapsed = Math.max(1, Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - t0));
+        if (cancelled) return;
+        setLatencyMs(elapsed);
 
-      const simulatedHeadlines: Partial<NewsArticle>[] = [
-        {
-          title: "Semiconductor Foundry Wafer Utilization Hits 98.4% on 2nm Prototype Demands",
-          description: "Leading fab reports full pipeline commitments for next-generation generative AI accelerators through Q4 2027.",
-          symbols: ["TSM", "NVDA", "ASML"],
-          source: { id: "reuters", name: "Reuters Financial" },
-          url: "https://www.reuters.com/technology",
-          category: "Breaking",
-          sentiment: "BULLISH",
-          impactScore: 9,
-          invalidationAlert: "Semi equipment pullbacks trigger invalidation below $1,100.",
-        },
-        {
-          title: "G7 Energy Ministers Coordinate Strategic Reserve Release Protocol Amid Maritime Transit Alerts",
-          description: "Joint ministerial communiqué outlines synchronized crude and distillate swap readiness to stabilize refinery feedstock schedules.",
-          symbols: ["XOM", "CVX", "SLB"],
-          source: { id: "reuters", name: "Reuters Financial" },
-          url: "https://www.reuters.com/world",
-          category: "Geopolitics",
-          sentiment: "NEUTRAL",
-          impactScore: 8,
-        },
-        {
-          title: "SEC Form 10-Q: Alphabet (GOOGL) Cloud Operating Margin Expands 420 bps YoY on Custom TPU Fleet",
-          description: "Quarterly disclosure reports accelerating enterprise AI backlog conversion and reduced per-token inference unit costs.",
-          symbols: ["GOOGL"],
-          source: { id: "sec_edgar", name: "SEC EDGAR Form 10-Q" },
-          url: "https://www.sec.gov/edgar",
-          category: "SEC Filings",
-          sentiment: "BULLISH",
-          impactScore: 8,
-        },
-        {
-          title: "Treasury Quarterly Refunding Auction Meets Strong Buy-Side Indirect Bid at 4.28%",
-          description: "Primary dealers absorbed only 11% of the 10-year note issue as foreign sovereign accounts and pension allocations expanded.",
-          symbols: ["TLT", "SPY"],
-          source: { id: "macro_wire", name: "Institutional Macro Wire" },
-          url: "https://www.wsj.com/economy",
-          category: "Macro",
-          sentiment: "BULLISH",
-          impactScore: 8,
-        },
-        {
-          title: "Biotech Early-Stage Phase 2 Oncology Trial Achieves 68% Objective Response Rate",
-          description: "Independent data monitoring committee recommends early termination for positive efficacy in metastatic solid tumors.",
-          symbols: ["MRNA", "BIIB"],
-          source: { id: "fda_bulletin", name: "U.S. FDA Drug Evaluation" },
-          url: "https://www.fda.gov/news-events",
-          category: "FDA Approvals",
-          sentiment: "BULLISH",
-          impactScore: 9,
-        },
-      ];
+        if (Array.isArray(data.articles) && data.articles.length > 0) {
+          setArticles((prev) => {
+            const seen = new Set(data.articles!.map((a) => a.title.toLowerCase().trim()));
+            const existingFiltered = prev.filter((a) => !seen.has(a.title.toLowerCase().trim()));
+            return [...data.articles!, ...existingFiltered].slice(0, 60);
+          });
+        }
+      } catch {
+        // retain current live + initial articles without fabricating headlines
+      }
+    };
 
-      const pick = simulatedHeadlines[Math.floor(Math.random() * simulatedHeadlines.length)];
-      const newArticle: NewsArticle = {
-        id: `rt-live-${Date.now()}`,
-        title: pick.title!,
-        description: pick.description!,
-        symbols: pick.symbols || ["NVDA"],
-        url: pick.url || "https://www.reuters.com/markets",
-        publishedAt: new Date().toISOString(),
-        source: pick.source || { id: "macro_wire", name: "Institutional Macro Wire" },
-        author: "Real-Time WebSocket Stream",
-        category: pick.category || "Breaking",
-        sentiment: pick.sentiment || "BULLISH",
-        impactScore: pick.impactScore || 8,
-        invalidationAlert: pick.invalidationAlert,
+    pullLiveWire();
+    if (!isStreaming) {
+      return () => {
+        cancelled = true;
       };
+    }
 
-      setArticles((prev) => [newArticle, ...prev.slice(0, 35)]);
-    }, 14000);
-
-    return () => clearInterval(interval);
+    const interval = setInterval(pullLiveWire, 20_000);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
   }, [isStreaming]);
 
   const baseFilteredArticles = useMemo(() => {

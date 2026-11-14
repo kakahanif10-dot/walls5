@@ -44,10 +44,10 @@ export default function InstitutionalToolShell({
     : "bg-zinc-900 border-zinc-800 text-zinc-200 hover:bg-zinc-800";
 
   return (
-    <div className={`rounded-2xl border p-5 md:p-6 space-y-6 transition-colors ${containerCls}`}>
+    <div className={`min-w-0 rounded-2xl border p-4 sm:p-5 md:p-6 space-y-6 transition-colors ${containerCls}`}>
       {/* Institutional Header Bar */}
       <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b pb-5 border-inherit">
-        <div className="space-y-1.5">
+        <div className="min-w-0 space-y-1.5">
           {/* Unboxed typographic metadata (Zero-Pill Rule) */}
           <div className={`flex flex-wrap items-center gap-2 text-xs ${mutedCls}`}>
             <span>{spec.stack === "traditional" ? "Traditional Wall Street Stack" : "Digital Asset & Crypto Stack"}</span>
@@ -109,8 +109,8 @@ export default function InstitutionalToolShell({
         </div>
       </div>
 
-      {/* Cross-Desk Switcher Strip (All 11 Platforms) */}
-      <nav aria-label="Institutional Tools Switcher" className="flex items-center gap-1.5 overflow-x-auto pb-1">
+      {/* Cross-Desk Switcher Strip (All 12 Platforms) */}
+      <nav aria-label="Institutional Tools Switcher" className="flex min-w-0 w-full items-center gap-1.5 overflow-x-auto pb-1">
         {INSTITUTIONAL_TOOL_SPECS.map((item) => {
           const active = item.slug === slug;
           return (
@@ -137,7 +137,7 @@ export default function InstitutionalToolShell({
       {showCompare && <WorkflowMatrix activeSlug={slug} isLight={isLight} />}
 
       {/* Main Tool Workspace */}
-      <div>{children({ isLight })}</div>
+      <div className="min-w-0">{children({ isLight })}</div>
     </div>
   );
 }

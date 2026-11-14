@@ -18,6 +18,7 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { ASSETS, ASSET_BY_SYMBOL, fmtPrice, fmtPct, metricsFor, type Asset } from "@/lib/market";
+import { useQuote } from "@/components/live-prices";
 import { useAuth } from "@/lib/auth-context";
 import WhopBadge from "@/components/whop-badge";
 import { db } from "@/lib/firebase";
@@ -45,6 +46,8 @@ export default function PositionSizingCalculator({
 
   // Selected asset
   const [symbol, setSymbol] = useState(initialSymbol);
+  const liveQuote = useQuote(symbol);
+  const [hasManualPriceEdit, setHasManualPriceEdit] = useState(false);
   const [assetSearch, setAssetSearch] = useState("");
   const [isAssetSelectorOpen, setIsAssetSelectorOpen] = useState(false);
 
@@ -59,7 +62,7 @@ export default function PositionSizingCalculator({
   }, [currentAsset]);
 
   // Pricing & Model defaults
-  const defaultPrice = initialPrice ?? assetMetrics?.last ?? 100;
+  const defaultPrice = initialPrice ?? liveQuote?.price ?? assetMetrics?.last ?? 100;
   const defaultVol = initialVolatility ?? (assetMetrics?.vol ? assetMetrics.vol * 100 : 35);
   const defaultInvalidation =
     initialInvalidation ??
@@ -82,7 +85,10 @@ export default function PositionSizingCalculator({
   // Sync inputs when symbol or initial props change
   useEffect(() => {
     if (initialPrice) setPrice(initialPrice);
-    else if (assetMetrics?.last) setPrice(assetMetrics.last);
+    else if (!hasManualPriceEdit) {
+      if (liveQuote?.price) setPrice(liveQuote.price);
+      else if (assetMetrics?.last) setPrice(assetMetrics.last);
+    }
 
     if (initialVolatility) setVolatility(initialVolatility);
     else if (assetMetrics?.vol) setVolatility(Math.round(assetMetrics.vol * 1000) / 10);
@@ -95,7 +101,7 @@ export default function PositionSizingCalculator({
           : Math.max(assetMetrics.sma20, assetMetrics.sma50) * 1.02;
       setInvalidationLevel(Math.round(inv * 1000) / 1000);
     }
-  }, [symbol, initialPrice, initialVolatility, initialInvalidation, assetMetrics]);
+  }, [symbol, initialPrice, initialVolatility, initialInvalidation, assetMetrics, liveQuote?.price, hasManualPriceEdit]);
 
   // Load saved risk preferences from Firestore if authenticated
   useEffect(() => {
@@ -138,14 +144,15 @@ export default function PositionSizingCalculator({
   // Reset to current asset defaults
   const handleResetToModel = useCallback(() => {
     if (!assetMetrics) return;
-    setPrice(assetMetrics.last);
+    setHasManualPriceEdit(false);
+    setPrice(liveQuote?.price ?? assetMetrics.last);
     setVolatility(Math.round(assetMetrics.vol * 1000) / 10);
     const inv =
       assetMetrics.score >= 47
         ? Math.min(assetMetrics.sma20, assetMetrics.sma50) * 0.975
         : Math.max(assetMetrics.sma20, assetMetrics.sma50) * 1.02;
     setInvalidationLevel(Math.round(inv * 1000) / 1000);
-  }, [assetMetrics]);
+  }, [assetMetrics, liveQuote?.price]);
 
   // Calculations
   const calculations = useMemo(() => {
@@ -303,6 +310,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
                     type="button"
                     onClick={() => {
                       setSymbol(a.symbol);
+                      setHasManualPriceEdit(false);
                       setIsAssetSelectorOpen(false);
                       setAssetSearch("");
                     }}
@@ -414,7 +422,10 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
                 type="number"
                 step="any"
                 value={price}
-                onChange={(e) => setPrice(Number(e.target.value))}
+                onChange={(e) => {
+                  setHasManualPriceEdit(true);
+                  setPrice(Number(e.target.value));
+                }}
                 className="mt-1 w-full rounded-lg border border-line bg-ink-850 px-2.5 py-1.5 font-mono text-xs text-bone focus:border-gold focus:outline-none"
               />
             </div>

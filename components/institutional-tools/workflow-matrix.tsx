@@ -38,7 +38,8 @@ export default function WorkflowMatrix({
             How Institutional Workflows Compare
           </h3>
           <p className={`text-xs mt-1 ${subText}`}>
-            Traditional Wall Street Stack vs. Digital Asset &amp; On-Chain Research Stack across all 11 specialized desks.
+            Traditional Wall Street Stack vs. Digital Asset &amp; On-Chain Research Stack across all{" "}
+            {INSTITUTIONAL_TOOL_SPECS.length} specialized desks.
           </p>
         </div>
 
@@ -46,8 +47,14 @@ export default function WorkflowMatrix({
           {(
             [
               { id: "all", label: "Side-by-Side" },
-              { id: "traditional", label: "Traditional (5)" },
-              { id: "digital", label: "Digital Asset (6)" },
+              {
+                id: "traditional",
+                label: `Traditional (${INSTITUTIONAL_TOOL_SPECS.filter((t) => t.stack === "traditional").length})`,
+              },
+              {
+                id: "digital",
+                label: `Digital Asset (${INSTITUTIONAL_TOOL_SPECS.filter((t) => t.stack === "digital").length})`,
+              },
             ] as const
           ).map((opt) => (
             <button

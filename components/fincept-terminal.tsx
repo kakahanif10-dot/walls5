@@ -34,6 +34,7 @@ import {
   type FinceptCLIResponse,
 } from "@/lib/fincept-platform";
 import { ASSETS, ASSET_BY_SYMBOL, fmtPrice, metricsFor } from "@/lib/market";
+import { useQuotes } from "@/components/live-prices";
 import WhopBadge from "@/components/whop-badge";
 
 type QuantDesk = "cli" | "agents" | "dcf" | "options" | "paper" | "connectors" | "node";
@@ -45,6 +46,10 @@ function getAssetLastPrice(symbol: string, fallback = 187.4): number {
 }
 
 export default function FinceptTerminal() {
+  const liveQuotes = useQuotes();
+  const liveLastPrice = (symbol: string, fallback = 187.4): number =>
+    liveQuotes[symbol]?.price ?? getAssetLastPrice(symbol, fallback);
+
   const [activeDesk, setActiveDesk] = useState<QuantDesk>("cli");
 
   // CLI Workstation State
@@ -115,6 +120,8 @@ export default function FinceptTerminal() {
     { id: 5, title: "5. Execution Venue", desc: "Smart Order Routing via Broker Fix API", status: "Standby", active: false },
   ]);
 
+  const [dcfPriceEdited, setDcfPriceEdited] = useState(false);
+
   useEffect(() => {
     setDcfResult(computeFinceptDCF(dcfInputs));
   }, [dcfInputs]);
@@ -124,10 +131,38 @@ export default function FinceptTerminal() {
   }, [optionsInputs]);
 
   useEffect(() => {
+    if (dcfPriceEdited) return;
+    const livePx = liveQuotes[dcfInputs.symbol]?.price;
+    if (livePx && livePx > 0 && Math.abs(livePx - dcfInputs.currentPrice) > 0.001) {
+      setDcfInputs((prev) => ({ ...prev, currentPrice: livePx }));
+    }
+  }, [liveQuotes, dcfInputs.symbol, dcfInputs.currentPrice, dcfPriceEdited]);
+
+  useEffect(() => {
+    let active = true;
+    fetch("/api/live-terminal-data?view=macro-perps", { cache: "no-store" })
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!active || !data?.yieldCurve) return;
+        const y10 = (data.yieldCurve as Array<{ tenor: string; rate: number }>).find(
+          (p) => p.tenor === "10Y",
+        );
+        if (y10 && y10.rate > 0) {
+          setOptionsInputs((prev) => ({ ...prev, riskFreeRatePct: Number(y10.rate.toFixed(2)) }));
+        }
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
     const asset = ASSET_BY_SYMBOL[agentTicker] || ASSETS[0];
     const m = metricsFor(asset);
-    setAgentEvaluation(selectedAgent.evaluate(asset.symbol, m.last, 32.5, 0.45, 0.042, 1.35));
-  }, [selectedAgent, agentTicker]);
+    const liveSpot = liveQuotes[asset.symbol]?.price ?? m.last;
+    setAgentEvaluation(selectedAgent.evaluate(asset.symbol, liveSpot, 32.5, m.vol, 0.042, 1.35));
+  }, [selectedAgent, agentTicker, liveQuotes]);
 
   useEffect(() => {
     logEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -153,8 +188,8 @@ export default function FinceptTerminal() {
   const handleExecutePaperOrder = (e: React.FormEvent) => {
     e.preventDefault();
     const asset = ASSET_BY_SYMBOL[orderSymbol] || ASSETS[0];
-    const m = metricsFor(asset);
-    const cost = orderShares * m.last;
+    const lastPrice = liveLastPrice(asset.symbol);
+    const cost = orderShares * lastPrice;
 
     if (orderSide === "BUY") {
       if (cost > cashBalance) {
@@ -173,8 +208,9 @@ export default function FinceptTerminal() {
                   ...p,
                   shares: totalShares,
                   entryPrice: avgPrice,
-                  unrealizedPnL: (m.last - avgPrice) * totalShares,
-                  unrealizedPnLPct: ((m.last - avgPrice) / avgPrice) * 100,
+                  currentPrice: lastPrice,
+                  unrealizedPnL: (lastPrice - avgPrice) * totalShares,
+                  unrealizedPnLPct: ((lastPrice - avgPrice) / avgPrice) * 100,
                 }
               : p
           );
@@ -186,30 +222,33 @@ export default function FinceptTerminal() {
             assetName: asset.name,
             side: "BUY",
             shares: orderShares,
-            entryPrice: m.last,
-            currentPrice: m.last,
+            entryPrice: lastPrice,
+            currentPrice: lastPrice,
             unrealizedPnL: 0,
             unrealizedPnLPct: 0,
             timestamp: "Just now",
           },
         ];
       });
-      setOrderFeedback(`Order Filled: Bought ${orderShares} $${asset.symbol} at ${fmtPrice(m.last)}`);
+      setOrderFeedback(`Order Filled: Bought ${orderShares} $${asset.symbol} at ${fmtPrice(lastPrice)}`);
     } else {
       setCashBalance((prev) => prev + cost);
       setPositions((prev) =>
         prev.filter((p) => !(p.symbol === asset.symbol && p.shares <= orderShares))
       );
-      setOrderFeedback(`Order Filled: Sold ${orderShares} $${asset.symbol} at ${fmtPrice(m.last)}`);
+      setOrderFeedback(`Order Filled: Sold ${orderShares} $${asset.symbol} at ${fmtPrice(lastPrice)}`);
     }
   };
 
   const totalPositionsValue = positions.reduce(
-    (acc, p) => acc + p.shares * getAssetLastPrice(p.symbol, p.currentPrice),
+    (acc, p) => acc + p.shares * liveLastPrice(p.symbol, p.currentPrice),
     0
   );
   const totalPortfolioValue = cashBalance + totalPositionsValue;
-  const totalUnrealizedPnL = positions.reduce((acc, p) => acc + p.unrealizedPnL, 0);
+  const totalUnrealizedPnL = positions.reduce(
+    (acc, p) => acc + (liveLastPrice(p.symbol, p.currentPrice) - p.entryPrice) * p.shares,
+    0
+  );
 
   return (
     <div className="space-y-8 text-[#f2efe8]">
@@ -501,7 +540,7 @@ export default function FinceptTerminal() {
               <div className="rounded-xl border border-white/[0.07] bg-[#050609] p-3.5">
                 <span className="text-[10px] font-mono uppercase text-stone-400">Spot Price</span>
                 <p className="mt-1 font-mono text-lg font-bold text-[#f2efe8]">
-                  {fmtPrice(getAssetLastPrice(agentTicker))}
+                  {fmtPrice(liveLastPrice(agentTicker))}
                 </p>
               </div>
               <div className="rounded-xl border border-white/[0.07] bg-[#050609] p-3.5">
@@ -603,11 +642,11 @@ export default function FinceptTerminal() {
                 value={dcfInputs.symbol}
                 onChange={(e) => {
                   const s = e.target.value;
-                  const asset = ASSET_BY_SYMBOL[s] || ASSETS[0];
+                  setDcfPriceEdited(false);
                   setDcfInputs((prev) => ({
                     ...prev,
                     symbol: s,
-                    currentPrice: metricsFor(asset).last,
+                    currentPrice: liveLastPrice(s),
                     revenueBaseBillion: s === "NVDA" ? 115 : s === "AAPL" ? 395 : s === "MSFT" ? 245 : 60,
                     growthRatePct: s === "NVDA" ? 38 : s === "AAPL" ? 10 : 18,
                   }));
@@ -1070,7 +1109,7 @@ export default function FinceptTerminal() {
                   >
                     {ASSETS.slice(0, 18).map((a) => (
                       <option key={a.symbol} value={a.symbol}>
-                        ${a.symbol} ({a.name}) — {fmtPrice(metricsFor(a).last)}
+                        ${a.symbol} ({a.name}) — {fmtPrice(liveLastPrice(a.symbol))}
                       </option>
                     ))}
                   </select>
@@ -1122,13 +1161,13 @@ export default function FinceptTerminal() {
                   <div className="flex justify-between">
                     <span>Estimated Fill Price:</span>
                     <span className="text-[#f2efe8] font-bold">
-                      {fmtPrice(getAssetLastPrice(orderSymbol))}
+                      {fmtPrice(liveLastPrice(orderSymbol))}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span>Total Notional Cost:</span>
                     <span className="text-[#f0c979] font-bold">
-                      {fmtPrice(getAssetLastPrice(orderSymbol) * orderShares)}
+                      {fmtPrice(liveLastPrice(orderSymbol) * orderShares)}
                     </span>
                   </div>
                 </div>
@@ -1179,7 +1218,7 @@ export default function FinceptTerminal() {
                   </thead>
                   <tbody className="divide-y divide-white/[0.05]">
                     {positions.map((pos) => {
-                      const curPrice = getAssetLastPrice(pos.symbol, pos.currentPrice);
+                      const curPrice = liveLastPrice(pos.symbol, pos.currentPrice);
                       const pnl = (curPrice - pos.entryPrice) * pos.shares;
                       const pnlPct = ((curPrice - pos.entryPrice) / pos.entryPrice) * 100;
                       return (
@@ -1343,7 +1382,7 @@ export default function FinceptTerminal() {
               className="rounded-xl bg-gradient-to-r from-[#d8ab5a] to-[#f0c979] px-4 py-2 font-mono text-xs font-bold text-[#050609] hover:brightness-110 transition flex items-center gap-2"
             >
               <Play className="h-3.5 w-3.5 fill-current" />
-              <span>Simulate Pipeline Execution</span>
+              <span>Run Pipeline Execution</span>
             </button>
           </div>
 

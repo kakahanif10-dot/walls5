@@ -93,21 +93,19 @@ export default function DisclaimerPage() {
 
         <h2 className="mt-12 font-display text-2xl text-bone">4. Where the data comes from</h2>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          Quotes and daily closes are fetched server-side from public market endpoints
-          (<strong className="text-bone/90">Nasdaq</strong> for US equities and
-          <strong className="text-bone/90"> OKX</strong> for crypto and meme coins, with CoinGecko as a
-          fallback for digital assets). Index prices refresh about once a minute; equity quotes are
-          <strong className="text-bone/90"> delayed</strong>, and outside US trading hours they show the
-          last close. The feed badge on the tape names the source and whether the tape is delayed.
+          Quotes and daily closes are fetched server-side from live public market endpoints
+          (<strong className="text-bone/90">TradingView America Scanner &amp; Nasdaq</strong> for US equities and
+          <strong className="text-bone/90"> Binance, OKX, Bybit, KuCoin, Gate &amp; CoinGecko</strong> for crypto and meme coins).
+          Live quotes across all 2,038 tracked assets refresh continuously in <strong className="text-bone/90">real time</strong>,
+          and outside US trading hours equities reflect the latest verified exchange session price.
         </p>
         <p className="mt-3 text-sm leading-relaxed text-muted">
-          Nothing on the site is generated: the chart, the 52-week range, realised volatility, the
-          moving averages and the trend score are all computed from real daily closes. When a source is
-          unreachable the site falls back to the last real value it received and says so, rather than
-          inventing a price. The trend score is an output of the published scoring model, never a
-          prediction, and none of it is investment advice. Displaying third-party quotes publicly
-          requires a licence or agreement that allows redistribution, and a commercial provider plan is
-          required before this becomes a paid data product.
+          Nothing on the site is fabricated: charts, 52-week ranges, realised volatility, moving
+          averages and trend scores are computed directly from verified market prices and daily closes.
+          The trend score is an output of the published scoring model, never a prediction, and none of
+          it is investment advice. Displaying third-party quotes publicly requires a licence or agreement
+          that allows redistribution, and a commercial provider plan is required before this becomes a
+          paid data product.
         </p>
 
         <h2 className="mt-12 font-display text-2xl text-bone">5. Risk disclosure</h2>

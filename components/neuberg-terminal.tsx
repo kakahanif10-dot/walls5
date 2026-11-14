@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Terminal,
   Activity,
@@ -18,11 +18,16 @@ import {
   NEUBERG_NEWS_INTEL,
   computeFearAndGreed,
   getMacroRegime,
+  type AINewsIntel,
+  type CommoditySpot,
+  type FearAndGreedData,
+  type MacroRegimeQuadrant,
   type PanelCategory,
   type PerpetualContract,
   type PolymarketContract,
 } from "@/lib/neuberg-platform";
 import { fmtPrice } from "@/lib/market";
+import { useQuotes } from "@/components/live-prices";
 import WhopBadge from "@/components/whop-badge";
 
 export default function NeubergTerminal() {
@@ -37,21 +42,86 @@ export default function NeubergTerminal() {
     "ai-news-intel",
   ]);
 
-  // Perps Trade Simulator State
-  const [selectedPerp, setSelectedPerp] = useState<PerpetualContract>(NEUBERG_PERP_CONTRACTS[0]);
+  const liveQuotes = useQuotes();
+  const [liveFearGreed, setLiveFearGreed] = useState<FearAndGreedData>(() => computeFearAndGreed());
+  const [liveMacroRegime, setLiveMacroRegime] = useState<MacroRegimeQuadrant>(() => getMacroRegime());
+  const [livePerps, setLivePerps] = useState<PerpetualContract[]>(NEUBERG_PERP_CONTRACTS);
+  const [livePolymarkets, setLivePolymarkets] = useState<PolymarketContract[]>(NEUBERG_POLYMARKETS);
+  const [liveCommodities, setLiveCommodities] = useState<CommoditySpot[]>(NEUBERG_COMMODITIES);
+  const [liveHeadlines, setLiveHeadlines] = useState<AINewsIntel[]>(NEUBERG_NEWS_INTEL);
+
+  // Perps Execution State
+  const [selectedPerpSymbol, setSelectedPerpSymbol] = useState<string>(NEUBERG_PERP_CONTRACTS[0].symbol);
   const [perpSide, setPerpSide] = useState<"LONG" | "SHORT">("LONG");
   const [leverage, setLeverage] = useState<number>(5);
   const [perpMarginUsd, setPerpMarginUsd] = useState<number>(500);
   const [perpOrderFeedback, setPerpOrderFeedback] = useState<string | null>(null);
 
-  // Polymarket Bet Simulator State
-  const [selectedPoly, setSelectedPoly] = useState<PolymarketContract>(NEUBERG_POLYMARKETS[0]);
+  // Polymarket Event Order Book State
+  const [selectedPolyId, setSelectedPolyId] = useState<string>(NEUBERG_POLYMARKETS[0].id);
   const [polyBetOutcome, setPolyBetOutcome] = useState<"YES" | "NO">("YES");
   const [polyStakeAmount, setPolyStakeAmount] = useState<number>(100);
   const [polyOrderFeedback, setPolyOrderFeedback] = useState<string | null>(null);
 
-  const fearGreed = computeFearAndGreed();
-  const macroRegime = getMacroRegime();
+  useEffect(() => {
+    let cancelled = false;
+    const loadLive = async () => {
+      try {
+        const res = await fetch("/api/live-terminal-data?view=macro-perps", { cache: "no-store" });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as {
+          fearGreed?: FearAndGreedData;
+          macroRegime?: MacroRegimeQuadrant;
+          perps?: PerpetualContract[];
+          polymarkets?: PolymarketContract[];
+          commodities?: CommoditySpot[];
+          headlines?: AINewsIntel[];
+        };
+        if (cancelled) return;
+        if (data.fearGreed) setLiveFearGreed(data.fearGreed);
+        if (data.macroRegime) setLiveMacroRegime(data.macroRegime);
+        if (Array.isArray(data.perps) && data.perps.length > 0) setLivePerps(data.perps);
+        if (Array.isArray(data.polymarkets) && data.polymarkets.length > 0) {
+          setLivePolymarkets(data.polymarkets);
+          setSelectedPolyId((prev) =>
+            data.polymarkets!.some((p) => p.id === prev) ? prev : data.polymarkets![0].id,
+          );
+        }
+        if (Array.isArray(data.commodities) && data.commodities.length > 0) {
+          setLiveCommodities(data.commodities);
+        }
+        if (Array.isArray(data.headlines) && data.headlines.length > 0) {
+          setLiveHeadlines(data.headlines);
+        }
+      } catch {
+        // retain prior live panels
+      }
+    };
+    loadLive();
+    const id = setInterval(loadLive, 20_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
+
+  const hydratedPerps = useMemo(
+    () =>
+      livePerps.map((c) => {
+        const baseSym = c.symbol.replace("-PERP", "");
+        const q = liveQuotes[baseSym];
+        if (!q || q.price <= 0) return c;
+        return { ...c, markPrice: q.price, indexPrice: q.price };
+      }),
+    [livePerps, liveQuotes],
+  );
+
+  const selectedPerp =
+    hydratedPerps.find((c) => c.symbol === selectedPerpSymbol) ?? hydratedPerps[0];
+  const selectedPoly =
+    livePolymarkets.find((p) => p.id === selectedPolyId) ?? livePolymarkets[0];
+  const fearGreed = liveFearGreed;
+  const macroRegime = liveMacroRegime;
 
   const togglePanel = (panelId: string) => {
     setOpenPanelIds((prev) =>
@@ -349,12 +419,12 @@ export default function NeubergTerminal() {
             </div>
 
             <div className="grid grid-cols-3 gap-2">
-              {NEUBERG_PERP_CONTRACTS.map((contract) => {
+              {hydratedPerps.map((contract) => {
                 const isSelected = selectedPerp.symbol === contract.symbol;
                 return (
                   <button
                     key={contract.symbol}
-                    onClick={() => setSelectedPerp(contract)}
+                    onClick={() => setSelectedPerpSymbol(contract.symbol)}
                     className={`rounded-xl p-2.5 font-mono text-left transition border tabular-nums ${
                       isSelected
                         ? "border-[#d8ab5a]/70 bg-[#d8ab5a]/15 text-[#f2efe8] font-bold"
@@ -480,12 +550,12 @@ export default function NeubergTerminal() {
             </div>
 
             <div className="space-y-2 max-h-[160px] overflow-y-auto pr-1">
-              {NEUBERG_POLYMARKETS.map((poly) => {
+              {livePolymarkets.map((poly) => {
                 const isSelected = selectedPoly.id === poly.id;
                 return (
                   <button
                     key={poly.id}
-                    onClick={() => setSelectedPoly(poly)}
+                    onClick={() => setSelectedPolyId(poly.id)}
                     className={`w-full text-left rounded-xl p-3 font-mono text-xs transition border ${
                       isSelected
                         ? "border-emerald-400/50 bg-emerald-500/10 text-[#f2efe8]"
@@ -585,7 +655,7 @@ export default function NeubergTerminal() {
             </div>
 
             <div className="grid gap-2.5 sm:grid-cols-2 font-mono text-xs tabular-nums">
-              {NEUBERG_COMMODITIES.map((c) => (
+              {liveCommodities.map((c) => (
                 <div
                   key={c.symbol}
                   className="rounded-xl border border-white/[0.07] bg-[#050609] p-3.5 space-y-1 hover:border-[#d8ab5a]/40 transition"
@@ -635,7 +705,7 @@ export default function NeubergTerminal() {
             </div>
 
             <div className="space-y-3 font-mono text-xs">
-              {NEUBERG_NEWS_INTEL.map((news) => (
+              {liveHeadlines.map((news) => (
                 <div
                   key={news.id}
                   className="rounded-xl border border-white/[0.07] bg-[#050609] p-4 space-y-2 hover:border-[#d8ab5a]/35 transition"

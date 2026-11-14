@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import {
   WSJ_SECTORS,
@@ -10,9 +10,12 @@ import {
   WSJ_HEARD_STORIES,
   WSJ_INSIDER_TRADES,
   WSJ_EARNINGS_EVENTS,
+  type WSJInsiderTrade,
   type WSJMarketLeader,
   type WSJHeardStory,
+  type WSJSectorPerformance,
 } from "@/lib/wsj-data";
+import { useQuotes } from "@/components/live-prices";
 import WhopBadge from "@/components/whop-badge";
 import {
   TrendingUp,
@@ -38,11 +41,54 @@ export default function WSJMarketCenter() {
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
   const [audioProgress, setAudioProgress] = useState(38);
   const [searchQuery, setSearchQuery] = useState("");
+  const [liveMostActive, setLiveMostActive] = useState<WSJMarketLeader[]>(WSJ_MOST_ACTIVE);
+  const [liveGainers, setLiveGainers] = useState<WSJMarketLeader[]>(WSJ_TOP_GAINERS);
+  const [liveLosers, setLiveLosers] = useState<WSJMarketLeader[]>(WSJ_TOP_LOSERS);
+  const [liveSectors, setLiveSectors] = useState<WSJSectorPerformance[]>(WSJ_SECTORS);
+  const [liveInsiders, setLiveInsiders] = useState<WSJInsiderTrade[]>(WSJ_INSIDER_TRADES);
+  const liveQuotes = useQuotes();
+
+  useEffect(() => {
+    let cancelled = false;
+    const loadLive = async () => {
+      try {
+        const res = await fetch("/api/live-terminal-data?view=market-center", { cache: "no-store" });
+        if (!res.ok || cancelled) return;
+        const data = (await res.json()) as {
+          mostActive?: WSJMarketLeader[];
+          topGainers?: WSJMarketLeader[];
+          topLosers?: WSJMarketLeader[];
+          sectors?: WSJSectorPerformance[];
+          insiderTrades?: WSJInsiderTrade[];
+        };
+        if (cancelled) return;
+        if (Array.isArray(data.mostActive) && data.mostActive.length > 0) setLiveMostActive(data.mostActive);
+        if (Array.isArray(data.topGainers) && data.topGainers.length > 0) setLiveGainers(data.topGainers);
+        if (Array.isArray(data.topLosers) && data.topLosers.length > 0) setLiveLosers(data.topLosers);
+        if (Array.isArray(data.sectors) && data.sectors.length > 0) setLiveSectors(data.sectors);
+        if (Array.isArray(data.insiderTrades) && data.insiderTrades.length > 0) setLiveInsiders(data.insiderTrades);
+      } catch {
+        // retain current live tables
+      }
+    };
+    loadLive();
+    const id = setInterval(loadLive, 25_000);
+    return () => {
+      cancelled = true;
+      clearInterval(id);
+    };
+  }, []);
 
   const getTableRows = (): WSJMarketLeader[] => {
-    if (boardType === "gainers") return WSJ_TOP_GAINERS;
-    if (boardType === "losers") return WSJ_TOP_LOSERS;
-    return WSJ_MOST_ACTIVE;
+    const raw =
+      boardType === "gainers" ? liveGainers : boardType === "losers" ? liveLosers : liveMostActive;
+    return raw.map((r) => {
+      const q = liveQuotes[r.symbol];
+      if (!q) return r;
+      const pct = q.change * 100;
+      const absChg = q.price - q.open;
+      return { ...r, price: q.price, changePct: pct, change: absChg };
+    });
   };
 
   const filteredRows = getTableRows().filter(
@@ -263,7 +309,7 @@ export default function WSJMarketCenter() {
             </div>
 
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 mt-6">
-              {WSJ_SECTORS.map((sector) => {
+              {liveSectors.map((sector) => {
                 const positive = sector.change1d >= 0;
                 return (
                   <div
@@ -422,7 +468,7 @@ export default function WSJMarketCenter() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-stone-800/60">
-                {WSJ_INSIDER_TRADES.map((trade) => {
+                {liveInsiders.map((trade) => {
                   const isBuy = trade.type === "BUY";
                   return (
                     <tr key={trade.id} className="hover:bg-stone-900/50 transition">

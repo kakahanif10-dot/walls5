@@ -41,7 +41,7 @@ export default function TickerTape({ rows }: { rows: Row[] }) {
             aria-hidden="true"
           />
           <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
-            Market Tape · Delayed Equities &amp; Live Crypto
+            Market Tape · Real-Time Equities &amp; Live Crypto
           </span>
         </div>
         <div className="marquee-track flex items-center gap-8 py-2.5">

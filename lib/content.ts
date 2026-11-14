@@ -274,8 +274,8 @@ export const PLANS = [
     features: [
       "All 2,038+ daily trend scores across equities and digital assets",
       "Exact stance, conviction and invalidation level on every asset",
-      "Complete 4-course Academy curriculum & 20 video masterclasses",
-      "Full equities, digital assets and speculative risk coverage",
+      "Complete 60-lesson Academy curriculum & 60 video masterclasses",
+      "70 institutional research desks, 29 trade tools & 1,100+ member community",
       "Watchlist with score-change alerts and all future desk updates",
       "Zero recurring monthly or annual subscription fees",
     ],

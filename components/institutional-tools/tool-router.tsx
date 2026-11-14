@@ -12,6 +12,7 @@ import {
 import {
   ChainalysisAmlView,
   CoinMetricsKaikoView,
+  CryptoFearGreedView,
   DefillamaTerminalView,
   GlassnodeOnchainView,
   MessariResearchView,
@@ -42,6 +43,8 @@ export default function InstitutionalToolRouter({ slug }: { slug: InstitutionalT
       return <DefillamaTerminalView />;
     case "coinmetrics-kaiko":
       return <CoinMetricsKaikoView />;
+    case "crypto-fear-greed":
+      return <CryptoFearGreedView />;
     default:
       return <BloombergDeskView />;
   }

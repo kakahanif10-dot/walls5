@@ -5,7 +5,7 @@ import PricingPlans from "@/components/pricing-plans";
 export const metadata: Metadata = {
   title: "Lifetime Access & Plans",
   description:
-    "Reader is free. Lifetime Access is a $2,497 one-time payment for all 2,038+ daily trend scores, exact invalidation levels, the 4-course Academy curriculum, and all future desk updates.",
+    "Reader is free. Lifetime Access is a $2,497 one-time payment for all 2,038+ daily trend scores, exact invalidation levels, 70 research desks, 60 Academy lessons, 29 trade tools, and all future desk updates.",
 };
 
 const FAQ = [
@@ -23,7 +23,7 @@ const FAQ = [
   },
   {
     q: "What is included in $2,497 One-Time Lifetime Access?",
-    a: "A single payment of $2,497 permanently unlocks all 2,038+ daily trend scores, exact invalidation levels, the complete 4-course Academy curriculum, and all future desk updates with zero recurring monthly or annual fees.",
+    a: "A single payment of $2,497 permanently unlocks all 2,038+ daily trend scores, exact invalidation levels, 70 research desks, the complete 60-lesson Academy curriculum, 29 trade tools, and all future desk updates with zero recurring monthly or annual fees.",
   },
   {
     q: "Can teams still request multi-seat institutional access?",
@@ -42,7 +42,7 @@ export default function PricingPage() {
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-muted">
             One desk, one methodology, zero recurring monthly fees for individual Lifetime Access
-            members. Unlock all 2,038+ daily scores, exact invalidation levels, and the 4-course Academy.
+            members. Unlock all 2,038+ daily scores, exact invalidation levels, 70 research desks, 60 Academy lessons, 29 trade tools, and our 1,100+ member community.
           </p>
         </div>
       </section>

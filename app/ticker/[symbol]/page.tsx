@@ -25,7 +25,7 @@ import {
   type Kind,
 } from "@/lib/market";
 import WhopBadge from "@/components/whop-badge";
-import { ensureMarketData } from "@/lib/market-data";
+import { ensureMarketData, ensureSymbolHistory } from "@/lib/market-data";
 
 const KIND_PATH: Record<Kind, string> = {
   stock: "/markets",
@@ -64,7 +64,7 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
   const asset = ASSET_BY_SYMBOL[symbol];
   if (!asset) notFound();
 
-  await ensureMarketData();
+  await Promise.all([ensureMarketData(), ensureSymbolHistory(asset.symbol)]);
 
   const m = metricsFor(asset);
   const pts = series(asset);
@@ -443,8 +443,8 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
       <section className="mx-auto max-w-7xl px-5 pb-4">
         <p className="rounded-lg border border-line/70 bg-ink-900/40 px-4 py-3 text-[11px] leading-relaxed text-muted/70">
           This report is market analysis and education, not investment advice. It contains no
-          recommendation to transact. Scores are computed from real daily closes; equity quotes are
-          delayed and crypto quotes stream continuously. See the{" "}
+          recommendation to transact. Scores and charts are computed from live real-time exchange
+          quotes and daily closes across equities, digital assets, and speculative pairs. See the{" "}
           <Link href="/disclaimer" className="text-bone/80 underline decoration-line underline-offset-2">
             methodology
           </Link>{" "}

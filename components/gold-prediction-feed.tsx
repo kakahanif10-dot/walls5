@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useCallback } from "react";
 import Link from "next/link";
-import { GOLD_NEWS_ITEMS, type GoldNewsItem, type NewsAction, type NewsCategory } from "@/lib/gold-news-100";
+import { GOLD_NEWS_ITEMS, type GoldNewsItem, type NewsAction } from "@/lib/gold-news-100";
+import { ASSET_BY_SYMBOL, metricsFor } from "@/lib/market";
+import { useQuotes } from "@/components/live-prices";
 import WhopBadge from "@/components/whop-badge";
 import {
   Flame,
@@ -29,14 +31,80 @@ export default function GoldPredictionFeed() {
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
   const [activeItem, setActiveItem] = useState<GoldNewsItem | null>(GOLD_NEWS_ITEMS[0]);
+  const liveQuotes = useQuotes();
 
-  // Live minute-by-minute countdown timer & simulated breaking wire update
+  const syncLiveWire = useCallback(async () => {
+    try {
+      const res = await fetch("/api/newsfilter?limit=24", { cache: "no-store" });
+      if (!res.ok) return;
+      const data = (await res.json()) as {
+        articles?: Array<{
+          id: string;
+          title: string;
+          description: string;
+          symbols: string[];
+          category: string;
+          source: { name: string };
+          publishedAt: string;
+          sentiment: "BULLISH" | "BEARISH" | "NEUTRAL";
+        }>;
+      };
+      if (!Array.isArray(data.articles) || data.articles.length === 0) return;
+
+      const mapped: GoldNewsItem[] = data.articles.map((art, idx) => {
+        const sym = (art.symbols?.[0] && ASSET_BY_SYMBOL[art.symbols[0]] ? art.symbols[0] : "NVDA");
+        const asset = ASSET_BY_SYMBOL[sym];
+        const m = asset ? metricsFor(asset) : null;
+        const basePrice = m?.last ?? 100;
+        const action: NewsAction =
+          art.sentiment === "BULLISH" ? "BUY" : art.sentiment === "BEARISH" ? "TRIM" : "HOLD";
+        const cat =
+          art.category === "Crypto"
+            ? "Crypto & Layer-1"
+            : art.category === "Geopolitics"
+              ? "Geopolitics & Defense"
+              : art.category === "Macro"
+                ? "Macro & Central Banks"
+                : art.category === "M&A"
+                  ? "Executive Boardroom & M&A"
+                  : "Tech & AI Scandals";
+        const minsAgo = Math.max(1, Math.round((Date.now() - Date.parse(art.publishedAt)) / 60000));
+        return {
+          id: `live-cat-${art.id}-${idx}`,
+          symbol: sym,
+          headline: art.title,
+          summary: art.description,
+          category: cat,
+          source: art.source?.name ?? "Global Financial Wire",
+          action,
+          confidence: action === "HOLD" ? 76 : 86,
+          impactPct: Number(((m?.change24h ?? 0) * 100).toFixed(2)),
+          currentPrice: basePrice,
+          targetPrice: Number((basePrice * (action === "TRIM" ? 0.94 : 1.075)).toFixed(2)),
+          invalidationStop: Number((basePrice * (action === "TRIM" ? 1.045 : 0.96)).toFixed(2)),
+          deskRationale: `Live market wire catalyst mapped directly to ${sym} real-time trend structure and invalidation support levels.`,
+          catalystWindow: minsAgo <= 60 ? "Immediate (Live Wire)" : "Intraday Catalyst",
+          timestampOffsetMinutes: minsAgo,
+        };
+      });
+
+      setItems(() => {
+        const seen = new Set(mapped.map((m) => m.headline.toLowerCase()));
+        return [...mapped, ...GOLD_NEWS_ITEMS.filter((g) => !seen.has(g.headline.toLowerCase()))];
+      });
+      setLastUpdated(new Date());
+    } catch {
+      setLastUpdated(new Date());
+    }
+  }, []);
+
+  // Live minute-by-minute countdown timer syncing real wire updates
   useEffect(() => {
+    syncLiveWire();
     const timer = setInterval(() => {
       setSecondsUntilRefresh((prev) => {
         if (prev <= 1) {
-          // Refresh cycle: bump timestamp and re-randomize top flash
-          setLastUpdated(new Date());
+          syncLiveWire();
           return 60;
         }
         return prev - 1;
@@ -44,7 +112,7 @@ export default function GoldPredictionFeed() {
     }, 1000);
 
     return () => clearInterval(timer);
-  }, []);
+  }, [syncLiveWire]);
 
   const categories: string[] = [
     "All",
@@ -203,6 +271,13 @@ export default function GoldPredictionFeed() {
       <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {filteredItems.map((item) => {
           const isSelected = activeItem?.id === item.id;
+          const q = liveQuotes[item.symbol];
+          const livePrice = q?.price ?? item.currentPrice;
+          const scale = item.currentPrice > 0 ? livePrice / item.currentPrice : 1;
+          const liveTarget = item.targetPrice * scale;
+          const liveStop = item.invalidationStop * scale;
+          const liveMovePct = q ? Number((q.change * 100).toFixed(2)) : item.impactPct;
+          const dec = livePrice < 1 ? 4 : 2;
           return (
             <div
               key={item.id}
@@ -249,15 +324,15 @@ export default function GoldPredictionFeed() {
                 <div className="mt-4 grid grid-cols-3 gap-2 rounded-lg bg-ink-850/80 p-2.5 text-[11px] font-mono border border-line/60">
                   <div>
                     <span className="block text-[9px] uppercase tracking-wider text-muted">Current</span>
-                    <span className="text-bone font-bold">${item.currentPrice.toFixed(2)}</span>
+                    <span className="text-bone font-bold">${livePrice.toFixed(dec)}</span>
                   </div>
                   <div>
                     <span className="block text-[9px] uppercase tracking-wider text-emerald-400">Target</span>
-                    <span className="text-emerald-300 font-bold">${item.targetPrice.toFixed(2)}</span>
+                    <span className="text-emerald-300 font-bold">${liveTarget.toFixed(dec)}</span>
                   </div>
                   <div>
                     <span className="block text-[9px] uppercase tracking-wider text-rose-400">Stop Loss</span>
-                    <span className="text-rose-300 font-bold">${item.invalidationStop.toFixed(2)}</span>
+                    <span className="text-rose-300 font-bold">${liveStop.toFixed(dec)}</span>
                   </div>
                 </div>
               </div>
@@ -270,8 +345,8 @@ export default function GoldPredictionFeed() {
                     <span>{item.confidence}% Match</span>
                   </span>
                   <span>•</span>
-                  <span className={item.impactPct >= 0 ? "text-emerald-400 font-mono" : "text-rose-400 font-mono"}>
-                    {item.impactPct >= 0 ? `+${item.impactPct}%` : `${item.impactPct}%`}
+                  <span className={liveMovePct >= 0 ? "text-emerald-400 font-mono" : "text-rose-400 font-mono"}>
+                    {liveMovePct >= 0 ? `+${liveMovePct}%` : `${liveMovePct}%`}
                   </span>
                 </div>
 

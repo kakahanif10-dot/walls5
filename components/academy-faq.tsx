@@ -19,7 +19,7 @@ const FAQ_ITEMS: FAQItem[] = [
     question: "What is the primary difference between Free (Reader) and Lifetime Access (PRO)?",
     answer: "Free Reader access provides foundational training and transparency into our scoring philosophy. Lifetime Access ($2,497 one-time) permanently unlocks all 2,038+ daily trend scores, exact invalidation price levels, all 4 Academy courses (60 video masterclasses), 70 research decks, real-time terminal dispatch, and all future desk updates with zero recurring monthly fees.",
     freeVsPremium: {
-      free: "Foundation Course ('Reading a Trend'), 2 monthly research pieces, delayed public board scores, no terminal dispatch.",
+      free: "Foundation Course ('Reading a Trend'), 2 monthly research pieces, public board scores, no terminal dispatch.",
       premium: "All 4 Complete Curriculums, 60 HD Masterclasses, 70 Research Decks, Sub-second Telegram & Discord Terminal Dispatch, Position Sizing Engine, and all future desk updates.",
     },
   },

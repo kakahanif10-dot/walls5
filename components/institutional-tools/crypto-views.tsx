@@ -1036,3 +1036,6 @@ export function CoinMetricsKaikoView() {
     </InstitutionalToolShell>
   );
 }
+
+export { CryptoFearGreedView } from "./crypto-fear-greed-view";
+

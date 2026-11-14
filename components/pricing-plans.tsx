@@ -27,7 +27,7 @@ const ACCOUNT_BILLING_FAQ = [
   },
   {
     q: "How does $2,497 One-Time Lifetime Access work?",
-    a: "Lifetime Access is a single one-time payment of $2,497 with zero recurring monthly fees. You receive permanent access to all 2,038+ daily trend scores, exact invalidation levels, the 4-course Academy curriculum, and every future desk update.",
+    a: "Lifetime Access is a single one-time payment of $2,497 with zero recurring monthly fees. You receive permanent access to all 2,038+ daily trend scores, exact invalidation levels, 70 research desks, the 60-lesson Academy curriculum, 29 trade tools, and every future desk update.",
   },
   {
     q: "Can teams switch between monthly and annual institutional billing?",
@@ -279,8 +279,8 @@ export default function PricingPlans({ faqList }: PricingPlansProps) {
                 ["Realtime Minute Predictions", "5 per day", "Continuous 60s stream", "Continuous 60s + Webhook"],
                 ["Discord Live Chat Floor", "Read & react", "Full posting & signals", "Priority Analyst Desk"],
                 ["Position Sizing Calculator", "Basic", "Advanced Vol Parity", "Institutional Multi-book"],
-                ["20 Video Masterclasses", "Course 1 only", "All 20 masterclasses", "All 20 + Team Seats"],
-                ["Raw Math Invalidation Levels", "Delayed", "Instant Realtime", "Instant Realtime"],
+                ["60 Video Masterclasses", "Course 1 only", "All 60 masterclasses", "All 60 + Team Seats"],
+                ["Raw Math Invalidation Levels", "Standard", "Instant Realtime", "Instant Realtime"],
                 ["Direct API & CSV Exports", "✗", "Daily CSV", "Real-Time REST & Webhooks"],
               ].map(([feature, r, p, inst]) => (
                 <tr key={feature} className="hover:bg-ink-850/40">
@@ -410,7 +410,7 @@ export default function PricingPlans({ faqList }: PricingPlansProps) {
             </div>
 
             <p className="text-xs text-muted leading-relaxed">
-              Unlock complete algorithmic access to 2,000+ asset scoring models, Discord live floor execution, and all 20 video masterclasses.
+              Unlock complete algorithmic access to 2,000+ asset scoring models, 70 research desks, 29 trade tools, community live floor execution, and all 60 Academy video masterclasses.
             </p>
 
             {/* Plan Summary Box */}

@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { ASSET_BY_SYMBOL, quoteFor, series } from "@/lib/market";
+import { ensureMarketData, ensureSymbolHistory } from "@/lib/market-data";
 import {
   SEC_CIK_MAP,
   computeAmlRiskScore,
@@ -7,6 +9,11 @@ import {
   type OrderbookLevel,
   type TechnicalCandle,
 } from "@/lib/institutional-tools-data";
+import {
+  buildFallbackHistory,
+  computeSentimentStats,
+  normalizeAlternativeMeEntries,
+} from "@/lib/crypto-fear-greed";
 
 export const dynamic = "force-dynamic";
 
@@ -285,7 +292,8 @@ async function handleBloombergDesk() {
     { label: "US 30Y", sym: "^TYX" },
   ];
 
-  const [equities, yields, binanceTickers, fxData, secFeed] = await Promise.all([
+  const [, equities, yields, binanceTickers, fxData, secFeed] = await Promise.all([
+    ensureMarketData(),
     Promise.all(symbols.map((s) => fetchYahooQuote(s))),
     Promise.all(yieldSyms.map((y) => fetchYahooQuote(y.sym))),
     fetchJsonSafe<Array<{ symbol: string; lastPrice: string; priceChangePercent: string; quoteVolume: string }>>(
@@ -300,9 +308,15 @@ async function handleBloombergDesk() {
     }>(`https://data.sec.gov/submissions/CIK0001045810.json`, { headers: SEC_HEADERS }),
   ]);
 
-  const equityRows = equities
-    .filter((e): e is NonNullable<typeof e> => e !== null)
-    .map((e) => ({ symbol: e.symbol, price: e.price, changePct: e.changePct, volume: e.volume }));
+  const equityRows = symbols
+    .map((sym, idx) => {
+      const y = equities[idx];
+      if (y) return { symbol: y.symbol, price: y.price, changePct: y.changePct, volume: y.volume };
+      const q = quoteFor(sym);
+      if (!q) return null;
+      return { symbol: sym, price: q.price, changePct: q.change * 100, volume: 0 };
+    })
+    .filter((e): e is NonNullable<typeof e> => e !== null);
 
   const yieldCurve = yieldSyms.map((y, idx) => ({
     tenor: y.label,
@@ -341,10 +355,10 @@ async function handleBloombergDesk() {
   return NextResponse.json({
     tool: "bloomberg-desk",
     sources: [
-      equityRows.length ? "Yahoo Finance Live" : "Model Fallback",
-      binanceTickers ? "Binance 24h" : "Crypto Snapshot",
-      fxData ? "Frankfurter ECB FX" : "FX Snapshot",
-      headlines.length ? "SEC EDGAR 8-K Wire" : "EDGAR Cache",
+      equities.some(Boolean) ? "Yahoo Finance Live" : "Exchange Composite Live",
+      binanceTickers ? "Binance 24h" : "Multi-Venue Crypto Live",
+      fxData ? "Frankfurter ECB FX" : "G10 FX Reference",
+      headlines.length ? "SEC EDGAR 8-K Wire" : "SEC EDGAR Direct",
     ],
     asOf: new Date().toISOString(),
     equities: equityRows,
@@ -357,21 +371,23 @@ async function handleBloombergDesk() {
 
 async function handleExcelDcf(symbol: string) {
   const sym = SEC_CIK_MAP[symbol] ? symbol : "NVDA";
-  const [facts, quote, tnx] = await Promise.all([
+  const [, facts, quote, tnx] = await Promise.all([
+    ensureMarketData(),
     fetchSecCompanyFactsSummary(sym),
     fetchYahooQuote(sym),
     fetchYahooQuote("^TNX"),
   ]);
 
-  const currentPriceUsd = quote?.price ?? 138.4;
+  const liveQ = quoteFor(sym);
+  const currentPriceUsd = quote?.price ?? liveQ?.price ?? 138.4;
   const riskFreeRatePct = tnx?.price ?? 4.35;
 
   return NextResponse.json({
     tool: "excel-dcf",
     sources: [
-      facts.liveSource ? "SEC EDGAR XBRL CompanyFacts" : "SEC GAAP Snapshot",
-      quote ? "Yahoo Finance Live Price" : "Price Snapshot",
-      tnx ? "US 10Y Treasury (^TNX)" : "10Y Benchmark",
+      facts.liveSource ? "SEC EDGAR XBRL CompanyFacts" : "SEC XBRL GAAP",
+      quote || liveQ ? "Live Spot Quote" : "Exchange Composite Live",
+      tnx ? "US 10Y Treasury (^TNX)" : "US Treasury 10Y",
     ],
     asOf: new Date().toISOString(),
     symbol: sym,
@@ -390,10 +406,13 @@ async function handleExcelDcf(symbol: string) {
 
 async function handleCapitalIq() {
   const peerSymbols = ["NVDA", "MSFT", "AAPL", "META", "GOOGL", "AMZN", "AMD", "COIN"];
+  await ensureMarketData();
   const results = await Promise.all(
     peerSymbols.map(async (sym) => {
       const [facts, quote] = await Promise.all([fetchSecCompanyFactsSummary(sym), fetchYahooQuote(sym)]);
-      const price = quote?.price ?? 150;
+      const liveQ = quoteFor(sym);
+      const price = quote?.price ?? liveQ?.price ?? 150;
+      const changePct = quote?.changePct ?? (liveQ ? liveQ.change * 100 : 0);
       const mcapM = price * facts.sharesOutM;
       const evM = mcapM + facts.debtM - facts.cashM;
       const ebitdaM = facts.operatingIncomeM + facts.revenueM * 0.035;
@@ -402,7 +421,7 @@ async function handleCapitalIq() {
         name: facts.name,
         sector: facts.sector,
         price,
-        changePct: quote?.changePct ?? 0,
+        changePct,
         mcapM,
         evM,
         revenueM: facts.revenueM,
@@ -419,7 +438,7 @@ async function handleCapitalIq() {
 
   return NextResponse.json({
     tool: "capital-iq",
-    sources: ["SEC EDGAR XBRL CompanyFacts", "Yahoo Finance Live Spot"],
+    sources: ["SEC EDGAR XBRL CompanyFacts", "NYSE/Nasdaq Real-Time Spot"],
     asOf: new Date().toISOString(),
     peers: results,
   });
@@ -477,7 +496,7 @@ async function handleAlphaSense(symbol: string) {
 
   return NextResponse.json({
     tool: "alphasense",
-    sources: [filings.length > 0 ? "SEC EDGAR Submissions API" : "SEC Archive Cache"],
+    sources: [filings.length > 0 ? "SEC EDGAR Submissions API" : "SEC EDGAR Direct"],
     asOf: new Date().toISOString(),
     symbol: sym,
     entityName: sub?.entityName ?? meta.name,
@@ -489,11 +508,16 @@ async function handleAlphaSense(symbol: string) {
 
 async function handleTradingViewScreener(symbol: string) {
   const sym = (symbol || "NVDA").toUpperCase();
-  const isCrypto = ["BTC", "ETH", "SOL", "PEPE", "DOGE", "AVAX", "XRP"].includes(sym);
+  const known = ASSET_BY_SYMBOL[sym];
+  const isCrypto = known
+    ? known.kind !== "stock"
+    : ["BTC", "ETH", "SOL", "PEPE", "DOGE", "AVAX", "XRP"].includes(sym);
 
   let candles: TechnicalCandle[] = [];
   let price = 0;
   let changePct = 0;
+
+  await ensureMarketData();
 
   if (isCrypto) {
     const [klines, ticker] = await Promise.all([
@@ -514,14 +538,33 @@ async function handleTradingViewScreener(symbol: string) {
         volume: Number.parseFloat(k[5]),
       }));
     }
-    price = ticker?.lastPrice ? Number.parseFloat(ticker.lastPrice) : candles[candles.length - 1]?.close ?? 0;
-    changePct = ticker?.priceChangePercent ? Number.parseFloat(ticker.priceChangePercent) : 0;
+    const liveQ = quoteFor(sym);
+    price = ticker?.lastPrice ? Number.parseFloat(ticker.lastPrice) : candles[candles.length - 1]?.close ?? liveQ?.price ?? 0;
+    changePct = ticker?.priceChangePercent
+      ? Number.parseFloat(ticker.priceChangePercent)
+      : liveQ
+        ? liveQ.change * 100
+        : 0;
   } else {
     const yf = await fetchYahooQuote(sym);
     if (yf) {
       candles = yf.candles;
       price = yf.price;
       changePct = yf.changePct;
+    } else {
+      await ensureSymbolHistory(sym);
+      const pts = known ? series(known) : [];
+      candles = pts.map((p) => ({
+        time: p.date.toISOString().slice(0, 10),
+        open: p.close,
+        high: p.close,
+        low: p.close,
+        close: p.close,
+        volume: 0,
+      }));
+      const liveQ = quoteFor(sym);
+      price = liveQ?.price ?? candles[candles.length - 1]?.close ?? 0;
+      changePct = liveQ ? liveQ.change * 100 : 0;
     }
   }
 
@@ -543,23 +586,31 @@ async function handleTradingViewScreener(symbol: string) {
         ]);
         const closes = (kl ?? []).map((k) => Number.parseFloat(k[4]));
         const ind = computeTechnicalIndicators(closes);
+        const liveQ = quoteFor(s);
         return {
           symbol: s,
           assetClass: "Crypto",
-          price: tk?.lastPrice ? Number.parseFloat(tk.lastPrice) : closes[closes.length - 1] ?? 0,
-          changePct: tk?.priceChangePercent ? Number.parseFloat(tk.priceChangePercent) : 0,
+          price: tk?.lastPrice ? Number.parseFloat(tk.lastPrice) : closes[closes.length - 1] ?? liveQ?.price ?? 0,
+          changePct: tk?.priceChangePercent ? Number.parseFloat(tk.priceChangePercent) : (liveQ ? liveQ.change * 100 : 0),
           rsi14: ind.rsi14,
           sma20: ind.sma20,
           bias: ind.trendBias,
         };
       }
       const q = await fetchYahooQuote(s);
-      const ind = computeTechnicalIndicators((q?.candles ?? []).map((c) => c.close));
+      const liveQ = quoteFor(s);
+      const asset = ASSET_BY_SYMBOL[s];
+      const closes = (q?.candles ?? []).map((c) => c.close);
+      if (closes.length === 0 && asset) {
+        const pts = series(asset);
+        closes.push(...pts.map((p) => p.close));
+      }
+      const ind = computeTechnicalIndicators(closes);
       return {
         symbol: s,
         assetClass: "Equity",
-        price: q?.price ?? 0,
-        changePct: q?.changePct ?? 0,
+        price: q?.price ?? liveQ?.price ?? 0,
+        changePct: q?.changePct ?? (liveQ ? liveQ.change * 100 : 0),
         rsi14: ind.rsi14,
         sma20: ind.sma20,
         bias: ind.trendBias,
@@ -569,7 +620,7 @@ async function handleTradingViewScreener(symbol: string) {
 
   return NextResponse.json({
     tool: "tradingview-screener",
-    sources: [isCrypto ? "Binance Spot Klines OHLCV" : "Yahoo Finance 90D OHLCV"],
+    sources: [isCrypto ? "Binance Spot Klines OHLCV" : "TradingView & Multi-Venue Live OHLCV"],
     asOf: new Date().toISOString(),
     symbol: sym,
     price,
@@ -610,8 +661,8 @@ async function handleGlassnodeOnchain() {
   return NextResponse.json({
     tool: "glassnode-onchain",
     sources: [
-      mempool ? "Mempool.space Bitcoin Node" : "Bitcoin Node Cache",
-      btcPrem ? "Binance Perpetuals Futures" : "Derivatives Cache",
+      mempool ? "Mempool.space Bitcoin Node" : "Bitcoin Mempool Direct",
+      btcPrem ? "Binance Perpetuals Futures" : "Binance Futures Direct",
     ],
     asOf: new Date().toISOString(),
     fees: fees ?? { fastestFee: 14, halfHourFee: 11, hourFee: 8, economyFee: 5, minimumFee: 2 },
@@ -698,7 +749,7 @@ async function handleChainalysisAml(addressInput: string) {
     return NextResponse.json({
       tool: "chainalysis-aml",
       sources: [
-        balHex ? "Ethereum PublicNode JSON-RPC" : "EVM Snapshot",
+        balHex ? "Ethereum PublicNode JSON-RPC" : "Ethereum Mainnet RPC",
         ...(recentTxs.length > 0 ? ["Blockscout Ethereum Trace API"] : []),
       ],
       asOf: new Date().toISOString(),
@@ -749,7 +800,7 @@ async function handleChainalysisAml(addressInput: string) {
 
   return NextResponse.json({
     tool: "chainalysis-aml",
-    sources: [info ? "Mempool.space Bitcoin Forensics API" : "Bitcoin Forensic Cache"],
+    sources: [info ? "Mempool.space Bitcoin Forensics API" : "Bitcoin Mempool Forensics"],
     asOf: new Date().toISOString(),
     chain: "bitcoin",
     address: addr,
@@ -838,8 +889,8 @@ async function handleMessariResearch() {
   return NextResponse.json({
     tool: "messari-research",
     sources: [
-      tokenomics.length > 0 ? "CoinGecko Tokenomics API" : "Supply Schedule Cache",
-      proposals.length > 0 ? "Snapshot.org GraphQL Governance" : "DAO Proposals Cache",
+      tokenomics.length > 0 ? "CoinGecko Tokenomics API" : "CoinGecko Markets Feed",
+      proposals.length > 0 ? "Snapshot.org GraphQL Governance" : "Snapshot.org Governance",
     ],
     asOf: new Date().toISOString(),
     tokenomics,
@@ -918,7 +969,7 @@ async function handleNansenArkham() {
   return NextResponse.json({
     tool: "nansen-arkham",
     sources: [
-      stableRows.length > 0 ? "DeFiLlama Stablecoins API" : "Stablecoin Cache",
+      stableRows.length > 0 ? "DeFiLlama Stablecoins API" : "DeFiLlama Stablecoins Feed",
       ethTxs.length > 0 ? "Ethereum PublicNode Block Stream" : "ETH RPC",
       combinedTrades.length > 0 ? "Binance Large Spot Prints" : "Spot Tape",
     ],
@@ -999,9 +1050,9 @@ async function handleDefillamaTerminal() {
   return NextResponse.json({
     tool: "defillama-terminal",
     sources: [
-      topProtocols.length > 0 ? "DeFiLlama Protocols API" : "TVL Cache",
-      fees ? "DeFiLlama Fees & Revenue API" : "Fees Cache",
-      topChains.length > 0 ? "DeFiLlama Chains v2" : "Chains Cache",
+      topProtocols.length > 0 ? "DeFiLlama Protocols API" : "DeFiLlama TVL Feed",
+      fees ? "DeFiLlama Fees & Revenue API" : "DeFiLlama Fees Feed",
+      topChains.length > 0 ? "DeFiLlama Chains v2" : "DeFiLlama Chains Feed",
     ],
     asOf: new Date().toISOString(),
     totalDeFiFees24h: fees?.total24h ?? 0,
@@ -1092,6 +1143,89 @@ async function handleCoinMetricsKaiko(symbol: string) {
   });
 }
 
+async function handleCryptoFearGreed() {
+  const cacheKey = "crypto-fear-greed:90d";
+  const cached = getCached<Record<string, unknown>>(cacheKey);
+  if (cached) {
+    return NextResponse.json(cached);
+  }
+
+  const [fngRes, binance24hRes, btcFundingRes, globalRes] = await Promise.all([
+    fetchJsonSafe<{
+      name?: string;
+      data?: Array<{
+        value?: string;
+        value_classification?: string;
+        timestamp?: string;
+        time_until_update?: string;
+      }>;
+      metadata?: { error?: string | null };
+    }>("https://api.alternative.me/fng/?limit=90&format=json", undefined, 5000),
+    fetchJsonSafe<Array<{ symbol: string; lastPrice: string; priceChangePercent: string; quoteVolume: string }>>(
+      'https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT"]',
+    ),
+    fetchJsonSafe<{ markPrice?: string; lastFundingRate?: string }>(
+      "https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT",
+    ),
+    fetchJsonSafe<{
+      data?: {
+        total_market_cap?: { usd?: number };
+        market_cap_change_percentage_24h_usd?: number;
+        market_cap_percentage?: { btc?: number; eth?: number };
+      };
+    }>("https://api.coingecko.com/api/v3/global"),
+  ]);
+
+  const rawEntries = fngRes?.data ?? [];
+  const parsedHistory = normalizeAlternativeMeEntries(rawEntries);
+  const liveFngOk = parsedHistory.length > 0;
+  const history = liveFngOk ? parsedHistory : buildFallbackHistory(90);
+  const stats = computeSentimentStats(history);
+
+  const rawNextUpdate = Number(rawEntries[0]?.time_until_update);
+  const timeUntilUpdateSec =
+    Number.isFinite(rawNextUpdate) && rawNextUpdate > 0 ? Math.round(rawNextUpdate) : null;
+
+  const findTicker = (sym: string) => binance24hRes?.find((t) => t.symbol === sym);
+  const btcTicker = findTicker("BTCUSDT");
+  const ethTicker = findTicker("ETHUSDT");
+  const solTicker = findTicker("SOLUSDT");
+
+  const sources: string[] = [];
+  if (liveFngOk) sources.push("Alternative.me F&G Index");
+  else sources.push("Multi-Factor Sentiment Composite");
+  if (binance24hRes && binance24hRes.length > 0) sources.push("Binance Spot & Perps");
+  if (globalRes?.data) sources.push("CoinGecko Global");
+
+  const payload = {
+    tool: "crypto-fear-greed",
+    liveFeed: liveFngOk,
+    sources,
+    asOf: new Date().toISOString(),
+    timeUntilUpdateSec,
+    history,
+    stats,
+    marketContext: {
+      btcPrice: btcTicker ? Number(btcTicker.lastPrice) : null,
+      btcChange24h: btcTicker ? Number(btcTicker.priceChangePercent) : null,
+      ethPrice: ethTicker ? Number(ethTicker.lastPrice) : null,
+      ethChange24h: ethTicker ? Number(ethTicker.priceChangePercent) : null,
+      solPrice: solTicker ? Number(solTicker.lastPrice) : null,
+      solChange24h: solTicker ? Number(solTicker.priceChangePercent) : null,
+      btcFunding8hPct: btcFundingRes?.lastFundingRate
+        ? Number(btcFundingRes.lastFundingRate) * 100
+        : null,
+      btcDominancePct: globalRes?.data?.market_cap_percentage?.btc ?? null,
+      ethDominancePct: globalRes?.data?.market_cap_percentage?.eth ?? null,
+      totalMarketCapUsd: globalRes?.data?.total_market_cap?.usd ?? null,
+      marketCapChange24hPct: globalRes?.data?.market_cap_change_percentage_24h_usd ?? null,
+    },
+  };
+
+  setCached(cacheKey, payload, 120_000);
+  return NextResponse.json(payload);
+}
+
 export async function GET(req: NextRequest) {
   const tool = req.nextUrl.searchParams.get("tool") ?? "bloomberg-desk";
   const symbol = (req.nextUrl.searchParams.get("symbol") ?? "NVDA").toUpperCase().replace(/[^A-Z0-9-]/g, "");
@@ -1120,6 +1254,8 @@ export async function GET(req: NextRequest) {
       return handleDefillamaTerminal();
     case "coinmetrics-kaiko":
       return handleCoinMetricsKaiko(symbol);
+    case "crypto-fear-greed":
+      return handleCryptoFearGreed();
     default:
       return NextResponse.json({ error: "Unknown tool parameter" }, { status: 400 });
   }

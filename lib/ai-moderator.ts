@@ -1,6 +1,8 @@
 import { ASSETS, ASSET_BY_SYMBOL, type Asset } from "./market-assets";
 import { metricsFor, fmtPrice, fmtPct, type Metrics } from "./market";
 
+let predSeq = 0;
+
 export type MinutePrediction = {
   id: string;
   symbol: string;
@@ -170,9 +172,10 @@ export function generateMinutePrediction(forceSymbol?: string, seedIndex?: numbe
 
   const confidence = Math.min(96, Math.max(74, m.confidence + (asset.kind === "meme" ? -3 : 2)));
   const catalystAlert = asset.catalysts[minute % asset.catalysts.length] || "Institutional order block mitigation";
+  predSeq = (predSeq + 1) % 10000;
 
   return {
-    id: `pred-${asset.symbol}-${Date.now()}-${Math.floor(Math.random() * 1000)}`,
+    id: `pred-${asset.symbol}-${Date.now()}-${predSeq}`,
     symbol: asset.symbol,
     name: asset.name,
     kind: asset.kind,

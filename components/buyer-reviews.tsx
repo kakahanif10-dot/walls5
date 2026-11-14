@@ -87,7 +87,7 @@ export default function BuyerReviews() {
             <WhopBadge size="xs" />
           </div>
           <h2 className="mt-2 font-display text-3xl sm:text-4xl text-bone">
-            Trusted by 1,840+ Active Traders &amp; Portfolio Desks.
+            Trusted by 1,100+ Active Traders &amp; Portfolio Desks.
           </h2>
           <p className="mt-2 text-sm text-muted max-w-xl">
             Independent testimonials from proprietary traders, fund managers, and self-directed investors relying on objective mathematical rules rather than subjective narratives.

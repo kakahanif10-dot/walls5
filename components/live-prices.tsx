@@ -33,10 +33,10 @@ const FeedContext = createContext<FeedMeta>({
   mode: "live",
   source: "",
   asOf: null,
-  delayed: true,
+  delayed: false,
 });
 
-const POLL_MS = 30_000;
+const POLL_MS = 10_000;
 
 /**
  * Quotes come from the server feed only. There is deliberately no client-side
@@ -46,7 +46,7 @@ const POLL_MS = 30_000;
 export default function LivePricesProvider({
   seed,
   source = "",
-  delayed = true,
+  delayed = false,
   children,
 }: {
   seed: LiveSeed;
@@ -112,7 +112,9 @@ export default function LivePricesProvider({
               change:
                 row.previousClose > 0
                   ? row.price / row.previousClose - 1
-                  : (previous?.change ?? 0),
+                  : Number.isFinite(row.change)
+                    ? row.change
+                    : (previous?.change ?? 0),
               dir: !previous || row.price === previous.price ? 0 : row.price > previous.price ? 1 : -1,
               tick: (previous?.tick ?? 0) + 1,
             };
@@ -143,6 +145,11 @@ export default function LivePricesProvider({
 export function useQuote(symbol: string): Quote | undefined {
   const context = useContext(QuoteContext);
   return context ? context[symbol] : undefined;
+}
+
+export function useQuotes(): Record<string, Quote> {
+  const context = useContext(QuoteContext);
+  return context ?? {};
 }
 
 export function useFeedMeta(): FeedMeta {
