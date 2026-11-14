@@ -12,7 +12,6 @@ import {
   ArrowUpRight,
   Terminal,
   Clock,
-  Sparkles,
   Bookmark,
   Share2,
   Copy,
@@ -259,7 +258,7 @@ export default function RealtimeNewsTerminal() {
         {/* Query Presets Chips */}
         <div className="flex flex-wrap items-center gap-2 pt-1">
           <span className="text-[11px] font-mono text-stone-400 flex items-center gap-1">
-            <Sparkles className="h-3 w-3 text-[#d8ab5a]" />
+            <Layers className="h-3 w-3 text-[#d8ab5a]" />
             Presets:
           </span>
           {QUERY_PRESETS.map((preset) => (

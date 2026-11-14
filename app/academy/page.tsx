@@ -30,7 +30,7 @@ export default function AcademyPage() {
             <span><span className="font-mono text-bone">{COURSES.length}</span> courses</span>
             <span><span className="font-mono text-bone">{totalLessons}</span> lessons</span>
             <span><span className="font-mono text-bone">{totalMinutes}</span> minutes</span>
-            <span><span className="font-mono text-bone">1</span> foundation course free</span>
+            <span><span className="font-mono text-gold-bright">Lifetime Premium</span> included</span>
             <span className="text-gold-bright font-medium">★ 60 Watchable HD Video Masterclasses Available</span>
           </div>
 
@@ -56,9 +56,8 @@ export default function AcademyPage() {
 
       <section className="mx-auto max-w-7xl px-5 py-12">
         <div className="grid gap-6 lg:grid-cols-2">
-          {COURSES.map((course, index) => {
+          {COURSES.map((course) => {
             const minutes = course.lessons.reduce((a, l) => a + l.minutes, 0);
-            const free = index === 0;
             return (
               <Link
                 key={course.slug}
@@ -72,11 +71,6 @@ export default function AcademyPage() {
                     <span>{course.lessons.length} lessons</span>
                     <span className="text-line">·</span>
                     <span>{minutes} min</span>
-                    {free && (
-                      <span className="ml-auto rounded border border-up/40 px-1.5 py-0.5 text-[9px] text-up">
-                        Free
-                      </span>
-                    )}
                   </div>
                   <h2 className="mt-3 font-display text-2xl leading-snug text-bone group-hover:text-gold-bright">
                     {course.title}

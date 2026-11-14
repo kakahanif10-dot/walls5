@@ -16,6 +16,8 @@ import type {
   GlobalSearchResponse,
   SearchScope,
 } from "@/lib/global-search";
+import { useWhop } from "@/lib/whop-context";
+import { isPublicRoute } from "@/components/locked-action";
 
 interface GlobalSearchProps {
   open: boolean;
@@ -41,6 +43,7 @@ export default function GlobalSearchModal({
   onClose,
 }: GlobalSearchProps) {
   const router = useRouter();
+  const { isUnlocked, openWhopModal } = useWhop();
   const inputRef = useRef<HTMLInputElement>(null);
   const [query, setQuery] = useState("");
   const [scope, setScope] = useState<SearchScope>("all");
@@ -139,8 +142,12 @@ export default function GlobalSearchModal({
     return items;
   }, [data]);
 
-  const navigateTo = (href: string) => {
+  const navigateTo = (href: string, label?: string) => {
     onClose();
+    if (!isUnlocked && !isPublicRoute(href.split("?")[0])) {
+      openWhopModal(label || href);
+      return;
+    }
     router.push(href);
   };
 
@@ -319,7 +326,15 @@ export default function GlobalSearchModal({
                 </p>
                 <Link
                   href="/markets"
-                  onClick={onClose}
+                  onClick={(e) => {
+                    if (!isUnlocked) {
+                      e.preventDefault();
+                      onClose();
+                      openWhopModal("All Scored Markets");
+                    } else {
+                      onClose();
+                    }
+                  }}
                   className="text-[11px] text-muted hover:text-gold-bright"
                 >
                   Browse all →
@@ -333,7 +348,15 @@ export default function GlobalSearchModal({
                     <li key={key}>
                       <Link
                         href={asset.href}
-                        onClick={onClose}
+                        onClick={(e) => {
+                          if (!isUnlocked) {
+                            e.preventDefault();
+                            onClose();
+                            openWhopModal(`${asset.symbol} · ${asset.name}`);
+                          } else {
+                            onClose();
+                          }
+                        }}
                         className={`flex items-center justify-between gap-3 rounded-xl px-3 py-2.5 transition ${
                           isHighlighted
                             ? "bg-ink-800 border border-gold/40"
@@ -382,7 +405,15 @@ export default function GlobalSearchModal({
                 </p>
                 <Link
                   href="/research"
-                  onClick={onClose}
+                  onClick={(e) => {
+                    if (!isUnlocked) {
+                      e.preventDefault();
+                      onClose();
+                      openWhopModal("All 70 Research Decks");
+                    } else {
+                      onClose();
+                    }
+                  }}
                   className="text-[11px] text-muted hover:text-gold-bright"
                 >
                   All 70 decks →
@@ -396,7 +427,15 @@ export default function GlobalSearchModal({
                     <li key={key}>
                       <Link
                         href={article.href}
-                        onClick={onClose}
+                        onClick={(e) => {
+                          if (!isUnlocked) {
+                            e.preventDefault();
+                            onClose();
+                            openWhopModal(article.title);
+                          } else {
+                            onClose();
+                          }
+                        }}
                         className={`flex items-start justify-between gap-3 rounded-xl px-3 py-2.5 transition ${
                           isHighlighted
                             ? "bg-ink-800 border border-gold/40"
@@ -441,7 +480,15 @@ export default function GlobalSearchModal({
                 </p>
                 <Link
                   href="/desks"
-                  onClick={onClose}
+                  onClick={(e) => {
+                    if (!isUnlocked) {
+                      e.preventDefault();
+                      onClose();
+                      openWhopModal("Quantitative Analyst Desks");
+                    } else {
+                      onClose();
+                    }
+                  }}
                   className="text-[11px] text-muted hover:text-gold-bright"
                 >
                   All 44 desks →
@@ -455,7 +502,15 @@ export default function GlobalSearchModal({
                     <li key={key}>
                       <Link
                         href={desk.href}
-                        onClick={onClose}
+                        onClick={(e) => {
+                          if (!isUnlocked) {
+                            e.preventDefault();
+                            onClose();
+                            openWhopModal(desk.name);
+                          } else {
+                            onClose();
+                          }
+                        }}
                         className={`flex items-start justify-between gap-3 rounded-xl px-3 py-2.5 transition ${
                           isHighlighted
                             ? "bg-ink-800 border border-gold/40"

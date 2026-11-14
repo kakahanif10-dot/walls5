@@ -13,17 +13,12 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  Sparkles,
-  Lock,
-  Key,
   ShieldCheck,
-  TrendingUp,
 } from "lucide-react";
 
 type SortKey = "score" | "change24h" | "change30d" | "name";
 
 const STANCES = ["All", "Buy", "Accumulate", "Hold", "Trim", "Avoid"] as const;
-const PREVIEW_LIMIT = 8;
 
 function dayTradeBadgeColor(bias: string) {
   switch (bias) {
@@ -152,13 +147,42 @@ export default function MarketExplorer({
 
   const displayedRows = useMemo(() => {
     if (!isUnlocked) {
-      // In preview mode, allow viewing the first PREVIEW_LIMIT assets
-      return filtered.slice(0, PREVIEW_LIMIT);
+      return [];
     }
     if (isShowAll) return filtered;
     const start = (currentPage - 1) * effectivePageSize;
     return filtered.slice(start, start + effectivePageSize);
   }, [filtered, currentPage, effectivePageSize, isShowAll, isUnlocked]);
+
+  if (!isUnlocked) {
+    return (
+      <div className="mx-auto max-w-xl rounded-2xl border border-gold/45 bg-gradient-to-b from-[#13110c] via-ink-900 to-ink-950 p-7 text-center shadow-2xl space-y-4">
+        <h3 className="font-display text-2xl text-bone">
+          Continue to Lifetime Premium checkout
+        </h3>
+        <p className="text-xs leading-relaxed text-muted">
+          Get every research piece, full crypto and meme-coin coverage, all four Academy courses,
+          score-change alerts, and all 2,038+ scored assets with one $1,487 USD lifetime purchase.
+        </p>
+        <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+          <button
+            type="button"
+            onClick={() => openWhopModal("All 2,038+ Scored Assets")}
+            className="inline-flex items-center gap-2 rounded-full bg-gold px-6 py-3 text-xs font-bold text-ink-950 transition hover:bg-gold-bright shadow-lg"
+          >
+            <ShieldCheck className="h-4 w-4" />
+            <span>Unlock Lifetime Premium — $1,487 USD</span>
+          </button>
+          <Link
+            href="/pricing"
+            className="rounded-full border border-line bg-ink-900 px-5 py-3 text-xs font-semibold text-bone transition hover:border-gold/50"
+          >
+            Purchase details
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div>
@@ -207,30 +231,22 @@ export default function MarketExplorer({
         </div>
       )}
 
-      {/* WSJ Institutional Status Banner & Mode Controls */}
+      {/* Institutional Status Banner & Mode Controls */}
       <div className="mb-4 rounded-xl border border-gold/30 bg-gold/[0.04] p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <span className="live-dot h-2 w-2 rounded-full bg-up shrink-0" aria-hidden="true" />
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-display text-sm sm:text-base font-semibold text-bone">
-                {isUnlocked
-                  ? `Full Universe Active: ${filtered.length} of ${activeRows.length} Assets Loaded`
-                  : `Member Only Preview: ${PREVIEW_LIMIT} of ${activeRows.length}+ Scored Assets`}
+                Full Universe Active: {filtered.length} of {activeRows.length} Assets Loaded
               </span>
-              <WhopBadge variant={isUnlocked ? "plus" : "wsj"} />
+              <WhopBadge variant="plus" />
               <span className="rounded bg-gold/15 border border-gold/40 px-2 py-0.5 text-[10px] font-mono font-bold text-gold-bright">
-                {isUnlocked
-                  ? isShowAll
-                    ? "ALL ASSETS UNLOCKED"
-                    : `Page ${currentPage}/${totalPages}`
-                  : "FREE PREVIEW MODE"}
+                {isShowAll ? "ALL ASSETS UNLOCKED" : `Page ${currentPage}/${totalPages}`}
               </span>
             </div>
             <p className="text-[11px] text-muted leading-tight mt-0.5">
-              {isUnlocked
-                ? "Full institutional feed active. Real-time intraday Day Trading and multi-week Swing models unlocked."
-                : "You are currently viewing an institutional preview. Unlock Lifetime Access via Whop for the complete 2,038+ universe."}
+              Full institutional feed active. Real-time intraday Day Trading and multi-week Swing models unlocked.
             </p>
           </div>
         </div>
@@ -241,13 +257,12 @@ export default function MarketExplorer({
             type="button"
             onClick={handleViewAllClick}
             className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
-              isUnlocked && isShowAll
+              isShowAll
                 ? "bg-gold text-ink-950 shadow-md ring-1 ring-gold"
                 : "border border-gold/40 bg-gold/10 text-gold-bright hover:bg-gold/20"
             }`}
           >
-            <span>⚡ View All ({activeRows.length})</span>
-            {!isUnlocked && <WhopBadge variant="pro" className="ml-1" />}
+            <span>View All ({activeRows.length})</span>
           </button>
 
           {isUnlocked && (
@@ -522,50 +537,6 @@ export default function MarketExplorer({
           <p className="px-4 py-10 text-center text-sm text-muted">
             No assets match that filter. Try a different stance or clear the search.
           </p>
-        )}
-
-        {/* WSJ-STYLE MEMBER ONLY PAYWALL BANNER (When free user views beyond preview) */}
-        {!isUnlocked && filtered.length > PREVIEW_LIMIT && (
-          <div className="border-t border-gold/30 bg-gradient-to-b from-ink-950 via-ink-900 to-ink-950 px-6 py-8 text-center">
-            <div className="mx-auto max-w-xl space-y-3">
-              <div className="inline-flex items-center gap-2 rounded-full border border-gold/50 bg-gold/15 px-3 py-1 text-[11px] text-gold-bright font-semibold">
-                <Sparkles className="h-3.5 w-3.5 text-gold" />
-                <span>MEMBER ONLY · WALL STREET JOURNAL GRADE TAPE</span>
-                <WhopBadge variant="plus" className="ml-0" />
-              </div>
-
-              <h4 className="font-display text-2xl text-bone">
-                Viewing Free Preview ({PREVIEW_LIMIT} of {filtered.length} Scored Assets)
-              </h4>
-
-              <p className="text-xs text-muted leading-relaxed">
-                Unlock the complete <strong className="text-bone">2,000+ asset universe</strong>, real-time Nasdaq, Coinbase &amp; Binance algorithmic scoring, institutional Day Trading scalp targets, and multi-month Swing invalidations with your active Whop Member Pass.
-              </p>
-
-              <div className="pt-3 flex flex-wrap items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => openWhopModal("View All 2,000+ Scored Assets")}
-                  className="inline-flex items-center gap-2 rounded-full bg-gold px-6 py-3 text-xs font-bold text-ink-950 hover:bg-gold-bright transition shadow-xl"
-                >
-                  <Key className="h-4 w-4" />
-                  <span>Unlock Full Terminal Access via Whop</span>
-                  <WhopBadge variant="plus" className="ml-0 text-[10px]" />
-                </button>
-
-                <Link
-                  href="/pricing"
-                  className="rounded-full border border-line bg-ink-900 px-5 py-3 text-xs font-semibold text-bone hover:border-gold/50 transition"
-                >
-                  View Plans &amp; Billing
-                </Link>
-              </div>
-
-              <p className="text-[10px] text-muted/70 pt-1">
-                Instant activation with Whop checkout or license key. Cancel anytime with one click.
-              </p>
-            </div>
-          </div>
         )}
       </div>
 

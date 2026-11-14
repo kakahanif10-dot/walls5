@@ -3,9 +3,9 @@ import Link from "next/link";
 import PricingPlans from "@/components/pricing-plans";
 
 export const metadata: Metadata = {
-  title: "Lifetime Access & Plans",
+  title: "Lifetime Premium ($1,487 USD) — NextWallStreet",
   description:
-    "Reader is free. Lifetime Access is a $2,497 one-time payment for all 2,038+ daily trend scores, exact invalidation levels, 70 research desks, 60 Academy lessons, 29 trade tools, and all future desk updates.",
+    "Lifetime Premium is a single one-time payment of $1,487 USD for all 2,038+ daily trend scores, exact invalidation levels, 70 research desks, 60 Academy lessons, and 32 trade tools.",
 };
 
 const FAQ = [
@@ -19,15 +19,11 @@ const FAQ = [
   },
   {
     q: "How do you grade speculative digital assets?",
-    a: "As pure liquidity risk, not investments. The sector has no cash flows, so we score concentration, order-book depth and narrative decay, and we cap conviction deliberately. Our coverage is designed to keep subscribers out of liquidity traps, not to talk them into positions.",
+    a: "As pure liquidity risk, not investments. The sector has no cash flows, so we score concentration, order-book depth and narrative decay, and we cap conviction deliberately.",
   },
   {
-    q: "What is included in $2,497 One-Time Lifetime Access?",
-    a: "A single payment of $2,497 permanently unlocks all 2,038+ daily trend scores, exact invalidation levels, 70 research desks, the complete 60-lesson Academy curriculum, 29 trade tools, and all future desk updates with zero recurring monthly or annual fees.",
-  },
-  {
-    q: "Can teams still request multi-seat institutional access?",
-    a: "Yes. Institutional accounts include multi-seat governance, shared watchlists, CSV signal history logs, and API access for fund workflows.",
+    q: "What is included in $1,487 USD Lifetime Premium?",
+    a: "A single one-time payment of $1,487 USD permanently unlocks all 2,038+ daily trend scores, exact invalidation levels, 70 research desks, all four Academy courses (60 video masterclasses), 32 trade tools, score-change alerts, and all future desk updates with zero recurring monthly or annual fees.",
   },
 ];
 
@@ -36,13 +32,16 @@ export default function PricingPage() {
     <div>
       <section className="grain border-b border-line/60">
         <div className="mx-auto max-w-7xl px-5 py-14 text-center">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">Lifetime Access</p>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">
+            Lifetime Premium · $1,487 USD
+          </p>
           <h1 className="mx-auto mt-4 max-w-2xl font-display text-4xl leading-tight text-bone sm:text-5xl">
-            Analysis you can audit. One-time lifetime access.
+            Analysis you can audit. One-time lifetime purchase.
           </h1>
           <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-muted">
-            One desk, one methodology, zero recurring monthly fees for individual Lifetime Access
-            members. Unlock all 2,038+ daily scores, exact invalidation levels, 70 research desks, 60 Academy lessons, 29 trade tools, and our 1,100+ member community.
+            Get every research piece, full crypto and meme-coin coverage, all four Academy courses,
+            32 trade tools, score-change alerts, and model portfolio access with one lifetime
+            purchase.
           </p>
         </div>
       </section>
@@ -51,13 +50,12 @@ export default function PricingPage() {
         <PricingPlans faqList={FAQ} />
 
         <div className="mt-12 text-center text-xs text-muted">
-          Still deciding? Read{" "}
-          <Link href="/research" className="text-bone/85 underline decoration-line underline-offset-2 hover:text-gold-bright">
-            free research
-          </Link>{" "}
-          or start with the{" "}
-          <Link href="/academy/reading-trends" className="text-bone/85 underline decoration-line underline-offset-2 hover:text-gold-bright">
-            foundation course
+          Questions on the scoring math? Review our{" "}
+          <Link
+            href="/disclaimer"
+            className="text-bone/85 underline decoration-line underline-offset-2 hover:text-gold-bright"
+          >
+            methodology &amp; disclosures
           </Link>
           .
         </div>
@@ -65,4 +63,3 @@ export default function PricingPage() {
     </div>
   );
 }
-

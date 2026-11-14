@@ -169,8 +169,8 @@ export default async function TickerPage({ params }: { params: Promise<{ symbol:
             sma200={m.sma200}
             rsi={m.rsi}
             volatility60d={m.vol}
-            validReason={`Struktur ${asset.symbol} dinilai berdasarkan 5 bobot teknikal kuantitatif: harga ${fmtPrice(m.last)} berada di ${m.last > m.sma20 ? "atas" : "bawah"} 20-day SMA ($${m.sma20.toFixed(2)}) dengan RSI ${m.rsi.toFixed(0)}. Sektor ${asset.group} menunjukkan persistensi momentum dengan skor komposit ${m.score}/100.`}
-            invalidationReason={`Tesis ini gugur dan dibatalkan jika harga penutupan harian tembus di bawah ${fmtPrice(trigger.value)}. Level invalidasi ini adalah batas objektif cut loss untuk melindungi modal sebelum drawdown berlarut.`}
+            validReason={`${asset.symbol} structure is scored across 5 quantitative weights: spot ${fmtPrice(m.last)} sits ${m.last > m.sma20 ? "above" : "below"} the 20-day SMA ($${m.sma20.toFixed(2)}) with a 14-day RSI of ${m.rsi.toFixed(0)}. The ${asset.group} sleeve carries a composite trend score of ${m.score}/100.`}
+            invalidationReason={`This thesis invalidates cleanly if daily closing price breaks ${m.score >= 47 ? "below" : "above"} ${fmtPrice(trigger.value)}. That trigger defines an objective risk cut before drawdowns compound.`}
           />
 
           <div className="rounded-xl border border-line bg-ink-900/50 p-5">

@@ -39,11 +39,11 @@ export default function WatchStudioPage() {
               <WhopBadge size="xs" className="ml-2" />
             </h3>
             <p className="mt-1 text-xs text-muted">
-              Pilih dari 3 menu desk: Wall Street &amp; Day Trading (22 video), Crypto &amp; Derivatives (20 video), atau Meme Coins pump.fun (18 video).
+              Choose from 3 dedicated desks: Wall Street &amp; Day Trading (22 videos), Crypto &amp; Derivatives (20 videos), or Speculative Meme Coins (18 videos).
             </p>
           </div>
           <Link href="/academy" className="text-xs text-muted hover:text-gold-bright">
-            Lihat silabus tertulis →
+            View written syllabus →
           </Link>
         </div>
 

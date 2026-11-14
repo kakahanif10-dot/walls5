@@ -3,7 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { LogIn, LogOut, User as UserIcon, Shield, Bookmark, Award, Calculator, Mail, KeyRound, Sparkles } from "lucide-react";
+import { LogIn, LogOut, User as UserIcon, Shield, Bookmark, Award, Calculator, Mail, KeyRound, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useWhop } from "@/lib/whop-context";
 
@@ -114,7 +114,7 @@ export default function AuthButton() {
               {user.displayName || user.email?.split("@")[0] || "Trader"}
             </span>
             <span className="rounded border border-gold/40 bg-gold/15 px-1.5 py-0.2 font-mono text-[9px] font-bold uppercase tracking-wider text-gold-bright">
-              {isUnlocked || profile?.plan === "premium" ? "MEMBER" : "READER"}
+              {isUnlocked || profile?.plan === "premium" ? "LIFETIME" : "LOCKED"}
             </span>
           </button>
 
@@ -163,7 +163,7 @@ export default function AuthButton() {
                   className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-bone hover:bg-ink-800 transition-colors"
                 >
                   <Award className="h-3.5 w-3.5 text-gold-bright" />
-                  <span>Plan: {isUnlocked || profile?.plan === "premium" ? "MEMBER ACCESS" : "FREE READER"}</span>
+                  <span>Plan: {isUnlocked || profile?.plan === "premium" ? "LIFETIME PREMIUM" : "LOCKED"}</span>
                 </Link>
               </div>
 
@@ -199,7 +199,7 @@ export default function AuthButton() {
 
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-gold flex items-center gap-1.5">
-                <Sparkles className="h-3 w-3" />
+                <ShieldCheck className="h-3 w-3" />
                 NextWallStreet Terminal Access
               </span>
               <h3 className="font-display text-2xl text-bone mt-1">

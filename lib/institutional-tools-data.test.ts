@@ -10,12 +10,12 @@ import {
   computeWacc,
 } from "./institutional-tools-data";
 
-test("catalog defines exactly 12 institutional tools (5 TradFi + 7 Digital Assets)", () => {
-  assert.equal(INSTITUTIONAL_TOOL_SPECS.length, 12);
+test("catalog defines exactly 15 institutional tools (7 Traditional + 8 Digital Assets)", () => {
+  assert.equal(INSTITUTIONAL_TOOL_SPECS.length, 15);
   const tradfi = INSTITUTIONAL_TOOL_SPECS.filter((t) => t.stack === "traditional");
   const digital = INSTITUTIONAL_TOOL_SPECS.filter((t) => t.stack === "digital");
-  assert.equal(tradfi.length, 5);
-  assert.equal(digital.length, 7);
+  assert.equal(tradfi.length, 7);
+  assert.equal(digital.length, 8);
   assert.equal(WORKFLOW_COMPARISON_MATRIX.length, 4);
 });
 

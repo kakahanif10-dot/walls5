@@ -12,7 +12,10 @@ export type InstitutionalToolSlug =
   | "nansen-arkham"
   | "defillama-terminal"
   | "coinmetrics-kaiko"
-  | "crypto-fear-greed";
+  | "crypto-fear-greed"
+  | "whale-alert"
+  | "ai-sentiment"
+  | "top-signals";
 
 export interface InstitutionalToolSpec {
   slug: InstitutionalToolSlug;
@@ -157,6 +160,39 @@ export const INSTITUTIONAL_TOOL_SPECS: InstitutionalToolSpec[] = [
     tagline:
       "Real-time 0–100 crypto market sentiment gauge, 90-day extreme regime history, Z-score dispersion, and live BTC/ETH/SOL leverage & dominance context.",
     freeApis: ["Alternative.me F&G API", "Binance Spot & Perps", "CoinGecko Global"],
+  },
+  {
+    slug: "whale-alert",
+    href: "/tools/whale-alert",
+    label: "Live Whale Movement Feed (Whale Alert)",
+    shortLabel: "Whale Alert",
+    stack: "digital",
+    equivalentPlatforms: "Whale Alert · Arkham · Nansen",
+    tagline:
+      "Real-time tracking of high-value Ethereum block transfers, institutional BTC/ETH/SOL spot block prints, and 24h stablecoin treasury mints.",
+    freeApis: ["Ethereum PublicNode Mainnet", "Binance Spot Whale Tape", "DeFiLlama Stablecoins"],
+  },
+  {
+    slug: "ai-sentiment",
+    href: "/tools/ai-sentiment",
+    label: "Real-Time AI Market Sentiment",
+    shortLabel: "AI Sentiment",
+    stack: "traditional",
+    equivalentPlatforms: "NextWallStreet AI · Alternative.me",
+    tagline:
+      "Real-time AI sentiment regime blending 2,038-asset breadth, live Fear & Greed Index, perpetual funding skew, and institutional desk synthesis.",
+    freeApis: ["2,038-Asset Scoring Engine", "Alternative.me F&G", "Binance Perps Funding"],
+  },
+  {
+    slug: "top-signals",
+    href: "/tools/top-signals",
+    label: "Top 3 Signals Today & Conviction Board",
+    shortLabel: "Top 3 Signals",
+    stack: "traditional",
+    equivalentPlatforms: "NextWallStreet Quant Desk",
+    tagline:
+      "Real-time highest-conviction signals across US equities and digital assets with live targets, mathematical invalidation levels, and risk-reward ratios.",
+    freeApis: ["Live Multi-Venue Quotes", "5-Factor Trend Scoring Model"],
   },
 ];
 

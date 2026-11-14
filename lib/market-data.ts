@@ -94,10 +94,10 @@ const SYMBOL_ALIASES: Record<string, string> = {
 const UA =
   "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0 Safari/537.36";
 
-const QUOTE_TTL = 10_000;
+const QUOTE_TTL = 60_000;
 const COINGECKO_TTL = 60_000;
 const HISTORY_TTL = 6 * 60 * 60 * 1000;
-const TIMEOUT_MS = 4500;
+const TIMEOUT_MS = 3500;
 
 const STOCK_HEADERS = { Origin: "https://www.nasdaq.com", Referer: "https://www.nasdaq.com/" };
 
@@ -1104,26 +1104,22 @@ async function loadAllLiveQuotes(): Promise<{
     }
   }
 
-  // Batch cached DEX/on-chain fallback for all remaining long-tail crypto/meme tokens
+  // Batch cached DEX/on-chain fallback for long-tail crypto/meme tokens (bounded to avoid stalling SSR)
   if (stillMissingCrypto.length > 0) {
-    const dexBatch = stillMissingCrypto.slice(0, 120);
+    const dexBatch = stillMissingCrypto.slice(0, 40);
     let dexCount = 0;
-    const chunkSize = 20;
-    for (let start = 0; start < dexBatch.length; start += chunkSize) {
-      const slice = dexBatch.slice(start, start + chunkSize);
-      const dexResults = await Promise.allSettled(slice.map((a) => resolveDexTokenFallback(a)));
-      for (let i = 0; i < slice.length; i++) {
-        const asset = slice[i];
-        const res = dexResults[i];
-        const dq = res.status === "fulfilled" ? res.value : null;
-        if (dq) {
-          quotes[asset.symbol] = dq;
-          telemetry[asset.symbol] = { price: dq.price, change24h: dq.change };
-          dexCount++;
-        } else {
-          const cached = quoteCache.get(asset.symbol);
-          if (cached) quotes[asset.symbol] = cached.value;
-        }
+    const dexResults = await Promise.allSettled(dexBatch.map((a) => resolveDexTokenFallback(a)));
+    for (let i = 0; i < dexBatch.length; i++) {
+      const asset = dexBatch[i];
+      const res = dexResults[i];
+      const dq = res.status === "fulfilled" ? res.value : null;
+      if (dq) {
+        quotes[asset.symbol] = dq;
+        telemetry[asset.symbol] = { price: dq.price, change24h: dq.change };
+        dexCount++;
+      } else {
+        const cached = quoteCache.get(asset.symbol);
+        if (cached) quotes[asset.symbol] = cached.value;
       }
     }
     if (dexCount > 0) sources.add("DexScreener Live");
@@ -1220,10 +1216,9 @@ async function buildSnapshot(): Promise<MarketSnapshot> {
   }
 }
 
-const COLD_START_BUDGET_MS = 12000;
+const COLD_START_BUDGET_MS = 5000;
 
-export async function ensureMarketData(force = false): Promise<MarketSnapshot> {
-  if (!force && snapshot && Date.now() - snapshot.fetchedAt < QUOTE_TTL) return snapshot;
+function startSnapshotRefresh(): Promise<MarketSnapshot> {
   if (!inflight) {
     inflight = buildSnapshot()
       .then((next) => {
@@ -1243,6 +1238,19 @@ export async function ensureMarketData(force = false): Promise<MarketSnapshot> {
         inflight = null;
       });
   }
+  return inflight;
+}
+
+export async function ensureMarketData(force = false): Promise<MarketSnapshot> {
+  if (!force && snapshot) {
+    if (Date.now() - snapshot.fetchedAt >= QUOTE_TTL) {
+      // Stale-while-revalidate: refresh in background without blocking SSR/API responses
+      void startSnapshotRefresh();
+    }
+    return snapshot;
+  }
+
+  const pending = startSnapshotRefresh();
 
   if (!snapshot && !force) {
     const fallback: MarketSnapshot = {
@@ -1254,12 +1262,12 @@ export async function ensureMarketData(force = false): Promise<MarketSnapshot> {
       missing: [],
     };
     return Promise.race([
-      inflight,
+      pending,
       new Promise<MarketSnapshot>((resolve) => setTimeout(() => resolve(fallback), COLD_START_BUDGET_MS)),
     ]);
   }
 
-  return inflight;
+  return pending;
 }
 
 export function getCachedSnapshot(): MarketSnapshot | null {

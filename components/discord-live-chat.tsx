@@ -6,7 +6,6 @@ import {
   Hash,
   Send,
   Zap,
-  Sparkles,
   Bot,
   Clock,
   ExternalLink,

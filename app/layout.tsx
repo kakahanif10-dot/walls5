@@ -3,6 +3,7 @@ import "./globals.css";
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import LivePricesProvider from "@/components/live-prices";
+import { LifetimeRouteGuard } from "@/components/locked-action";
 import { AuthProvider } from "@/lib/auth-context";
 import { WhopProvider } from "@/lib/whop-context";
 import { liveSeed } from "@/lib/market";
@@ -90,7 +91,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           <WhopProvider>
             <LivePricesProvider seed={liveSeed()} source={source} delayed={delayed}>
               <SiteHeader />
-              <main>{children}</main>
+              <main>
+                <LifetimeRouteGuard>{children}</LifetimeRouteGuard>
+              </main>
               <SiteFooter />
             </LivePricesProvider>
           </WhopProvider>

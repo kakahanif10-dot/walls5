@@ -18,6 +18,11 @@ import {
   MessariResearchView,
   NansenArkhamView,
 } from "./crypto-views";
+import {
+  AiSentimentToolView,
+  TopSignalsToolView,
+  WhaleAlertToolView,
+} from "./frontpage-tool-views";
 
 export default function InstitutionalToolRouter({ slug }: { slug: InstitutionalToolSlug }) {
   switch (slug) {
@@ -45,6 +50,12 @@ export default function InstitutionalToolRouter({ slug }: { slug: InstitutionalT
       return <CoinMetricsKaikoView />;
     case "crypto-fear-greed":
       return <CryptoFearGreedView />;
+    case "whale-alert":
+      return <WhaleAlertToolView />;
+    case "ai-sentiment":
+      return <AiSentimentToolView />;
+    case "top-signals":
+      return <TopSignalsToolView />;
     default:
       return <BloombergDeskView />;
   }

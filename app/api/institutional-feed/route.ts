@@ -13,6 +13,11 @@ import {
   computeSentimentStats,
   normalizeAlternativeMeEntries,
 } from "@/lib/crypto-fear-greed";
+import {
+  getLiveAiSentimentFeed,
+  getLiveTopSignalsFeed,
+  getLiveWhaleAlertFeed,
+} from "@/lib/live-frontpage-data";
 
 export const dynamic = "force-dynamic";
 
@@ -1457,6 +1462,12 @@ export async function GET(req: NextRequest) {
       return handleCoinMetricsKaiko(symbol);
     case "crypto-fear-greed":
       return handleCryptoFearGreed();
+    case "whale-alert":
+      return NextResponse.json(await getLiveWhaleAlertFeed());
+    case "ai-sentiment":
+      return NextResponse.json(await getLiveAiSentimentFeed());
+    case "top-signals":
+      return NextResponse.json(await getLiveTopSignalsFeed(18));
     default:
       return NextResponse.json({ error: "Unknown tool parameter" }, { status: 400 });
   }

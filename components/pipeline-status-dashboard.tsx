@@ -18,7 +18,6 @@ import {
   ChevronLeft,
   Info,
   Clock,
-  Sparkles,
   BarChart2,
   Filter,
   X,

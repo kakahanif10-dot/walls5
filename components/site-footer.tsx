@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ASSETS } from "@/lib/market";
+import { LockedLink } from "@/components/locked-action";
 
 const COLUMNS = [
   {
@@ -34,8 +35,8 @@ const COLUMNS = [
   {
     title: "Company",
     links: [
-      { href: "/pricing", label: "Lifetime access ($2,497)" },
-      { href: "/disclaimer", label: "Disclaimer & methodology" },
+      { href: "/pricing", label: "Lifetime access ($1,487 USD)", isPublic: true },
+      { href: "/disclaimer", label: "Disclaimer & methodology", isPublic: true },
     ],
   },
 ];
@@ -54,7 +55,7 @@ export default function SiteFooter() {
               speculative markets — plus the education to use it responsibly.
             </p>
             <p className="mt-5 text-xs leading-relaxed text-muted/70">
-              {ASSETS.length.toLocaleString()} Assets Tracked · 70 Research Desks · 60 Academy Lessons · 29 Trade Tools · 1,100+ Community Members
+              {ASSETS.length.toLocaleString()} Assets Tracked · 70 Research Desks · 60 Academy Lessons · 32 Trade Tools · 1,100+ Community Members
             </p>
           </div>
 
@@ -66,12 +67,22 @@ export default function SiteFooter() {
               <ul className="mt-4 space-y-2.5">
                 {col.links.map((link) => (
                   <li key={link.href + link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-bone/75 transition-colors hover:text-gold-bright"
-                    >
-                      {link.label}
-                    </Link>
+                    {"isPublic" in link && link.isPublic ? (
+                      <Link
+                        href={link.href}
+                        className="text-sm text-bone/75 transition-colors hover:text-gold-bright"
+                      >
+                        {link.label}
+                      </Link>
+                    ) : (
+                      <LockedLink
+                        href={link.href}
+                        deskLabel={link.label}
+                        className="text-sm text-bone/75 transition-colors hover:text-gold-bright"
+                      >
+                        {link.label}
+                      </LockedLink>
+                    )}
                   </li>
                 ))}
               </ul>

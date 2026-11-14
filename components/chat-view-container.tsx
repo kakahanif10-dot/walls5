@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import DiscordLiveChat from "@/components/discord-live-chat";
 import GeminiQuantTerminal from "@/components/gemini-quant-terminal";
 import WhopBadge from "@/components/whop-badge";
-import { Sparkles, Users, Columns2 } from "lucide-react";
+import { BrainCircuit, Users, Columns2 } from "lucide-react";
 
 export type FloorMode = "nws-ai" | "split" | "discord";
 
@@ -44,7 +44,7 @@ export default function ChatViewContainer({ initialFloor = "discord" }: ChatView
             }`}
             title="NWS AI Quantitative Terminal (Option on left)"
           >
-            <Sparkles className="h-3.5 w-3.5" />
+            <BrainCircuit className="h-3.5 w-3.5" />
             <span>NWS AI (Option)</span>
           </button>
 
@@ -83,7 +83,7 @@ export default function ChatViewContainer({ initialFloor = "discord" }: ChatView
           <div className="space-y-2">
             <div className="flex items-center justify-between rounded-lg border border-gold/30 bg-gold/[0.05] px-3 py-1.5">
               <span className="font-mono text-xs font-semibold text-gold-bright flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-gold" />
+                <BrainCircuit className="h-3.5 w-3.5 text-gold" />
                 NWS AI Quantitative Intelligence (Option · Left)
               </span>
               <button

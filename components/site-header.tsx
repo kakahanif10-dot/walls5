@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, type MouseEvent } from "react";
 import LiveClock from "@/components/live-clock";
 import FeedBadge from "@/components/feed-badge";
 import AuthButton from "@/components/auth-button";
 import GlobalSearchModal from "@/components/global-search";
+import { useWhop } from "@/lib/whop-context";
 import {
   Menu,
   Search,
@@ -26,7 +27,7 @@ import {
   Bookmark,
   ExternalLink,
   Activity,
-  Sparkles,
+  BrainCircuit,
   ShieldCheck,
   Calculator,
   Monitor,
@@ -82,7 +83,7 @@ export const ALL_MAIN_ITEMS: MainDirectoryItem[] = [
     href: "/nws-ai",
     label: "NWS AI",
     desc: "Titan 4.0 reasoning, 24kHz voice & search grounding terminal",
-    icon: Sparkles,
+    icon: BrainCircuit,
     live: true,
   },
   {
@@ -248,10 +249,32 @@ export const ALL_MAIN_ITEMS: MainDirectoryItem[] = [
     desc: "Complete institutional quantitative research directory",
     icon: Cpu,
   },
+  {
+    href: "/tools/whale-alert",
+    label: "Live Whale Movement Feed",
+    desc: "Real-time ETH block whale alerts, spot blocks & stablecoin flows",
+    icon: Radar,
+    live: true,
+  },
+  {
+    href: "/tools/ai-sentiment",
+    label: "AI Market Sentiment",
+    desc: "Real-time AI sentiment synthesis across Fear & Greed & equities breadth",
+    icon: BrainCircuit,
+    live: true,
+  },
+  {
+    href: "/tools/top-signals",
+    label: "Top 3 Signals Today",
+    desc: "Daily highest-conviction scores with live price targets & stops",
+    icon: TrendingUp,
+    live: true,
+  },
 ];
 
 export default function SiteHeader() {
   const pathname = usePathname();
+  const { isUnlocked, openWhopModal } = useWhop();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [directoryOpen, setDirectoryOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
@@ -262,6 +285,20 @@ export default function SiteHeader() {
     pathname.startsWith(`${href}/`) ||
     (href === "/crypto" && pathname === "/meme-coins");
 
+  const handleLockedNav = (e: MouseEvent<HTMLAnchorElement>, label: string) => {
+    if (!isUnlocked) {
+      e.preventDefault();
+      e.stopPropagation();
+      setDirectoryOpen(false);
+      setMobileOpen(false);
+      openWhopModal(label);
+      return true;
+    }
+    setDirectoryOpen(false);
+    setMobileOpen(false);
+    return false;
+  };
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -269,7 +306,7 @@ export default function SiteHeader() {
         setMobileOpen(false);
       }
     };
-    const handlePointerDown = (e: MouseEvent) => {
+    const handlePointerDown = (e: MouseEvent | globalThis.MouseEvent) => {
       if (headerRef.current && !headerRef.current.contains(e.target as Node)) {
         setDirectoryOpen(false);
       }
@@ -306,7 +343,8 @@ export default function SiteHeader() {
               <Link
                 key={link.href}
                 href={link.href}
-                onClick={() => setDirectoryOpen(false)}
+                prefetch={isUnlocked ? undefined : false}
+                onClick={(e) => handleLockedNav(e, link.label)}
                 className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] xl:text-sm whitespace-nowrap transition-colors ${
                   isActive(link.href)
                     ? "bg-ink-800 text-bone"
@@ -349,7 +387,7 @@ export default function SiteHeader() {
                 </span>
               </button>
 
-              {/* Compact Elongated Popover Dropdown (Not Full Page) */}
+              {/* Compact Elongated Popover Dropdown */}
               {directoryOpen && (
                 <div
                   id="trade-tools-directory-menu"
@@ -369,7 +407,9 @@ export default function SiteHeader() {
                         </span>
                       </div>
                       <p className="text-[11px] text-muted mt-0.5">
-                        Clicking an item opens in a new tab <span className="text-gold">↗</span>
+                        {isUnlocked
+                          ? "Clicking an item opens in a new tab ↗"
+                          : "Lifetime Premium ($1,487 USD) unlocks all 32 tools"}
                       </p>
                     </div>
                     <button
@@ -383,7 +423,7 @@ export default function SiteHeader() {
                     </button>
                   </div>
 
-                  {/* Elongated Clean Scrollable Single List (15 items) */}
+                  {/* Elongated Clean Scrollable Single List (32 items) */}
                   <div className="mt-2 max-h-[62vh] sm:max-h-[520px] space-y-1 overflow-y-auto pr-1 overscroll-contain">
                     {ALL_MAIN_ITEMS.map((item, idx) => {
                       const Icon = item.icon;
@@ -392,9 +432,15 @@ export default function SiteHeader() {
                         <Link
                           key={`all-main-${idx}-${item.label}`}
                           href={item.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          onClick={() => setDirectoryOpen(false)}
+                          prefetch={isUnlocked ? undefined : false}
+                          target={isUnlocked ? "_blank" : undefined}
+                          rel={isUnlocked ? "noopener noreferrer" : undefined}
+                          onClick={(e) =>
+                            handleLockedNav(
+                              e,
+                              `Trade Tool #${String(idx + 1).padStart(2, "0")} · ${item.label}`,
+                            )
+                          }
                           className={`group flex items-center justify-between gap-3 rounded-xl px-2.5 py-2 text-xs transition-all ${
                             active
                               ? "bg-gold/15 text-gold-bright border border-gold/40 shadow-inner"
@@ -425,9 +471,11 @@ export default function SiteHeader() {
                               </p>
                             </div>
                           </div>
-                          <div className="flex shrink-0 items-center gap-1">
-                            <ExternalLink className="h-3 w-3 text-muted/50 group-hover:text-gold-bright transition-colors" />
-                          </div>
+                          {isUnlocked && (
+                            <div className="flex shrink-0 items-center gap-1">
+                              <ExternalLink className="h-3 w-3 text-muted/50 group-hover:text-gold-bright transition-colors" />
+                            </div>
+                          )}
                         </Link>
                       );
                     })}
@@ -438,33 +486,33 @@ export default function SiteHeader() {
                     <div className="flex items-center gap-3">
                       <Link
                         href="/pipeline"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => setDirectoryOpen(false)}
+                        prefetch={isUnlocked ? undefined : false}
+                        target={isUnlocked ? "_blank" : undefined}
+                        rel={isUnlocked ? "noopener noreferrer" : undefined}
+                        onClick={(e) => handleLockedNav(e, "Live Market Pipeline")}
                         className="hover:text-gold-bright flex items-center gap-1 transition-colors"
                       >
                         <Activity className="h-3 w-3 text-gold" />
-                        <span>Pipeline ↗</span>
+                        <span>Pipeline</span>
                       </Link>
                       <Link
                         href="/watchlist"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        onClick={() => setDirectoryOpen(false)}
+                        prefetch={isUnlocked ? undefined : false}
+                        target={isUnlocked ? "_blank" : undefined}
+                        rel={isUnlocked ? "noopener noreferrer" : undefined}
+                        onClick={(e) => handleLockedNav(e, "Watchlist")}
                         className="hover:text-gold-bright flex items-center gap-1 transition-colors"
                       >
                         <Bookmark className="h-3 w-3 text-gold" />
-                        <span>Watchlist ↗</span>
+                        <span>Watchlist</span>
                       </Link>
                     </div>
                     <Link
                       href="/pricing"
-                      target="_blank"
-                      rel="noopener noreferrer"
                       onClick={() => setDirectoryOpen(false)}
                       className="font-medium text-gold-bright hover:underline"
                     >
-                      Get Lifetime Access ↗
+                      Get Lifetime Access →
                     </Link>
                   </div>
                 </div>
@@ -473,14 +521,15 @@ export default function SiteHeader() {
 
             <Link
               href="/watchlist"
-              onClick={() => setDirectoryOpen(false)}
-              className={`rounded-full px-3 py-1.5 text-[13px] xl:text-sm whitespace-nowrap transition-colors ${
+              prefetch={isUnlocked ? undefined : false}
+              onClick={(e) => handleLockedNav(e, "Watchlist")}
+              className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] xl:text-sm whitespace-nowrap transition-colors ${
                 isActive("/watchlist")
                   ? "bg-ink-800 text-bone"
                   : "text-muted hover:bg-ink-850 hover:text-bone"
               }`}
             >
-              Watchlist
+              <span>Watchlist</span>
             </Link>
           </nav>
 
@@ -543,7 +592,7 @@ export default function SiteHeader() {
           </div>
         </div>
 
-        {/* Mobile Drawer (Only Single Clean List with 14 Items, Opening in New Tab) */}
+        {/* Mobile Drawer */}
         {mobileOpen && (
           <nav className="max-h-[84vh] overflow-y-auto border-t border-line/70 bg-ink-950 px-5 pb-6 pt-3 lg:hidden space-y-4">
             <div className="flex items-center justify-between border-b border-line/60 pb-3">
@@ -557,7 +606,8 @@ export default function SiteHeader() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  onClick={() => setMobileOpen(false)}
+                  prefetch={isUnlocked ? undefined : false}
+                  onClick={(e) => handleLockedNav(e, link.label)}
                   className={`flex items-center justify-between rounded-md px-3 py-2 text-sm ${
                     isActive(link.href) ? "bg-ink-800 text-bone" : "text-muted hover:text-bone"
                   }`}
@@ -580,13 +630,15 @@ export default function SiteHeader() {
               ))}
             </div>
 
-            {/* Single Unified Trade Tools Directory (15 items) */}
+            {/* Single Unified Trade Tools Directory (32 items) */}
             <div className="border-t border-line/60 pt-3 space-y-1.5">
               <div className="flex items-center justify-between px-2 pb-1">
                 <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-gold">
                   Directory · Trade Tools ({ALL_MAIN_ITEMS.length})
                 </p>
-                <span className="text-[10px] text-muted">Opens in new tab ↗</span>
+                <span className="text-[10px] text-muted">
+                  {isUnlocked ? "Opens in new tab ↗" : "$1,487 USD Lifetime"}
+                </span>
               </div>
               {ALL_MAIN_ITEMS.map((item, idx) => {
                 const Icon = item.icon;
@@ -594,9 +646,15 @@ export default function SiteHeader() {
                   <Link
                     key={`m-main-${idx}-${item.label}`}
                     href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => setMobileOpen(false)}
+                    prefetch={isUnlocked ? undefined : false}
+                    target={isUnlocked ? "_blank" : undefined}
+                    rel={isUnlocked ? "noopener noreferrer" : undefined}
+                    onClick={(e) =>
+                      handleLockedNav(
+                        e,
+                        `Trade Tool #${String(idx + 1).padStart(2, "0")} · ${item.label}`,
+                      )
+                    }
                     className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium ${
                       isActive(item.href) ? "bg-ink-800 text-gold-bright" : "text-bone/90 hover:bg-ink-900 hover:text-gold-bright"
                     }`}
@@ -613,7 +671,9 @@ export default function SiteHeader() {
                         </span>
                       )}
                     </span>
-                    <ExternalLink className="h-3 w-3 text-muted/60" />
+                    {isUnlocked && (
+                      <ExternalLink className="h-3 w-3 text-muted/60" />
+                    )}
                   </Link>
                 );
               })}

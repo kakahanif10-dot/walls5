@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import {
-  Sparkles,
+  BrainCircuit,
   Send,
   Search,
   Mic,
@@ -402,7 +402,7 @@ export default function GeminiQuantTerminal() {
       <div className="border-b border-line/70 bg-ink-900/90 px-4 py-3 sm:px-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
         <div className="flex items-center gap-3">
           <div className="h-9 w-9 rounded-xl border border-gold/40 bg-gold/10 flex items-center justify-center text-gold">
-            <Sparkles className="h-5 w-5" />
+            <BrainCircuit className="h-5 w-5" />
           </div>
           <div>
             <div className="flex items-center gap-2">

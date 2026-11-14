@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import GlobalMarketsView from "@/components/global-markets-view";
 import WhopBadge from "@/components/whop-badge";
-import { Globe, Sparkles, Bell, TrendingUp, MapPin } from "lucide-react";
+import { Globe, Activity, Bell, TrendingUp, MapPin } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Global Markets & Financial Exchanges Map — NextWallStreet",
@@ -58,7 +58,7 @@ export default function OpenStockPage() {
               Multi-Tab Technical Overlays
             </span>
             <span className="flex items-center gap-1.5 text-stone-200">
-              <Sparkles className="h-3.5 w-3.5 text-[#d8ab5a]" />
+              <Activity className="h-3.5 w-3.5 text-[#d8ab5a]" />
               Social &amp; Crowd Sentiment Radar
             </span>
             <span className="flex items-center gap-1.5 text-stone-200">

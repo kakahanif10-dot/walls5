@@ -32,7 +32,7 @@ export default function FastAlertBanner() {
           </div>
 
           <h2 className="mt-4 font-display text-2xl sm:text-3xl text-bone leading-tight">
-            Realize Immediate $29/Month Value Daily on Your Mobile Terminal.
+            Instantaneous Signal Alerts Delivered Daily to Your Terminal.
           </h2>
 
           <p className="mt-3 text-sm text-muted leading-relaxed max-w-xl">
@@ -129,7 +129,7 @@ export default function FastAlertBanner() {
           )}
 
           <p className="text-[10px] text-muted/70 text-center">
-            Standard with PRO Membership ($29/month). Dispatched daily at New York Bell, Level Invalidation, and Volume Outliers.
+            Included with Lifetime Premium ($1,487 USD one-time). Dispatched daily at New York Bell, Level Invalidation, and Volume Outliers.
           </p>
         </div>
       </div>

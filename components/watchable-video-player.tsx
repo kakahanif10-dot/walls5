@@ -13,7 +13,6 @@ import {
   Bookmark,
   CheckCircle,
   HelpCircle,
-  Sparkles,
   Layers,
   Clock,
   ChevronRight,
@@ -635,7 +634,7 @@ export default function WatchableVideoPlayer({
         <div>
           <div className="flex flex-wrap items-center gap-2">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/50 bg-gold/15 px-3 py-0.5 text-[10px] font-bold uppercase tracking-[0.16em] text-gold-bright">
-              <Sparkles className="h-3 w-3 text-gold" />
+              <GraduationCap className="h-3.5 w-3.5 text-gold" />
               <span>Watchable Video Academy (20 Masterclasses)</span>
               <WhopBadge className="ml-1" />
             </span>

@@ -8,7 +8,6 @@ import {
   Search,
   X,
   BarChart3,
-  Sparkles,
   MessageSquare,
   Share2,
   Vote,
@@ -487,7 +486,7 @@ export default function OpenStockHub() {
           <div className="border-b border-white/[0.07] pb-3 flex items-center justify-between">
             <div>
               <h3 className="font-display text-base font-medium text-[#f2efe8] flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[#d8ab5a]" />
+                <BarChart3 className="h-4 w-4 text-[#d8ab5a]" />
                 Social Sentiment Radar: ${activeAsset.symbol}
               </h3>
               <p className="text-xs text-stone-400 font-mono">

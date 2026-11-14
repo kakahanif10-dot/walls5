@@ -9,7 +9,6 @@ import {
   Info,
   Filter,
   X,
-  Sparkles,
   ArrowUpRight,
 } from "lucide-react";
 import {

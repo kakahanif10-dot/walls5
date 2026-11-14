@@ -14,18 +14,28 @@ const checkoutLinks: CheckoutLinks = {
   },
 };
 
-export function getWhopCheckoutUrl(
-  planId: PaidPlanId,
-  cadence: BillingCadence,
-): string | null {
-  const value = checkoutLinks[planId][cadence]?.trim();
-
-  if (!value) return null;
-
+function sanitizeHttpsUrl(value: string | undefined): string | null {
+  const trimmed = value?.trim();
+  if (!trimmed) return null;
   try {
-    const url = new URL(value);
+    const url = new URL(trimmed);
     return url.protocol === "https:" ? url.toString() : null;
   } catch {
     return null;
   }
+}
+
+export function getWhopCheckoutUrl(
+  planId: PaidPlanId,
+  cadence: BillingCadence,
+): string | null {
+  return sanitizeHttpsUrl(checkoutLinks[planId][cadence]);
+}
+
+export function getLifetimeCheckoutUrl(): string | null {
+  return (
+    sanitizeHttpsUrl(process.env.NEXT_PUBLIC_WHOP_CHECKOUT_LIFETIME_URL) ??
+    sanitizeHttpsUrl(process.env.NEXT_PUBLIC_WHOP_CHECKOUT_PREMIUM_ANNUAL_URL) ??
+    sanitizeHttpsUrl(process.env.NEXT_PUBLIC_WHOP_CHECKOUT_PREMIUM_MONTHLY_URL)
+  );
 }

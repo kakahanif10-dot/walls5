@@ -2,46 +2,43 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, HelpCircle, Check, X, ShieldCheck, Zap } from "lucide-react";
-import WhopBadge from "./whop-badge";
+import { ChevronDown, HelpCircle, ShieldCheck, Check } from "lucide-react";
 
 interface FAQItem {
   question: string;
   answer: string;
-  freeVsPremium?: {
-    free: string;
-    premium: string;
-  };
 }
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    question: "What is the primary difference between Free (Reader) and Lifetime Access (PRO)?",
-    answer: "Free Reader access provides foundational training and transparency into our scoring philosophy. Lifetime Access ($2,497 one-time) permanently unlocks all 2,038+ daily trend scores, exact invalidation price levels, all 4 Academy courses (60 video masterclasses), 70 research decks, real-time terminal dispatch, and all future desk updates with zero recurring monthly fees.",
-    freeVsPremium: {
-      free: "Foundation Course ('Reading a Trend'), 2 monthly research pieces, public board scores, no terminal dispatch.",
-      premium: "All 4 Complete Curriculums, 60 HD Masterclasses, 70 Research Decks, Sub-second Telegram & Discord Terminal Dispatch, Position Sizing Engine, and all future desk updates.",
-    },
+    question: "What does $1,487 USD Lifetime Premium include across the Academy?",
+    answer:
+      "Lifetime Premium ($1,487 USD one-time purchase) permanently unlocks all four Academy courses, all 60 interactive HD video masterclasses with synchronized takeaways, 70 institutional research decks, all 2,038+ daily trend scores, exact invalidation levels, all 32 trade tools, and community access.",
   },
   {
-    question: "Are the 60 Video Masterclasses in the Video Studio accessible for free?",
-    answer: "Lesson 01 across each curriculum module is available as a complimentary preview of our production quality. Unrestricted access to all 60 interactive masterclasses—complete with technical chart overlays, chapter bookmarks, synchronized takeaways, and comprehension quizzes—is included permanently with Lifetime Access.",
+    question: "Are the 60 Video Masterclasses included in the one-time purchase?",
+    answer:
+      "Yes. Unrestricted access to all 60 video masterclasses across Wall Street & Equities, Crypto & Microstructure, and Speculative Bonding Curve Mechanics is unlocked permanently upon payment verification.",
   },
   {
-    question: "Are there any recurring monthly fees with Lifetime Access?",
-    answer: "No. Lifetime Access is a single $2,497 one-time payment through Whop that unlocks permanent access across your cloud profile, including all future research updates and Academy additions.",
+    question: "Are there any recurring monthly or annual subscription fees?",
+    answer:
+      "No. Lifetime Premium is a single one-time payment of $1,487 USD processed through Whop, with zero recurring monthly renewals or hidden charges.",
   },
   {
     question: "Do I need to keep a browser window open during market hours?",
-    answer: "No. Our direct Telegram Terminal and Discord room integrations push real-time technical alerts, invalidation breaches, and pre-market desk memos straight to your mobile device, allowing seamless execution on the go.",
+    answer:
+      "No. Real-time score-change alerts, invalidation breaches, and pre-market desk notes push directly to your alert channels once Lifetime Premium is active.",
   },
   {
-    question: "Is the Academy curriculum suitable for beginning and intermediate traders?",
-    answer: "Yes. Our pedagogy is grounded in rigorous mathematical rules rather than subjective 'feel.' The curriculum begins with structural price action and moving average slope mechanics, progressing sequentially into order flow absorption, volatility-adjusted position sizing, and capital preservation.",
+    question: "Is the Academy curriculum suitable for intermediate and advanced traders?",
+    answer:
+      "Yes. Our curriculum is grounded in transparent quantitative rules: structural price action, moving average slope mechanics, cross-asset liquidity flows, volatility-adjusted position sizing, and capital preservation.",
   },
   {
-    question: "What is the desk's methodology regarding risk and market signals?",
-    answer: "We publish zero speculative certainty. No indicator or model possesses a guaranteed edge. Our framework teaches survival first: identifying the precise dollar level where the trend thesis breaks, so you can exit with minimal, mathematically bounded losses before drawdowns compound.",
+    question: "What is the desk methodology regarding risk and market signals?",
+    answer:
+      "We publish zero speculative certainty. Every asset includes an objective composite score, stance, and mathematical invalidation price where the thesis breaks so losses remain bounded.",
   },
 ];
 
@@ -54,75 +51,49 @@ export default function AcademyFAQ() {
 
   return (
     <div className="rounded-2xl border border-line bg-ink-900/60 p-6 sm:p-10 shadow-xl space-y-8">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-line/60 pb-6">
         <div>
-          <div className="flex items-center gap-2">
-            <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">
-              Membership Architecture &amp; FAQ
-            </span>
-            <WhopBadge size="xs" />
-          </div>
+          <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">
+            Membership Architecture &amp; FAQ
+          </span>
           <h2 className="mt-2 font-display text-3xl sm:text-4xl text-bone">
             Frequently Asked Questions
           </h2>
           <p className="mt-2 text-sm text-muted max-w-xl">
-            Understand the distinction between complimentary Reader access and full PRO Lifetime Access ($2,497 one-time) across the NextWallStreet Academy.
+            Everything included in NextWallStreet Lifetime Premium ($1,487 USD one-time purchase).
           </p>
         </div>
 
-        {/* Free vs Lifetime Quick Pill Indicator */}
         <div className="flex items-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 py-2.5 text-xs text-gold-bright shrink-0">
-          <Zap className="h-4 w-4 text-gold shrink-0" />
-          <span>$2,497 One-Time · Zero Monthly Fees</span>
+          <ShieldCheck className="h-4 w-4 text-gold shrink-0" />
+          <span>$1,487 USD One-Time · Lifetime Access</span>
         </div>
       </div>
 
-      {/* Quick Comparison Matrix Table */}
+      {/* Included Benefits Ledger */}
       <div className="overflow-hidden rounded-xl border border-line bg-ink-950">
-        <div className="grid grid-cols-3 bg-ink-900 text-xs font-semibold text-bone border-b border-line p-3 sm:p-4">
-          <div className="text-muted">Feature &amp; Curriculum Access</div>
-          <div className="text-center text-muted">Free Reader Access</div>
-          <div className="text-center text-gold-bright flex items-center justify-center gap-1">
-            <span>Lifetime Member ($2,497)</span>
-            <WhopBadge size="xs" />
-          </div>
+        <div className="grid grid-cols-[1fr_auto] bg-ink-900 text-xs font-semibold text-bone border-b border-line p-3 sm:p-4">
+          <div className="text-muted">Feature &amp; Curriculum Scope</div>
+          <div className="text-right text-gold-bright">Lifetime Premium ($1,487 USD)</div>
         </div>
 
         <div className="divide-y divide-line/60 text-xs">
           {[
-            { feature: "Foundation Course ('Reading a Trend')", free: true, pro: true },
-            { feature: "3 Advanced Curriculums (Crypto, Meme Risk, Sizing)", free: false, pro: true },
-            { feature: "60 HD Masterclasses with Interactive Studio", free: "Lesson 01 Only", pro: "All 60 Lessons Unrestricted" },
-            { feature: "70 Institutional Quantitative Research Decks", free: "2 Sample Decks", pro: "All 70 Decks Uncut" },
-            { feature: "Definitive Invalidation Levels (Stop Loss Anchors)", free: false, pro: true },
-            { feature: "60-Day Realized Volatility Sizing Calculator", free: false, pro: true },
-            { feature: "Sub-Second Telegram Terminal & Discord Alerts", free: false, pro: true },
-            { feature: "44 Specialized Quantitative Analyst Desks", free: "Limited Previews", pro: "Full 44 Desks Active" },
-          ].map((row, i) => (
-            <div key={i} className="grid grid-cols-3 p-3 sm:p-4 items-center hover:bg-ink-900/40 transition-colors">
-              <div className="text-bone/90 font-medium">{row.feature}</div>
-              <div className="text-center text-muted font-mono text-[11px]">
-                {typeof row.free === "boolean" ? (
-                  row.free ? (
-                    <Check className="h-4 w-4 text-emerald-400 mx-auto" />
-                  ) : (
-                    <X className="h-4 w-4 text-muted/50 mx-auto" />
-                  )
-                ) : (
-                  <span>{row.free}</span>
-                )}
-              </div>
-              <div className="text-center text-gold-bright font-mono text-[11px] font-semibold">
-                {typeof row.pro === "boolean" ? (
-                  row.pro ? (
-                    <Check className="h-4 w-4 text-emerald-400 mx-auto" />
-                  ) : (
-                    <X className="h-4 w-4 text-muted/50 mx-auto" />
-                  )
-                ) : (
-                  <span>{row.pro}</span>
-                )}
+            "All 4 Quantitative Curriculums (Structure, Crypto, Portfolio Sizing, Speculative Risk)",
+            "All 60 HD Watchable Video Masterclasses",
+            "All 70 Institutional Quantitative Research Decks",
+            "All 2,038+ Daily Asset Scores & Exact Invalidation Levels",
+            "60-Day Realized Volatility Position Sizing Engine",
+            "All 32 Trade Tools (#30 Whale Alert, #31 AI Sentiment, #32 Top Signals)",
+          ].map((feature) => (
+            <div
+              key={feature}
+              className="grid grid-cols-[1fr_auto] p-3 sm:p-4 items-center hover:bg-ink-900/40 transition-colors gap-4"
+            >
+              <div className="text-bone/90 font-medium">{feature}</div>
+              <div className="text-right text-emerald-400 font-mono text-[11px] font-semibold flex items-center gap-1.5">
+                <Check className="h-4 w-4" />
+                <span>Included</span>
               </div>
             </div>
           ))}
@@ -161,25 +132,8 @@ export default function AcademyFAQ() {
               </button>
 
               {isOpen && (
-                <div className="px-5 pb-5 pt-1 border-t border-line/60 text-xs text-muted leading-relaxed space-y-3 animate-in fade-in duration-150">
+                <div className="px-5 pb-5 pt-1 border-t border-line/60 text-xs text-muted leading-relaxed animate-in fade-in duration-150">
                   <p>{item.answer}</p>
-
-                  {item.freeVsPremium && (
-                    <div className="grid sm:grid-cols-2 gap-3 pt-2">
-                      <div className="rounded-lg border border-line bg-ink-950 p-3">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-muted block mb-1">
-                          Free Reader Tier:
-                        </span>
-                        <p className="text-bone/80 text-[11px]">{item.freeVsPremium.free}</p>
-                      </div>
-                      <div className="rounded-lg border border-gold/40 bg-gold/10 p-3">
-                        <span className="text-[10px] font-bold uppercase tracking-wider text-gold-bright block mb-1">
-                          PRO Membership ($29/mo):
-                        </span>
-                        <p className="text-gold-bright text-[11px] font-medium">{item.freeVsPremium.premium}</p>
-                      </div>
-                    </div>
-                  )}
                 </div>
               )}
             </div>
@@ -187,15 +141,14 @@ export default function AcademyFAQ() {
         })}
       </div>
 
-      {/* Institutional Subscriber Concierge Footer */}
       <div className="rounded-xl border border-gold/30 bg-ink-950 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
           <p className="font-semibold text-bone text-sm flex items-center gap-1.5">
             <ShieldCheck className="h-4 w-4 text-gold" />
-            Institutional Subscriber Inquiries &amp; Desk Concierge
+            Lifetime Premium Checkout &amp; Activation
           </p>
           <p className="text-xs text-muted mt-1">
-            Institutional multi-seat access, signal audit trail exports, or custom research inquiries are handled directly by the quantitative desk.
+            One-time $1,487 USD purchase via Whop activates permanent access after payment verification.
           </p>
         </div>
         <div className="flex gap-2 shrink-0">
@@ -203,7 +156,7 @@ export default function AcademyFAQ() {
             href="/pricing"
             className="rounded-xl bg-gold px-5 py-2.5 text-xs font-bold text-ink-950 hover:bg-gold-bright transition shadow"
           >
-            Start 14-Day Free Trial
+            Continue to Lifetime Premium — $1,487 USD
           </Link>
         </div>
       </div>
