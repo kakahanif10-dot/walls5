@@ -250,15 +250,14 @@ export function CryptoFearGreedView() {
     >
       {({ isLight }) => {
         const card = isLight
-          ? "bg-white border-slate-200 text-slate-900"
-          : "bg-zinc-950/75 border-zinc-800 text-zinc-100";
+          ? "bg-white text-slate-900"
+          : "bg-ink-950/75 text-zinc-100";
         const subCard = isLight
-          ? "bg-slate-50 border-slate-200"
-          : "bg-zinc-900/60 border-zinc-800";
+          ? "bg-slate-50 text-slate-900"
+          : "bg-ink-900/65 text-zinc-100";
         const muted = isLight ? "text-slate-500" : "text-zinc-400";
-        const border = isLight ? "border-slate-200" : "border-zinc-800";
-        const thBg = isLight ? "bg-slate-50 text-slate-600" : "bg-zinc-900/90 text-zinc-400";
-        const rowHover = isLight ? "hover:bg-slate-50" : "hover:bg-zinc-900/60";
+        const thBg = isLight ? "bg-slate-100 text-slate-600" : "bg-ink-900/90 text-zinc-400";
+        const rowHover = isLight ? "hover:bg-slate-100/70" : "hover:bg-ink-900/50";
 
         const currentScore = stats?.current.value ?? 0;
         const currentMeta = stats?.meta ?? classifySentiment(currentScore);
@@ -269,7 +268,7 @@ export function CryptoFearGreedView() {
         return (
           <div className="space-y-5" data-testid="crypto-fear-greed-module">
             {error && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-300">
                 <span className="flex items-center gap-2">
                   <AlertTriangle className="h-4 w-4 shrink-0" />
                   <span>{error}</span>
@@ -277,7 +276,7 @@ export function CryptoFearGreedView() {
                 <button
                   type="button"
                   onClick={load}
-                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                  className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-medium hover:bg-rose-500/30"
                 >
                   Retry
                 </button>
@@ -287,7 +286,7 @@ export function CryptoFearGreedView() {
             {/* Primary Gauge + 90D History Chart */}
             <div className="grid gap-5 lg:grid-cols-12">
               {/* Left: Live Sentiment Gauge & Deltas */}
-              <div className={`min-w-0 lg:col-span-5 rounded-xl border p-4 sm:p-5 flex flex-col justify-between space-y-4 ${card}`}>
+              <div className={`min-w-0 lg:col-span-5 rounded-xl p-4 sm:p-5 flex flex-col justify-between space-y-4 ${card}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className="flex items-center gap-1.5 text-xs font-semibold">
@@ -303,7 +302,7 @@ export function CryptoFearGreedView() {
                     </p>
                   </div>
                   <span
-                    className={`rounded-md border px-2 py-0.5 font-mono text-[11px] font-semibold ${
+                    className={`rounded-lg px-2.5 py-1 font-mono text-[11px] font-semibold ${
                       isLight ? currentMeta.badgeClassLight : currentMeta.badgeClassDark
                     }`}
                     data-testid="sentiment-zone-badge"
@@ -320,7 +319,7 @@ export function CryptoFearGreedView() {
                       isLight={isLight}
                     />
                   ) : (
-                    <div className={`flex h-40 items-center justify-center rounded-lg border text-xs font-mono ${subCard} ${muted}`}>
+                    <div className={`flex h-40 items-center justify-center rounded-xl text-xs font-mono ${subCard} ${muted}`}>
                       {loading ? "Syncing Alternative.me F&G gauge..." : "Live Fear & Greed reading unavailable"}
                     </div>
                   )}
@@ -333,7 +332,7 @@ export function CryptoFearGreedView() {
                     { label: "7d Delta", val: stats?.delta7d ?? 0 },
                     { label: "30d Delta", val: stats?.delta30d ?? 0 },
                   ].map((d) => (
-                    <div key={d.label} className={`rounded-lg border p-2 sm:p-2.5 ${subCard}`}>
+                    <div key={d.label} className={`rounded-xl p-2.5 sm:p-3 ${subCard}`}>
                       <div className={`font-sans text-[10px] sm:text-[11px] ${muted}`}>{d.label}</div>
                       <div
                         className={`mt-1 text-xs sm:text-sm font-semibold whitespace-nowrap flex items-center gap-1 ${
@@ -356,7 +355,7 @@ export function CryptoFearGreedView() {
                 </div>
 
                 {/* Update Countdown & Regime Streak */}
-                <div className={`flex flex-wrap items-center justify-between gap-2 border-t pt-3 text-[11px] ${border} ${muted}`}>
+                <div className={`flex flex-wrap items-center justify-between gap-2 pt-2 text-[11px] ${muted}`}>
                   <span className="inline-flex items-center gap-1.5 font-mono">
                     <Clock className="h-3.5 w-3.5 text-amber-500" aria-hidden="true" />
                     <span>Next update: {formatCountdown(data?.timeUntilUpdateSec ?? null)}</span>
@@ -371,7 +370,7 @@ export function CryptoFearGreedView() {
               </div>
 
               {/* Right: Historical Regime Chart */}
-              <div className={`min-w-0 lg:col-span-7 rounded-xl border p-4 sm:p-5 flex flex-col justify-between space-y-4 ${card}`}>
+              <div className={`min-w-0 lg:col-span-7 rounded-xl p-4 sm:p-5 flex flex-col justify-between space-y-4 ${card}`}>
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <h3 className="text-sm font-semibold">
@@ -392,9 +391,9 @@ export function CryptoFearGreedView() {
                           setActiveIndex(null);
                         }}
                         aria-pressed={timeframe === tf}
-                        className={`rounded-lg border px-2.5 py-1 font-mono text-xs font-semibold transition-colors ${
+                        className={`rounded-xl px-2.5 py-1 font-mono text-xs font-semibold transition-colors ${
                           timeframe === tf
-                            ? "border-emerald-500 bg-emerald-500/15 text-emerald-400"
+                            ? "bg-emerald-500/20 text-emerald-400"
                             : `${subCard} ${muted}`
                         }`}
                       >
@@ -405,7 +404,7 @@ export function CryptoFearGreedView() {
                 </div>
 
                 {/* Inspected Point Readout Bar */}
-                <div className={`flex flex-wrap items-center justify-between gap-3 rounded-lg border px-3.5 py-2 text-xs font-mono tabular-nums ${subCard}`}>
+                <div className={`flex flex-wrap items-center justify-between gap-3 rounded-xl px-3.5 py-2.5 text-xs font-mono tabular-nums ${subCard}`}>
                   <div className="flex items-center gap-2.5">
                     <span className={muted}>{inspectedPoint?.date ?? "—"}</span>
                     <span className="font-semibold text-sm" style={{ color: inspectedMeta.accentHex }}>
@@ -564,7 +563,7 @@ export function CryptoFearGreedView() {
                       <button
                         type="button"
                         onClick={load}
-                        className="rounded-lg border border-emerald-500/40 px-2.5 py-1 font-mono text-[11px] text-emerald-400 hover:bg-emerald-500/10"
+                        className="rounded-lg bg-emerald-500/15 px-3 py-1.5 font-mono text-[11px] text-emerald-400 hover:bg-emerald-500/25"
                       >
                         Retry Live Feed
                       </button>
@@ -574,25 +573,25 @@ export function CryptoFearGreedView() {
 
                 {/* Statistical Extremes Summary */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 font-mono text-xs tabular-nums">
-                  <div className={`rounded-lg border p-2.5 ${subCard}`}>
+                  <div className={`rounded-xl p-3 ${subCard}`}>
                     <div className={`font-sans text-[11px] ${muted}`}>7D / 90D Average</div>
                     <div className="mt-1 font-semibold">
                       {stats ? `${stats.avg7d.toFixed(1)} / ${stats.avg90d.toFixed(1)}` : "—"}
                     </div>
                   </div>
-                  <div className={`rounded-lg border p-2.5 ${subCard}`}>
+                  <div className={`rounded-xl p-3 ${subCard}`}>
                     <div className={`font-sans text-[11px] ${muted}`}>90D Min – Max</div>
                     <div className="mt-1 font-semibold">
                       {stats ? `${stats.min90d} – ${stats.max90d}` : "—"}
                     </div>
                   </div>
-                  <div className={`rounded-lg border p-2.5 ${subCard}`}>
+                  <div className={`rounded-xl p-3 ${subCard}`}>
                     <div className={`font-sans text-[11px] ${muted}`}>30D Extreme Fear</div>
                     <div className="mt-1 font-semibold text-rose-500">
                       {stats ? `${stats.extremeFearDays30d} days` : "—"}
                     </div>
                   </div>
-                  <div className={`rounded-lg border p-2.5 ${subCard}`}>
+                  <div className={`rounded-xl p-3 ${subCard}`}>
                     <div className={`font-sans text-[11px] ${muted}`}>30D Extreme Greed</div>
                     <div className="mt-1 font-semibold text-emerald-500">
                       {stats ? `${stats.extremeGreedDays30d} days` : "—"}
@@ -653,7 +652,7 @@ export function CryptoFearGreedView() {
                   sub: market?.marketCapChange24hPct,
                 },
               ].map((kpi) => (
-                <div key={kpi.label} className={`rounded-xl border p-3.5 ${card}`}>
+                <div key={kpi.label} className={`rounded-xl p-3.5 ${card}`}>
                   <div className={`text-[11px] ${muted}`}>{kpi.label}</div>
                   <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
                     {kpi.value}
@@ -677,7 +676,7 @@ export function CryptoFearGreedView() {
             {/* Bottom Grid: Contrarian Regime Playbook + 5-Band Reference + Daily Readings */}
             <div className="grid gap-5 lg:grid-cols-12">
               {/* Contrarian Regime Playbook & Band Matrix */}
-              <div className={`min-w-0 lg:col-span-7 rounded-xl border p-4 sm:p-5 space-y-4 ${card}`}>
+              <div className={`min-w-0 lg:col-span-7 rounded-xl p-4 sm:p-5 space-y-4 ${card}`}>
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <ShieldCheck className="h-4 w-4 text-emerald-500" aria-hidden="true" />
@@ -688,7 +687,7 @@ export function CryptoFearGreedView() {
                   </span>
                 </div>
 
-                <div className={`rounded-lg border p-3.5 space-y-1.5 ${subCard}`}>
+                <div className={`rounded-xl p-3.5 space-y-1.5 ${subCard}`}>
                   <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                     <span className="font-semibold">{currentMeta.contrarianBias}</span>
                     <span className={`font-mono text-[11px] ${muted}`}>
@@ -698,30 +697,30 @@ export function CryptoFearGreedView() {
                   <p className={`text-xs leading-relaxed ${muted}`}>{currentMeta.guidance}</p>
                 </div>
 
-                <div className={`overflow-x-auto rounded-lg border ${border}`}>
-                  <table className="w-full text-xs border-collapse">
+                <div className={`overflow-x-auto rounded-xl p-2 ${subCard}`}>
+                  <table className="w-full text-xs border-separate border-spacing-y-1">
                     <thead>
-                      <tr className={`border-b ${border} ${thBg}`}>
-                        <th className="py-2 px-3 text-left font-medium">Zone</th>
+                      <tr className={thBg}>
+                        <th className="py-2 px-3 text-left font-medium rounded-l-lg">Zone</th>
                         <th className="py-2 px-3 text-left font-mono font-medium">Score</th>
-                        <th className="py-2 px-3 text-left font-medium">Desk Action</th>
+                        <th className="py-2 px-3 text-left font-medium rounded-r-lg">Desk Action</th>
                       </tr>
                     </thead>
-                    <tbody className={`divide-y ${border}`}>
+                    <tbody>
                       {SENTIMENT_BANDS.map((band) => {
                         const isActive = band.zone === currentMeta.zone;
                         return (
                           <tr
                             key={band.zone}
-                            className={`${
+                            className={`transition-colors ${
                               isActive
                                 ? isLight
-                                  ? "bg-emerald-50/70"
-                                  : "bg-emerald-500/10"
+                                  ? "bg-emerald-50"
+                                  : "bg-emerald-500/15"
                                 : rowHover
                             }`}
                           >
-                            <td className="py-2.5 px-3 font-medium whitespace-nowrap">
+                            <td className="py-2.5 px-3 font-medium whitespace-nowrap rounded-l-lg">
                               <span className="inline-flex items-center gap-2">
                                 <span
                                   className="h-2 w-2 rounded-full shrink-0"
@@ -733,7 +732,7 @@ export function CryptoFearGreedView() {
                             <td className="py-2.5 px-3 font-mono tabular-nums whitespace-nowrap">
                               {band.rangeLabel}
                             </td>
-                            <td className={`py-2.5 px-3 leading-relaxed ${muted}`}>
+                            <td className={`py-2.5 px-3 leading-relaxed rounded-r-lg ${muted}`}>
                               {band.deskAction}
                             </td>
                           </tr>
@@ -745,23 +744,23 @@ export function CryptoFearGreedView() {
               </div>
 
               {/* Recent Daily Sentiment Ledger */}
-              <div className={`min-w-0 lg:col-span-5 rounded-xl border p-4 sm:p-5 space-y-3 ${card}`}>
+              <div className={`min-w-0 lg:col-span-5 rounded-xl p-4 sm:p-5 space-y-3 ${card}`}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold">Recent Daily Sentiment Readings</h3>
                   <span className={`font-mono text-[11px] ${muted}`}>Last 14 Sessions</span>
                 </div>
 
-                <div className={`overflow-x-auto rounded-lg border ${border}`}>
-                  <table className="w-full text-xs font-mono tabular-nums border-collapse">
+                <div className={`overflow-x-auto rounded-xl p-2 ${subCard}`}>
+                  <table className="w-full text-xs font-mono tabular-nums border-separate border-spacing-y-1">
                     <thead>
-                      <tr className={`border-b ${border} ${thBg}`}>
-                        <th className="py-2 px-3 text-left font-medium">Date (UTC)</th>
+                      <tr className={thBg}>
+                        <th className="py-2 px-3 text-left font-medium rounded-l-lg">Date (UTC)</th>
                         <th className="py-2 px-3 text-right font-medium">Index</th>
                         <th className="py-2 px-3 text-left font-sans font-medium">Regime</th>
-                        <th className="py-2 px-3 text-right font-medium">1D Chg</th>
+                        <th className="py-2 px-3 text-right font-medium rounded-r-lg">1D Chg</th>
                       </tr>
                     </thead>
-                    <tbody className={`divide-y ${border}`}>
+                    <tbody>
                       {(data?.history ?? [])
                         .slice(-14)
                         .reverse()
@@ -770,8 +769,8 @@ export function CryptoFearGreedView() {
                           const chg = prev ? pt.value - prev.value : 0;
                           const ptMeta = classifySentiment(pt.value);
                           return (
-                            <tr key={pt.date} className={rowHover}>
-                              <td className="py-2 px-3">{pt.date}</td>
+                            <tr key={pt.date} className={`transition-colors ${rowHover}`}>
+                              <td className="py-2 px-3 rounded-l-lg">{pt.date}</td>
                               <td
                                 className="py-2 px-3 text-right font-semibold"
                                 style={{ color: ptMeta.accentHex }}
@@ -780,7 +779,7 @@ export function CryptoFearGreedView() {
                               </td>
                               <td className="py-2 px-3 font-sans">{pt.classification}</td>
                               <td
-                                className={`py-2 px-3 text-right ${
+                                className={`py-2 px-3 text-right rounded-r-lg ${
                                   chg > 0
                                     ? "text-emerald-500"
                                     : chg < 0

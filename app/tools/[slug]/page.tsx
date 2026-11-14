@@ -37,8 +37,8 @@ export default async function InstitutionalToolPage({
 
   return (
     <div>
-      <section className="grain border-b border-line/60">
-        <div className="mx-auto max-w-[1440px] px-5 py-10">
+      <section className="grain">
+        <div className="mx-auto max-w-[1440px] px-5 py-9 sm:py-10">
           <nav className="flex items-center gap-2 text-xs text-muted">
             <Link href="/" className="hover:text-bone">
               Home

@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ComponentPropsWithoutRef, MouseEvent, ReactNode } from "react";
-import { ShieldCheck, ExternalLink, KeyRound, ArrowRight } from "lucide-react";
 import { useWhop } from "@/lib/whop-context";
 import { getLifetimeCheckoutUrl } from "@/lib/whop-checkout-links";
 
@@ -68,8 +67,8 @@ export function LifetimeRouteGuard({ children }: { children: ReactNode }) {
 
   if (!hasCheckedStorage) {
     return (
-      <div className="mx-auto flex min-h-[55vh] max-w-2xl items-center justify-center px-5 py-20">
-        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gold/40 border-t-gold" />
+      <div className="mx-auto flex min-h-[55vh] max-w-2xl items-center justify-center px-5 py-16">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-gold/30 border-t-gold" />
       </div>
     );
   }
@@ -79,35 +78,34 @@ export function LifetimeRouteGuard({ children }: { children: ReactNode }) {
   }
 
   return (
-    <div className="mx-auto flex min-h-[70vh] max-w-xl items-center justify-center px-5 py-16">
-      <div className="relative w-full overflow-hidden rounded-2xl border border-gold/45 bg-gradient-to-b from-[#13110c] via-ink-900 to-ink-950 p-7 sm:p-8 shadow-[0_32px_90px_rgba(0,0,0,0.85)] ring-1 ring-gold/20 space-y-5">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-bright/80 to-transparent" />
-
+    <div className="mx-auto flex min-h-[68vh] max-w-lg items-center justify-center px-5 py-12">
+      <div className="relative w-full overflow-hidden rounded-2xl bg-gradient-to-b from-[#13110c] via-ink-900 to-ink-950 p-7 sm:p-8 shadow-[0_32px_90px_rgba(0,0,0,0.85)] space-y-5">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">
-            Purchase details
+          <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-gold">
+            Membership &amp; Access
           </p>
-          <h1 className="mt-1 font-display text-2xl text-bone">
-            Continue to Lifetime Premium checkout
+          <h1 className="mt-1.5 font-display text-2xl text-bone">
+            Lifetime Premium
           </h1>
         </div>
 
         <p className="text-xs sm:text-sm leading-relaxed text-muted">
-          Get every research piece, full crypto and meme-coin coverage, all four Academy courses,
-          score-change alerts, and model portfolio access with one lifetime purchase.
+          One-time membership granting permanent access to all 2,038+ daily trend scores, exact
+          invalidation levels, 70 research desks, all four Academy courses, score-change alerts, and
+          all 32 trade tools with zero recurring fees.
         </p>
 
-        <div className="rounded-xl border border-gold/30 bg-ink-950/90 p-4 space-y-2.5 text-xs">
+        <div className="rounded-xl bg-ink-950/80 p-4 space-y-2.5 text-xs">
           <div className="flex items-center justify-between">
-            <span className="text-muted">Selected Tier:</span>
+            <span className="text-muted">Membership Tier</span>
             <span className="font-semibold text-bone">Lifetime Premium</span>
           </div>
-          <div className="flex items-center justify-between border-t border-line/50 pt-2">
-            <span className="text-muted">Payment type:</span>
-            <span className="font-medium text-bone">One-time · Lifetime</span>
+          <div className="flex items-center justify-between">
+            <span className="text-muted">Billing Structure</span>
+            <span className="font-medium text-bone">One-time · Permanent access</span>
           </div>
-          <div className="flex items-center justify-between border-t border-line/50 pt-2">
-            <span className="text-muted">Amount due once:</span>
+          <div className="flex items-center justify-between pt-1.5">
+            <span className="text-muted">Total Investment</span>
             <span className="font-mono text-lg font-bold text-gold-bright tabular-nums">
               $1,487 USD
             </span>
@@ -120,45 +118,40 @@ export function LifetimeRouteGuard({ children }: { children: ReactNode }) {
               href={checkoutUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-xs font-bold text-ink-950 transition hover:bg-gold-bright shadow-lg"
+              className="flex w-full items-center justify-center rounded-full bg-gold px-6 py-3.5 text-xs font-bold tracking-wide text-ink-950 transition hover:bg-gold-bright shadow-lg"
             >
-              <ShieldCheck className="h-4 w-4" />
-              <span>Continue to Lifetime Premium checkout</span>
-              <ExternalLink className="h-3.5 w-3.5" />
+              Continue to Lifetime Premium checkout
             </a>
           ) : (
             <button
               type="button"
               onClick={() => openWhopModal("Lifetime Premium")}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-xs font-bold text-ink-950 transition hover:bg-gold-bright shadow-lg"
+              className="flex w-full items-center justify-center rounded-full bg-gold px-6 py-3.5 text-xs font-bold tracking-wide text-ink-950 transition hover:bg-gold-bright shadow-lg"
             >
-              <ShieldCheck className="h-4 w-4" />
-              <span>Continue to Lifetime Premium checkout</span>
-              <ArrowRight className="h-3.5 w-3.5" />
+              Continue to Lifetime Premium checkout
             </button>
           )}
 
           <button
             type="button"
             onClick={() => openWhopModal("Verify Whop Purchase")}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 py-2.5 text-xs font-semibold text-gold-bright transition hover:bg-gold/20"
+            className="flex w-full items-center justify-center rounded-full bg-gold/12 px-5 py-3 text-xs font-semibold text-gold-bright transition hover:bg-gold/20"
           >
-            <KeyRound className="h-3.5 w-3.5" />
-            <span>Verify Existing Whop License Key</span>
+            Verify Existing Whop License Key
           </button>
         </div>
 
         <p className="text-[11px] leading-relaxed text-muted/85 text-center">
-          You will continue to Whop to complete the one-time $1,487 USD purchase. Access is
-          activated only after payment verification.
+          You will continue to Whop to complete the one-time $1,487 USD settlement. Full platform
+          access activates immediately upon payment verification.
         </p>
 
-        <div className="flex items-center justify-center gap-4 border-t border-line/60 pt-3 text-xs text-muted">
+        <div className="flex items-center justify-center gap-4 pt-2 text-xs text-muted">
           <Link href="/" className="hover:text-bone transition">
             ← Return Home
           </Link>
           <span>·</span>
-          <Link href="/pricing" className="text-gold-bright hover:underline">
+          <Link href="/pricing" className="text-gold-bright hover:underline underline-offset-4">
             View Pricelist
           </Link>
         </div>

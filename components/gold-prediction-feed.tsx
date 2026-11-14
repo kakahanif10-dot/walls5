@@ -154,22 +154,22 @@ export default function GoldPredictionFeed() {
   const getActionBadgeColor = (action: NewsAction) => {
     switch (action) {
       case "BUY":
-        return "bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-emerald-950/40";
+        return "bg-emerald-500/20 text-emerald-300";
       case "ACCUMULATE":
-        return "bg-cyan-500/20 text-cyan-300 border-cyan-500/50 shadow-cyan-950/40";
+        return "bg-cyan-500/20 text-cyan-300";
       case "HOLD":
-        return "bg-amber-500/20 text-amber-300 border-amber-500/50 shadow-amber-950/40";
+        return "bg-amber-500/20 text-amber-300";
       case "TRIM":
-        return "bg-orange-500/20 text-orange-300 border-orange-500/50 shadow-orange-950/40";
+        return "bg-orange-500/20 text-orange-300";
       case "AVOID":
-        return "bg-rose-500/20 text-rose-300 border-rose-500/50 shadow-rose-950/40";
+        return "bg-rose-500/20 text-rose-300";
     }
   };
 
   return (
     <div className="space-y-8">
       {/* Top News Action Command Status Bar */}
-      <div className="rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-950/30 via-ink-900 to-ink-950 p-6 shadow-2xl backdrop-blur">
+      <div className="rounded-2xl bg-gradient-to-r from-amber-950/30 via-ink-900/90 to-ink-950 p-6 sm:p-7 shadow-2xl backdrop-blur">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div>
             <div className="flex items-center gap-2">
@@ -189,7 +189,7 @@ export default function GoldPredictionFeed() {
 
           {/* 1-Minute Live Clock Refresh Pill */}
           <div className="flex items-center gap-3 shrink-0">
-            <div className="rounded-xl border border-amber-500/30 bg-ink-900/90 px-4 py-3 text-center">
+            <div className="rounded-xl bg-ink-950/85 px-4 py-3 text-center">
               <div className="flex items-center gap-2 text-xs font-mono font-bold text-amber-400">
                 <RefreshCw className="h-3.5 w-3.5 animate-spin" style={{ animationDuration: "8s" }} />
                 <span>Next Wire Sync: {secondsUntilRefresh}s</span>
@@ -201,10 +201,10 @@ export default function GoldPredictionFeed() {
 
             <button
               onClick={() => setIsAudioEnabled(!isAudioEnabled)}
-              className={`rounded-xl border p-3 transition ${
+              className={`rounded-xl p-3 transition ${
                 isAudioEnabled
-                  ? "border-amber-500/50 bg-amber-500/20 text-amber-300"
-                  : "border-line bg-ink-850 text-muted hover:text-bone"
+                  ? "bg-amber-500/20 text-amber-300"
+                  : "bg-ink-950/80 text-muted hover:text-bone hover:bg-ink-950"
               }`}
               title={isAudioEnabled ? "Mute Siren Alerts" : "Enable Siren Audio Alerts on Breaking News"}
             >
@@ -214,7 +214,7 @@ export default function GoldPredictionFeed() {
         </div>
 
         {/* Filter Bar */}
-        <div className="mt-8 space-y-4 border-t border-line/60 pt-6">
+        <div className="mt-7 space-y-4 pt-3">
           {/* Categories */}
           <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <span className="text-[10px] uppercase font-bold tracking-wider text-muted mr-1 hidden sm:inline">
@@ -226,10 +226,10 @@ export default function GoldPredictionFeed() {
                 <button
                   key={cat}
                   onClick={() => setSelectedCategory(cat)}
-                  className={`rounded-full px-3 py-1 text-[11px] font-medium transition ${
+                  className={`rounded-full px-3.5 py-1 text-[11px] font-medium transition ${
                     active
                       ? "bg-gold text-ink-950 font-bold shadow-md scale-105"
-                      : "bg-ink-850 text-muted hover:text-bone border border-line"
+                      : "bg-ink-950/75 text-muted hover:text-bone hover:bg-ink-950"
                   }`}
                 >
                   {cat}
@@ -239,7 +239,7 @@ export default function GoldPredictionFeed() {
           </div>
 
           {/* Action Filter & Search */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-1">
             <div className="flex flex-wrap items-center gap-1.5">
               <span className="text-[10px] uppercase font-bold tracking-wider text-muted mr-1 hidden sm:inline">
                 Action:
@@ -250,10 +250,10 @@ export default function GoldPredictionFeed() {
                   <button
                     key={act}
                     onClick={() => setSelectedAction(act)}
-                    className={`rounded-md px-2.5 py-1 text-[11px] font-semibold transition ${
+                    className={`rounded-lg px-3 py-1 text-[11px] font-semibold transition ${
                       active
-                        ? "bg-ink-800 text-gold-bright border border-gold/40"
-                        : "text-muted hover:text-bone hover:bg-ink-850"
+                        ? "bg-gold/20 text-gold-bright"
+                        : "bg-ink-950/60 text-muted hover:text-bone hover:bg-ink-950"
                     }`}
                   >
                     {act}
@@ -269,7 +269,7 @@ export default function GoldPredictionFeed() {
                 placeholder="Search $NVDA, Taiwan, Fed, pump.fun..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full rounded-lg border border-line bg-ink-900/90 pl-9 pr-3 py-1.5 text-xs text-bone placeholder-muted/60 focus:border-gold/50 focus:outline-none"
+                className="w-full rounded-xl bg-ink-950/90 pl-9 pr-3 py-2 text-xs text-bone placeholder-muted/60 focus:outline-none focus:ring-1 focus:ring-gold/40"
               />
             </div>
           </div>
@@ -291,15 +291,15 @@ export default function GoldPredictionFeed() {
             <div
               key={item.id}
               onClick={() => setActiveItem(item)}
-              className={`cursor-pointer rounded-xl border p-5 transition-all duration-200 flex flex-col justify-between ${
+              className={`cursor-pointer rounded-2xl p-5 sm:p-6 transition-all duration-200 flex flex-col justify-between ${
                 isSelected
-                  ? "border-amber-500/70 bg-amber-500/[0.04] shadow-xl ring-1 ring-amber-500/30"
-                  : "border-line bg-ink-900/60 hover:border-gold/40 hover:bg-ink-900"
+                  ? "bg-amber-500/[0.08] shadow-xl"
+                  : "bg-ink-900/55 hover:bg-ink-900/80"
               }`}
             >
               <div>
                 {/* Card Header */}
-                <div className="flex items-center justify-between gap-2 border-b border-line/50 pb-3">
+                <div className="flex items-center justify-between gap-2 pb-2">
                   <div className="flex items-center gap-2">
                     <Link
                       href={`/ticker/${item.symbol}`}
@@ -311,7 +311,7 @@ export default function GoldPredictionFeed() {
                   </div>
 
                   <span
-                    className={`rounded-full border px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider ${getActionBadgeColor(
+                    className={`rounded-full px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider ${getActionBadgeColor(
                       item.action
                     )}`}
                   >
@@ -320,7 +320,7 @@ export default function GoldPredictionFeed() {
                 </div>
 
                 {/* Headline */}
-                <h3 className="mt-3 font-display text-base text-bone font-medium leading-snug line-clamp-2">
+                <h3 className="mt-2 font-display text-base text-bone font-medium leading-snug line-clamp-2">
                   {item.headline}
                 </h3>
 
@@ -330,7 +330,7 @@ export default function GoldPredictionFeed() {
                 </p>
 
                 {/* Key Quantitative Target Metrics */}
-                <div className="mt-4 grid grid-cols-3 gap-2 rounded-lg bg-ink-850/80 p-2.5 text-[11px] font-mono border border-line/60">
+                <div className="mt-4 grid grid-cols-3 gap-2 rounded-xl bg-ink-950/75 p-3 text-[11px] font-mono">
                   <div>
                     <span className="block text-[9px] uppercase tracking-wider text-muted">Current</span>
                     <span className="text-bone font-bold">${livePrice.toFixed(dec)}</span>
@@ -347,7 +347,7 @@ export default function GoldPredictionFeed() {
               </div>
 
               {/* Card Footer */}
-              <div className="mt-4 flex items-center justify-between border-t border-line/50 pt-3 text-[11px]">
+              <div className="mt-4 flex items-center justify-between pt-2 text-[11px]">
                 <div className="flex items-center gap-2 text-muted">
                   <span className="flex items-center gap-1">
                     <Target className="h-3 w-3 text-gold" />
@@ -373,7 +373,7 @@ export default function GoldPredictionFeed() {
       </div>
 
       {filteredItems.length === 0 && (
-        <div className="rounded-xl border border-line bg-ink-900/50 p-12 text-center">
+        <div className="rounded-2xl bg-ink-900/55 p-12 text-center">
           {isLoading && items.length === 0 ? (
             <p className="text-sm text-muted">Syncing live breaking news dossiers...</p>
           ) : feedError && items.length === 0 ? (

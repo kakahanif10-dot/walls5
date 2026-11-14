@@ -26,10 +26,10 @@ const BANDS = [
 export default function DisclaimerPage() {
   return (
     <div>
-      <section className="grain border-b border-line/60">
-        <div className="mx-auto max-w-4xl px-5 py-12">
+      <section className="grain">
+        <div className="mx-auto max-w-4xl px-5 py-10 sm:py-12">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">Transparency</p>
-          <h1 className="mt-3 font-display text-4xl leading-tight text-bone">
+          <h1 className="mt-3 font-display text-3xl sm:text-4xl leading-tight text-bone">
             Methodology, terms and risk disclosure
           </h1>
           <p className="mt-4 text-[15px] leading-relaxed text-muted">
@@ -39,7 +39,7 @@ export default function DisclaimerPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-4xl px-5 py-12">
+      <section className="mx-auto max-w-4xl px-5 py-8 sm:py-10">
         <h2 className="font-display text-2xl text-bone">1. How the trend score is built</h2>
         <p className="mt-3 text-sm leading-relaxed text-muted">
           Each input is normalised to a 0–100 scale and combined with fixed weights. Weights changed
@@ -48,31 +48,31 @@ export default function DisclaimerPage() {
           as a regime filter rather than a signal.
         </p>
 
-        <div className="mt-6 overflow-hidden rounded-xl border border-line">
-          <table className="w-full text-left text-sm">
-            <thead className="bg-ink-900 text-[10px] uppercase tracking-[0.14em] text-muted">
+        <div className="mt-6 rounded-2xl bg-ink-900/55 p-3">
+          <table className="w-full text-left text-sm border-separate border-spacing-y-1">
+            <thead className="text-[10px] uppercase tracking-[0.14em] text-muted">
               <tr>
-                <th className="px-4 py-3 font-medium">Input</th>
-                <th className="px-4 py-3 text-center font-medium">Weight</th>
-                <th className="px-4 py-3 font-medium">What it reads</th>
+                <th className="px-4 py-2.5 font-medium">Input</th>
+                <th className="px-4 py-2.5 text-center font-medium">Weight</th>
+                <th className="px-4 py-2.5 font-medium">What it reads</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-line/70">
+            <tbody>
               {WEIGHTS.map((w) => (
-                <tr key={w.input}>
-                  <td className="px-4 py-3 text-bone/85">{w.input}</td>
+                <tr key={w.input} className="bg-ink-950/60">
+                  <td className="rounded-l-lg px-4 py-3 text-bone/85">{w.input}</td>
                   <td className="px-4 py-3 text-center font-mono text-xs text-gold">{w.weight}</td>
-                  <td className="px-4 py-3 text-muted">{w.reads}</td>
+                  <td className="rounded-r-lg px-4 py-3 text-muted">{w.reads}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
 
-        <h2 className="mt-12 font-display text-2xl text-bone">2. What the stance bands mean</h2>
+        <h2 className="mt-10 font-display text-2xl text-bone">2. What the stance bands mean</h2>
         <div className="mt-5 space-y-2.5">
           {BANDS.map((b) => (
-            <div key={b.stance} className="rounded-lg border border-line bg-ink-900/50 px-4 py-3">
+            <div key={b.stance} className="rounded-xl bg-ink-900/55 px-5 py-3.5">
               <div className="flex flex-wrap items-baseline gap-3">
                 <span className="font-mono text-xs text-muted">{b.band}</span>
                 <span className="font-display text-base text-bone">{b.stance}</span>
@@ -82,7 +82,7 @@ export default function DisclaimerPage() {
           ))}
         </div>
 
-        <h2 className="mt-12 font-display text-2xl text-bone">3. Conviction, risk and sizing</h2>
+        <h2 className="mt-10 font-display text-2xl text-bone">3. Conviction, risk and sizing</h2>
         <p className="mt-3 text-sm leading-relaxed text-muted">
           Conviction scales with the distance of the score from neutral and with position in the
           52-week range; it never implies certainty. Risk grade is derived from 60-day realised
@@ -91,7 +91,7 @@ export default function DisclaimerPage() {
           grading it.
         </p>
 
-        <h2 className="mt-12 font-display text-2xl text-bone">4. Where the data comes from</h2>
+        <h2 className="mt-10 font-display text-2xl text-bone">4. Where the data comes from</h2>
         <p className="mt-3 text-sm leading-relaxed text-muted">
           Quotes and daily closes are fetched server-side from live public market endpoints
           (<strong className="text-bone/90">TradingView America Scanner &amp; Nasdaq</strong> for US equities and
@@ -108,7 +108,7 @@ export default function DisclaimerPage() {
           paid data product.
         </p>
 
-        <h2 className="mt-12 font-display text-2xl text-bone">5. Risk disclosure</h2>
+        <h2 className="mt-10 font-display text-2xl text-bone">5. Risk disclosure</h2>
         <div className="mt-3 space-y-3 text-sm leading-relaxed text-muted">
           <p>
             NextWallStreet publishes market analysis and educational material only. Nothing on this
@@ -138,15 +138,15 @@ export default function DisclaimerPage() {
           </p>
         </div>
 
-        <div className="mt-10 rounded-xl border border-line bg-ink-900/50 p-6">
+        <div className="mt-10 rounded-2xl bg-ink-900/55 p-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-gold">Questions</p>
           <p className="mt-2 text-sm leading-relaxed text-muted">
             Methodology questions are welcome and answered by the desk. See{" "}
-            <Link href="/research" className="text-bone/85 underline decoration-line underline-offset-2 hover:text-gold-bright">
+            <Link href="/research" className="text-bone/85 underline decoration-muted/40 underline-offset-2 hover:text-gold-bright">
               research
             </Link>{" "}
             for recent pieces or{" "}
-            <Link href="/pricing" className="text-bone/85 underline decoration-line underline-offset-2 hover:text-gold-bright">
+            <Link href="/pricing" className="text-bone/85 underline decoration-muted/40 underline-offset-2 hover:text-gold-bright">
               plans
             </Link>{" "}
             for access.

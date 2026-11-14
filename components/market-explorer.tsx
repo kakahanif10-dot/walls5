@@ -13,7 +13,6 @@ import {
   ChevronRight,
   ChevronsLeft,
   ChevronsRight,
-  ShieldCheck,
 } from "lucide-react";
 
 type SortKey = "score" | "change24h" | "change30d" | "name";
@@ -23,27 +22,27 @@ const STANCES = ["All", "Buy", "Accumulate", "Hold", "Trim", "Avoid"] as const;
 function dayTradeBadgeColor(bias: string) {
   switch (bias) {
     case "LONG SCALP":
-      return "text-emerald-400 bg-emerald-500/15 border-emerald-500/40";
+      return "text-emerald-400 bg-emerald-500/15";
     case "SHORT SCALP":
-      return "text-rose-400 bg-rose-500/15 border-rose-500/40";
+      return "text-rose-400 bg-rose-500/15";
     case "RANGE BREAK":
-      return "text-gold-bright bg-gold/15 border-gold/40";
+      return "text-gold-bright bg-gold/15";
     default:
-      return "text-bone bg-ink-800 border-line";
+      return "text-bone bg-ink-850";
   }
 }
 
 function swingLongBadgeColor(bias: string) {
   switch (bias) {
     case "STAGE 2 EXPANSION":
-      return "text-emerald-400 bg-emerald-500/15 border-emerald-500/40";
+      return "text-emerald-400 bg-emerald-500/15";
     case "CORE ACCUMULATE":
     case "CYCLE LONG":
-      return "text-gold-bright bg-gold/15 border-gold/40";
+      return "text-gold-bright bg-gold/15";
     case "HOLD / REBALANCE":
-      return "text-bone bg-ink-800 border-line";
+      return "text-bone bg-ink-850";
     default:
-      return "text-amber-400 bg-amber-500/15 border-amber-500/40";
+      return "text-amber-400 bg-amber-500/15";
   }
 }
 
@@ -156,7 +155,7 @@ export default function MarketExplorer({
 
   if (!isUnlocked) {
     return (
-      <div className="mx-auto max-w-xl rounded-2xl border border-gold/45 bg-gradient-to-b from-[#13110c] via-ink-900 to-ink-950 p-7 text-center shadow-2xl space-y-4">
+      <div className="mx-auto max-w-lg rounded-2xl bg-gradient-to-b from-[#15120c] via-ink-900/95 to-ink-950 p-6 sm:p-7 text-center shadow-2xl space-y-4">
         <h3 className="font-display text-2xl text-bone">
           Continue to Lifetime Premium checkout
         </h3>
@@ -168,14 +167,13 @@ export default function MarketExplorer({
           <button
             type="button"
             onClick={() => openWhopModal("All 2,038+ Scored Assets")}
-            className="inline-flex items-center gap-2 rounded-full bg-gold px-6 py-3 text-xs font-bold text-ink-950 transition hover:bg-gold-bright shadow-lg"
+            className="inline-flex items-center justify-center rounded-full bg-gold px-6 py-3 text-xs font-bold text-ink-950 transition hover:bg-gold-bright shadow-lg"
           >
-            <ShieldCheck className="h-4 w-4" />
-            <span>Unlock Lifetime Premium — $1,487 USD</span>
+            Unlock Lifetime Premium — $1,487 USD
           </button>
           <Link
             href="/pricing"
-            className="rounded-full border border-line bg-ink-900 px-5 py-3 text-xs font-semibold text-bone transition hover:border-gold/50"
+            className="rounded-full bg-ink-900 px-5 py-3 text-xs font-semibold text-bone transition hover:bg-ink-850"
           >
             Purchase details
           </Link>
@@ -191,7 +189,7 @@ export default function MarketExplorer({
         <div
           role="tablist"
           aria-label="Digital Assets Universe"
-          className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-ink-900/70 p-2"
+          className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-2xl bg-ink-900/55 p-2.5"
         >
           <div className="flex flex-wrap items-center gap-2">
             <button
@@ -199,7 +197,7 @@ export default function MarketExplorer({
               role="tab"
               aria-selected={activeTab === "core"}
               onClick={() => handleTabChange("core")}
-              className={`rounded-lg px-4 py-2 text-xs sm:text-sm font-medium transition-all ${
+              className={`rounded-xl px-4 py-2 text-xs sm:text-sm font-medium transition-all ${
                 activeTab === "core"
                   ? "bg-gold text-ink-950 font-semibold shadow-sm"
                   : "text-muted hover:bg-ink-850 hover:text-bone"
@@ -213,7 +211,7 @@ export default function MarketExplorer({
               role="tab"
               aria-selected={activeTab === "speculative"}
               onClick={() => handleTabChange("speculative")}
-              className={`rounded-lg px-4 py-2 text-xs sm:text-sm font-medium transition-all ${
+              className={`rounded-xl px-4 py-2 text-xs sm:text-sm font-medium transition-all ${
                 activeTab === "speculative"
                   ? "bg-gold text-ink-950 font-semibold shadow-sm"
                   : "text-muted hover:bg-ink-850 hover:text-bone"
@@ -232,7 +230,7 @@ export default function MarketExplorer({
       )}
 
       {/* Institutional Status Banner & Mode Controls */}
-      <div className="mb-4 rounded-xl border border-gold/30 bg-gold/[0.04] p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="mb-5 rounded-2xl bg-ink-900/55 p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
           <span className="live-dot h-2 w-2 rounded-full bg-up shrink-0" aria-hidden="true" />
           <div>
@@ -241,7 +239,7 @@ export default function MarketExplorer({
                 Full Universe Active: {filtered.length} of {activeRows.length} Assets Loaded
               </span>
               <WhopBadge variant="plus" />
-              <span className="rounded bg-gold/15 border border-gold/40 px-2 py-0.5 text-[10px] font-mono font-bold text-gold-bright">
+              <span className="rounded-md bg-gold/15 px-2.5 py-0.5 text-[10px] font-mono font-bold text-gold-bright">
                 {isShowAll ? "ALL ASSETS UNLOCKED" : `Page ${currentPage}/${totalPages}`}
               </span>
             </div>
@@ -256,10 +254,10 @@ export default function MarketExplorer({
           <button
             type="button"
             onClick={handleViewAllClick}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
+            className={`flex items-center gap-1.5 rounded-xl px-3.5 py-1.5 text-xs font-semibold transition-all ${
               isShowAll
-                ? "bg-gold text-ink-950 shadow-md ring-1 ring-gold"
-                : "border border-gold/40 bg-gold/10 text-gold-bright hover:bg-gold/20"
+                ? "bg-gold text-ink-950 shadow-md"
+                : "bg-gold/15 text-gold-bright hover:bg-gold/25"
             }`}
           >
             <span>View All ({activeRows.length})</span>
@@ -273,10 +271,10 @@ export default function MarketExplorer({
                   setPageSize(100);
                   setPage(1);
                 }}
-                className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
+                className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
                   pageSize === 100
                     ? "bg-gold text-ink-950 font-semibold"
-                    : "border border-line bg-ink-900 text-muted hover:text-bone"
+                    : "bg-ink-950/75 text-muted hover:text-bone hover:bg-ink-950"
                 }`}
               >
                 100 / page
@@ -287,10 +285,10 @@ export default function MarketExplorer({
                   setPageSize(50);
                   setPage(1);
                 }}
-                className={`rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all ${
+                className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-all ${
                   pageSize === 50
                     ? "bg-gold text-ink-950 font-semibold"
-                    : "border border-line bg-ink-900 text-muted hover:text-bone"
+                    : "bg-ink-950/75 text-muted hover:text-bone hover:bg-ink-950"
                 }`}
               >
                 50 / page
@@ -310,10 +308,10 @@ export default function MarketExplorer({
               key={s}
               type="button"
               onClick={() => handleStanceChange(s)}
-              className={`rounded-full px-3 py-1 text-xs transition-all ${
+              className={`rounded-full px-3.5 py-1 text-xs transition-all ${
                 stance === s
-                  ? "border border-gold bg-gold/15 font-semibold text-gold-bright"
-                  : "border border-line bg-ink-900 text-muted hover:text-bone"
+                  ? "bg-gold/20 font-semibold text-gold-bright"
+                  : "bg-ink-900/75 text-muted hover:text-bone hover:bg-ink-900"
               }`}
             >
               {s}
@@ -328,7 +326,7 @@ export default function MarketExplorer({
               value={query}
               onChange={(e) => handleQueryChange(e.target.value)}
               placeholder={`Search ${activeRows.length}+ symbols, companies or themes...`}
-              className="w-full rounded-full border border-line bg-ink-900 px-4 py-1.5 text-xs sm:text-sm text-bone placeholder:text-muted/70 focus:border-gold/50 focus:outline-none lg:w-72"
+              className="w-full rounded-full bg-ink-900/90 px-4 py-1.5 text-xs sm:text-sm text-bone placeholder:text-muted/70 focus:outline-none focus:ring-1 focus:ring-gold/40 lg:w-72"
             />
             {query && (
               <button
@@ -344,7 +342,7 @@ export default function MarketExplorer({
           <select
             value={sort}
             onChange={(e) => setSort(e.target.value as SortKey)}
-            className="rounded-full border border-line bg-ink-900 px-3 py-1.5 text-xs text-bone focus:border-gold/50 focus:outline-none"
+            className="rounded-full bg-ink-900/90 px-3.5 py-1.5 text-xs text-bone focus:outline-none focus:ring-1 focus:ring-gold/40"
             aria-label="Sort assets"
           >
             <option value="score">Sort: Highest Score</option>
@@ -364,10 +362,10 @@ export default function MarketExplorer({
               key={sec}
               type="button"
               onClick={() => handleSectorChange(sec)}
-              className={`shrink-0 rounded-md px-2.5 py-1 text-[11px] transition-all ${
+              className={`shrink-0 rounded-lg px-2.5 py-1 text-[11px] transition-all ${
                 sector === sec
-                  ? "border border-gold/60 bg-gold/20 text-gold-bright font-semibold"
-                  : "border border-line/70 bg-ink-900/80 text-muted hover:text-bone"
+                  ? "bg-gold/20 text-gold-bright font-semibold"
+                  : "bg-ink-900/75 text-muted hover:text-bone hover:bg-ink-900"
               }`}
             >
               {sec}
@@ -377,11 +375,11 @@ export default function MarketExplorer({
       )}
 
       {/* Institutional Table with Day Trade and Long-Term / Swing Columns */}
-      <div className="overflow-x-auto rounded-xl border border-line bg-ink-950">
-        <table className="w-full text-left">
-          <thead className="bg-ink-900 text-[10px] uppercase tracking-[0.16em] text-muted border-b border-line">
-            <tr>
-              <th className="px-4 py-3 text-left font-medium">Asset</th>
+      <div className="overflow-x-auto rounded-2xl bg-ink-950/65 p-2 sm:p-3">
+        <table className="w-full text-left border-separate border-spacing-y-1">
+          <thead className="text-[10px] uppercase tracking-[0.16em] text-muted">
+            <tr className="bg-ink-900/90">
+              <th className="rounded-l-xl px-4 py-3 text-left font-medium">Asset</th>
               <th className="hidden px-4 py-3 text-left font-medium md:table-cell">Theme</th>
               <th className="px-4 py-3 text-right font-medium">Price</th>
               <th className="px-4 py-3 text-right font-medium">24h</th>
@@ -391,15 +389,15 @@ export default function MarketExplorer({
               <th className="hidden px-4 py-3 text-left font-medium lg:table-cell">Long-Term / Swing</th>
               <th className="hidden px-4 py-3 font-medium xl:table-cell">Trend</th>
               <th className="px-4 py-3 text-right font-medium">Score</th>
-              <th className="px-4 py-3 text-right font-medium">Stance</th>
-              <th className="hidden px-4 py-3 md:table-cell" />
+              <th className="px-4 py-3 text-right font-medium md:rounded-none rounded-r-xl">Stance</th>
+              <th className="hidden rounded-r-xl px-4 py-3 md:table-cell" />
             </tr>
           </thead>
-          <tbody className="divide-y divide-line/70">
+          <tbody>
             {displayedRows.map((row) => (
-              <tr key={row.symbol} className="group transition-colors hover:bg-ink-850/60">
+              <tr key={row.symbol} className="group transition-colors hover:bg-ink-900/55">
                 {/* Asset Identity */}
-                <td className="px-4 py-3.5">
+                <td className="rounded-l-xl px-4 py-3.5">
                   <Link href={`/ticker/${row.symbol}`} className="flex items-center gap-3">
                     <span className="flex flex-col">
                       <span className="font-mono text-sm font-semibold text-bone group-hover:text-gold-bright">
@@ -428,7 +426,7 @@ export default function MarketExplorer({
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5">
                       <span
-                        className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-mono font-bold border ${dayTradeBadgeColor(
+                        className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-mono font-bold ${dayTradeBadgeColor(
                           row.dayTrade.bias
                         )}`}
                       >
@@ -469,7 +467,7 @@ export default function MarketExplorer({
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5">
                       <span
-                        className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-mono font-bold border ${swingLongBadgeColor(
+                        className={`inline-block rounded px-1.5 py-0.5 text-[10px] font-mono font-bold ${swingLongBadgeColor(
                           row.swingLong.bias
                         )}`}
                       >
@@ -504,7 +502,7 @@ export default function MarketExplorer({
                 {/* Composite Trend Score */}
                 <td className="px-4 py-3.5 text-right">
                   <div className="flex items-center justify-end gap-2">
-                    <div className="hidden h-1 w-12 overflow-hidden rounded-full bg-line sm:block">
+                    <div className="hidden h-1 w-12 overflow-hidden rounded-full bg-ink-850 sm:block">
                       <div
                         className={`h-full rounded-full ${
                           row.score >= 66 ? "bg-up" : row.score >= 47 ? "bg-gold" : "bg-down"
@@ -517,14 +515,14 @@ export default function MarketExplorer({
                 </td>
 
                 {/* Stance */}
-                <td className="px-4 py-3.5 text-right">
-                  <span className={`inline-block rounded-full border px-2.5 py-1 text-[11px] ${stanceColor(row.stance)}`}>
+                <td className="px-4 py-3.5 text-right md:rounded-none rounded-r-xl">
+                  <span className={`inline-block rounded-full px-2.5 py-1 text-[11px] ${stanceColor(row.stance)}`}>
                     {row.stance}
                   </span>
                 </td>
 
                 {/* Watchlist */}
-                <td className="hidden px-4 py-3.5 text-right md:table-cell">
+                <td className="hidden rounded-r-xl px-4 py-3.5 text-right md:table-cell">
                   <WatchlistButton symbol={row.symbol} compact />
                 </td>
               </tr>
@@ -556,7 +554,7 @@ export default function MarketExplorer({
               type="button"
               disabled={currentPage <= 1}
               onClick={() => setPage(1)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-ink-900 transition hover:border-gold/40 hover:text-bone disabled:opacity-30"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-900/80 transition hover:bg-ink-900 hover:text-bone disabled:opacity-30"
               title="First Page"
             >
               <ChevronsLeft className="h-4 w-4" />
@@ -565,7 +563,7 @@ export default function MarketExplorer({
               type="button"
               disabled={currentPage <= 1}
               onClick={() => setPage((p) => Math.max(1, p - 1))}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-ink-900 transition hover:border-gold/40 hover:text-bone disabled:opacity-30"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-900/80 transition hover:bg-ink-900 hover:text-bone disabled:opacity-30"
               title="Previous Page"
             >
               <ChevronLeft className="h-4 w-4" />
@@ -579,7 +577,7 @@ export default function MarketExplorer({
               type="button"
               disabled={currentPage >= totalPages}
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-ink-900 transition hover:border-gold/40 hover:text-bone disabled:opacity-30"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-900/80 transition hover:bg-ink-900 hover:text-bone disabled:opacity-30"
               title="Next Page"
             >
               <ChevronRight className="h-4 w-4" />
@@ -588,7 +586,7 @@ export default function MarketExplorer({
               type="button"
               disabled={currentPage >= totalPages}
               onClick={() => setPage(totalPages)}
-              className="flex h-8 w-8 items-center justify-center rounded-lg border border-line bg-ink-900 transition hover:border-gold/40 hover:text-bone disabled:opacity-30"
+              className="flex h-8 w-8 items-center justify-center rounded-lg bg-ink-900/80 transition hover:bg-ink-900 hover:text-bone disabled:opacity-30"
               title="Last Page"
             >
               <ChevronsRight className="h-4 w-4" />

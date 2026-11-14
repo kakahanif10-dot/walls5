@@ -13,11 +13,11 @@ export const metadata: Metadata = {
 
 export default function WatchStudioPage() {
   return (
-    <div className="mx-auto max-w-7xl px-5 py-10 lg:py-14">
+    <div className="mx-auto max-w-7xl px-5 py-8 lg:py-12">
       {/* Breadcrumb */}
       <nav className="mb-4 flex items-center gap-2 text-xs text-muted">
         <Link href="/academy" className="hover:text-bone">Academy</Link>
-        <span className="text-line">/</span>
+        <span className="text-muted/40">/</span>
         <span className="text-gold-bright">Video Tutorial Studio (60 Masterclasses)</span>
       </nav>
 
@@ -25,12 +25,12 @@ export default function WatchStudioPage() {
       <WatchableVideoPlayer courseTitle="Institutional 60-Lesson Trading Architecture & Risk Masterclass" />
 
       {/* Video Curriculum Grid - 60 Comprehensive Lessons across 3 Desks */}
-      <div className="mt-14">
-        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-line/60 pb-4">
+      <div className="mt-12">
+        <div className="flex flex-wrap items-end justify-between gap-4 rounded-2xl bg-ink-900/50 p-5 sm:p-6">
           <div>
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">Comprehensive Curriculum</span>
-              <span className="rounded-full bg-gold/15 border border-gold/40 px-2 py-0.5 text-[10px] font-mono font-bold text-gold-bright">
+              <span className="rounded-full bg-gold/15 px-2.5 py-0.5 text-[10px] font-mono font-bold text-gold-bright">
                 60 Video Lessons
               </span>
             </div>
@@ -47,7 +47,7 @@ export default function WatchStudioPage() {
           </Link>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-6">
           <WatchCurriculumGrid lessons={VIDEO_LESSONS_60} />
         </div>
       </div>

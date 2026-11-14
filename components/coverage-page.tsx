@@ -72,22 +72,22 @@ export default async function CoveragePage({
 
   return (
     <div>
-      <section className="grain border-b border-line/60">
-        <div className="mx-auto max-w-7xl px-5 py-14 lg:py-16">
+      <section className="grain">
+        <div className="mx-auto max-w-7xl px-5 py-10 lg:py-12">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold flex items-center">
             <span>{copy.eyebrow}</span>
             <WhopBadge variant={isDigitalAssets && initialTab === "speculative" ? "member" : "wsj"} className="ml-2" />
           </p>
-          <h1 className="mt-4 max-w-3xl font-display text-4xl leading-tight text-bone sm:text-5xl flex flex-wrap items-center gap-2">
+          <h1 className="mt-3 max-w-3xl font-display text-3xl leading-tight text-bone sm:text-5xl flex flex-wrap items-center gap-2">
             <span>{copy.title}</span>
             <WhopBadge variant={isDigitalAssets && initialTab === "speculative" ? "member" : "wsj"} className="text-xs align-middle" />
           </h1>
-          <p className="mt-5 max-w-2xl text-[15px] leading-relaxed text-muted">{copy.sub}</p>
+          <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-muted">{copy.sub}</p>
 
-          <dl className="mt-10 grid grid-cols-2 gap-px overflow-hidden rounded-xl border border-line bg-line md:grid-cols-4">
+          <dl className="mt-8 grid grid-cols-2 gap-3 md:grid-cols-4">
             {copy.stats.map((stat, i) => (
-              <div key={stat.label} className="bg-ink-900 px-5 py-4">
-                <dd className="font-mono text-2xl text-bone">{values[i]}</dd>
+              <div key={stat.label} className="rounded-xl bg-ink-900/60 px-5 py-4">
+                <dd className="font-mono text-2xl text-bone tabular-nums">{values[i]}</dd>
                 <dt className="mt-1 text-xs text-muted">{stat.label}</dt>
                 <p className="mt-0.5 text-[10px] uppercase tracking-[0.12em] text-muted/60">{stat.hint}</p>
               </div>
@@ -96,7 +96,7 @@ export default async function CoveragePage({
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-12">
+      <section className="mx-auto max-w-7xl px-5 py-8 sm:py-10">
         <MarketExplorer
           key={isDigitalAssets ? initialTab : kind}
           rows={rows}
@@ -105,20 +105,20 @@ export default async function CoveragePage({
         />
       </section>
 
-      <section className="mx-auto max-w-7xl px-5">
-        <div className="rounded-xl border border-line bg-ink-900/60 p-7 lg:p-9">
+      <section className="mx-auto max-w-7xl px-5 pb-4">
+        <div className="rounded-2xl bg-ink-900/55 p-6 lg:p-8">
           <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">Desk note</p>
           <p className="mt-3 max-w-3xl font-display text-xl leading-relaxed text-bone/90">{copy.note}</p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Link
               href="/disclaimer"
-              className="rounded-full border border-line px-4 py-2 text-xs text-bone transition hover:border-gold/40"
+              className="rounded-full bg-ink-950/75 px-4 py-2 text-xs text-bone transition hover:bg-ink-850 hover:text-gold-bright"
             >
               Read the scoring methodology
             </Link>
             <Link
               href="/pricing"
-              className="inline-flex items-center gap-1.5 rounded-full border border-gold/50 bg-gold/10 px-4 py-2 text-xs font-medium text-gold-bright transition hover:bg-gold/20"
+              className="inline-flex items-center gap-1.5 rounded-full bg-gold/15 px-4 py-2 text-xs font-medium text-gold-bright transition hover:bg-gold/25"
             >
               <span>Unlock full stance reports</span>
               <WhopBadge className="ml-0.5" />

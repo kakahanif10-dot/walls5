@@ -7,15 +7,14 @@ import { formatCompactCurrency } from "@/lib/institutional-tools-data";
 
 function useCryptoStyles(isLight: boolean) {
   return {
-    card: isLight ? "bg-white border-slate-200 text-slate-900" : "bg-zinc-950/75 border-zinc-800 text-zinc-100",
-    subCard: isLight ? "bg-slate-50 border-slate-200" : "bg-zinc-900/60 border-zinc-800",
+    card: isLight ? "bg-white text-slate-900" : "bg-ink-950/75 text-zinc-100",
+    subCard: isLight ? "bg-slate-50 text-slate-900" : "bg-ink-900/65 text-zinc-100",
     muted: isLight ? "text-slate-500" : "text-zinc-400",
-    border: isLight ? "border-slate-200" : "border-zinc-800",
     input: isLight
-      ? "bg-white border-slate-300 text-slate-900 focus:border-emerald-600"
-      : "bg-zinc-900 border-zinc-700 text-zinc-100 focus:border-emerald-500",
-    rowHover: isLight ? "hover:bg-slate-50" : "hover:bg-zinc-900/60",
-    thBg: isLight ? "bg-slate-50 text-slate-600" : "bg-zinc-900/90 text-zinc-400",
+      ? "bg-slate-50 text-slate-900 focus:ring-1 focus:ring-emerald-600/40"
+      : "bg-ink-900/90 text-zinc-100 focus:ring-1 focus:ring-emerald-500/40",
+    rowHover: isLight ? "hover:bg-slate-100/70" : "hover:bg-ink-900/50",
+    thBg: isLight ? "bg-slate-100 text-slate-600" : "bg-ink-900/90 text-zinc-400",
   };
 }
 
@@ -98,12 +97,12 @@ export function GlassnodeOnchainView() {
         return (
           <div className="space-y-5">
             {fetchError && !loading && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-300">
                 <span>Live Bitcoin on-chain telemetry temporarily unavailable ({fetchError}).</span>
                 <button
                   type="button"
                   onClick={() => void load()}
-                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                  className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-medium hover:bg-rose-500/30"
                 >
                   Retry
                 </button>
@@ -111,7 +110,7 @@ export function GlassnodeOnchainView() {
             )}
             {/* KPI Telemetry Strip */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              <div className={`rounded-xl border p-3.5 ${s.card}`}>
+              <div className={`rounded-xl p-3.5 ${s.card}`}>
                 <div className={`text-[11px] ${s.muted}`}>Network Hashrate</div>
                 <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
                   {data?.currentHashrateEh !== null && data?.currentHashrateEh !== undefined
@@ -119,25 +118,25 @@ export function GlassnodeOnchainView() {
                     : "—"}
                 </div>
               </div>
-              <div className={`rounded-xl border p-3.5 ${s.card}`}>
+              <div className={`rounded-xl p-3.5 ${s.card}`}>
                 <div className={`text-[11px] ${s.muted}`}>Mempool Pending</div>
                 <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
                   {data?.mempool ? data.mempool.count.toLocaleString() : "—"}
                 </div>
               </div>
-              <div className={`rounded-xl border p-3.5 ${s.card}`}>
+              <div className={`rounded-xl p-3.5 ${s.card}`}>
                 <div className={`text-[11px] ${s.muted}`}>Fastest Fee Rate</div>
                 <div className="mt-1 font-mono text-lg font-semibold text-amber-500 tabular-nums">
                   {data?.fees ? `${data.fees.fastestFee} sat/vB` : "—"}
                 </div>
               </div>
-              <div className={`rounded-xl border p-3.5 ${s.card}`}>
+              <div className={`rounded-xl p-3.5 ${s.card}`}>
                 <div className={`text-[11px] ${s.muted}`}>Difficulty Progress</div>
                 <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
                   {data?.difficulty ? `${data.difficulty.progressPercent.toFixed(1)}%` : "—"}
                 </div>
               </div>
-              <div className={`rounded-xl border p-3.5 ${s.card}`}>
+              <div className={`rounded-xl p-3.5 ${s.card}`}>
                 <div className={`text-[11px] ${s.muted}`}>BTC Perp Open Int.</div>
                 <div className="mt-1 font-mono text-lg font-semibold text-emerald-500 tabular-nums">
                   {data?.derivatives?.btcOpenInterestUsd !== null && data?.derivatives?.btcOpenInterestUsd !== undefined
@@ -145,7 +144,7 @@ export function GlassnodeOnchainView() {
                     : "—"}
                 </div>
               </div>
-              <div className={`rounded-xl border p-3.5 ${s.card}`}>
+              <div className={`rounded-xl p-3.5 ${s.card}`}>
                 <div className={`text-[11px] ${s.muted}`}>BTC 8h Funding</div>
                 <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
                   {data?.derivatives?.btcFunding8hPct !== null && data?.derivatives?.btcFunding8hPct !== undefined
@@ -157,28 +156,28 @@ export function GlassnodeOnchainView() {
 
             <div className="grid gap-5 lg:grid-cols-12">
               {/* Fee Market + Hashrate Chart */}
-              <div className={`lg:col-span-5 rounded-xl border p-4 space-y-4 ${s.card}`}>
+              <div className={`lg:col-span-5 rounded-xl p-4 sm:p-5 space-y-4 ${s.card}`}>
                 <h3 className="text-sm font-semibold">Bitcoin Fee Pressure &amp; Hashrate Trend</h3>
                 <div className="grid grid-cols-2 gap-2.5 font-mono text-xs tabular-nums">
-                  <div className={`rounded-lg border p-3 ${s.subCard}`}>
+                  <div className={`rounded-xl p-3 ${s.subCard}`}>
                     <div className={s.muted}>Next Block</div>
                     <div className="mt-1 text-base font-semibold">
                       {data?.fees ? `${data.fees.fastestFee} sat/vB` : "—"}
                     </div>
                   </div>
-                  <div className={`rounded-lg border p-3 ${s.subCard}`}>
+                  <div className={`rounded-xl p-3 ${s.subCard}`}>
                     <div className={s.muted}>30 Min Target</div>
                     <div className="mt-1 text-base font-semibold">
                       {data?.fees ? `${data.fees.halfHourFee} sat/vB` : "—"}
                     </div>
                   </div>
-                  <div className={`rounded-lg border p-3 ${s.subCard}`}>
+                  <div className={`rounded-xl p-3 ${s.subCard}`}>
                     <div className={s.muted}>1 Hour Target</div>
                     <div className="mt-1 text-base font-semibold">
                       {data?.fees ? `${data.fees.hourFee} sat/vB` : "—"}
                     </div>
                   </div>
-                  <div className={`rounded-lg border p-3 ${s.subCard}`}>
+                  <div className={`rounded-xl p-3 ${s.subCard}`}>
                     <div className={s.muted}>Mempool Size</div>
                     <div className="mt-1 text-base font-semibold">
                       {data?.mempool ? `${(data.mempool.vsize / 1e6).toFixed(1)} vMB` : "—"}
@@ -187,7 +186,7 @@ export function GlassnodeOnchainView() {
                 </div>
 
                 {hashrateSvg && (
-                  <div className={`rounded-lg border p-3 ${s.subCard}`}>
+                  <div className={`rounded-xl p-3 ${s.subCard}`}>
                     <div className={`text-[11px] mb-1.5 ${s.muted}`}>30-Day Network Hashrate Curve (EH/s)</div>
                     <svg viewBox={`0 0 ${hashrateSvg.w} ${hashrateSvg.h}`} className="w-full h-28">
                       <path d={hashrateSvg.pts} fill="none" stroke="#10b981" strokeWidth={2} />
@@ -197,30 +196,30 @@ export function GlassnodeOnchainView() {
               </div>
 
               {/* Recent Mined Blocks Table */}
-              <div className={`lg:col-span-7 rounded-xl border p-4 space-y-3 ${s.card}`}>
+              <div className={`lg:col-span-7 rounded-xl p-4 sm:p-5 space-y-3 ${s.card}`}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold">Live Bitcoin Block Settlement &amp; Miner Pool Feed</h3>
                   <span className={`font-mono text-[11px] ${s.muted}`}>Mempool.space</span>
                 </div>
-                <div className={`overflow-x-auto rounded-lg border ${s.border}`}>
-                  <table className="w-full text-xs font-mono tabular-nums border-collapse">
+                <div className={`overflow-x-auto rounded-xl p-2 ${s.subCard}`}>
+                  <table className="w-full text-xs font-mono tabular-nums border-separate border-spacing-y-1">
                     <thead>
-                      <tr className={`border-b ${s.border} ${s.thBg}`}>
-                        <th className="py-2 px-3 text-left font-medium">Height</th>
+                      <tr className={s.thBg}>
+                        <th className="py-2 px-3 text-left font-medium rounded-l-lg">Height</th>
                         <th className="py-2 px-3 text-left font-sans font-medium">Mining Pool</th>
                         <th className="py-2 px-3 text-right font-medium">Txs</th>
                         <th className="py-2 px-3 text-right font-medium">Size</th>
-                        <th className="py-2 px-3 text-right font-medium">Total Fees</th>
+                        <th className="py-2 px-3 text-right font-medium rounded-r-lg">Total Fees</th>
                       </tr>
                     </thead>
-                    <tbody className={`divide-y ${s.border}`}>
+                    <tbody>
                       {(data?.recentBlocks ?? []).map((b) => (
-                        <tr key={b.height} className={s.rowHover}>
-                          <td className="py-2 px-3 font-semibold text-emerald-500">#{b.height}</td>
+                        <tr key={b.height} className={`transition-colors ${s.rowHover}`}>
+                          <td className="py-2 px-3 font-semibold text-emerald-500 rounded-l-lg">#{b.height}</td>
                           <td className="py-2 px-3 font-sans">{b.pool}</td>
                           <td className="py-2 px-3 text-right">{b.txCount.toLocaleString()}</td>
                           <td className="py-2 px-3 text-right">{b.sizeMb.toFixed(2)} MB</td>
-                          <td className="py-2 px-3 text-right">
+                          <td className="py-2 px-3 text-right rounded-r-lg">
                             {b.feesBtc !== null ? `${b.feesBtc.toFixed(4)} BTC` : "—"}
                           </td>
                         </tr>
@@ -323,12 +322,12 @@ export function ChainalysisAmlView() {
         return (
           <div className="space-y-5">
             {fetchError && !loading && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-300">
                 <span>Live address forensics RPC temporarily unavailable ({fetchError}).</span>
                 <button
                   type="button"
                   onClick={() => void inspectAddress(addressInput)}
-                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                  className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-medium hover:bg-rose-500/30"
                 >
                   Retry
                 </button>
@@ -340,7 +339,7 @@ export function ChainalysisAmlView() {
                 e.preventDefault();
                 void inspectAddress(addressInput);
               }}
-              className={`rounded-xl border p-4 space-y-3 ${s.card}`}
+              className={`rounded-xl p-4 sm:p-5 space-y-3 ${s.card}`}
             >
               <div className="flex flex-col sm:flex-row gap-2.5">
                 <div className="relative flex-1">
@@ -351,12 +350,12 @@ export function ChainalysisAmlView() {
                     onChange={(e) => setAddressInput(e.target.value)}
                     aria-label="Blockchain wallet address"
                     placeholder="Paste Bitcoin (1.../3.../bc1...) or Ethereum (0x...) address..."
-                    className={`w-full rounded-lg border pl-9 pr-3 py-2 font-mono text-xs outline-none ${s.input}`}
+                    className={`w-full rounded-xl pl-9 pr-3 py-2 font-mono text-xs outline-none ${s.input}`}
                   />
                 </div>
                 <button
                   type="submit"
-                  className="rounded-lg bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors whitespace-nowrap shrink-0"
+                  className="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors whitespace-nowrap shrink-0"
                 >
                   Screen Address
                 </button>
@@ -370,9 +369,9 @@ export function ChainalysisAmlView() {
                       setAddressInput(w.addr);
                       void inspectAddress(w.addr);
                     }}
-                    className={`rounded-lg border px-2.5 py-1 text-[11px] font-medium transition-colors whitespace-nowrap shrink-0 ${
+                    className={`rounded-xl px-3 py-1 text-[11px] font-medium transition-colors whitespace-nowrap shrink-0 ${
                       addressInput === w.addr
-                        ? "border-emerald-500 bg-emerald-500/15 text-emerald-400"
+                        ? "bg-emerald-500/20 text-emerald-400"
                         : `${s.subCard} ${s.muted}`
                     }`}
                   >
@@ -384,7 +383,7 @@ export function ChainalysisAmlView() {
 
             {/* Forensic Metrics Grid */}
             <div className="grid gap-5 lg:grid-cols-12">
-              <div className={`lg:col-span-5 rounded-xl border p-4 space-y-4 ${s.card}`}>
+              <div className={`lg:col-span-5 rounded-xl p-4 sm:p-5 space-y-4 ${s.card}`}>
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <div className={`text-xs ${s.muted}`}>AML Heuristic Risk Score</div>
@@ -400,13 +399,13 @@ export function ChainalysisAmlView() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2.5 font-mono text-xs tabular-nums">
-                  <div className={`rounded-lg border p-3 ${s.subCard}`}>
+                  <div className={`rounded-xl p-3 ${s.subCard}`}>
                     <div className={s.muted}>On-Chain Balance</div>
                     <div className="mt-1 text-base font-semibold">
                       {data ? `${data.balanceNative.toLocaleString(undefined, { maximumFractionDigits: 4 })} ${data.nativeUnit}` : "—"}
                     </div>
                   </div>
-                  <div className={`rounded-lg border p-3 ${s.subCard}`}>
+                  <div className={`rounded-xl p-3 ${s.subCard}`}>
                     <div className={s.muted}>Confirmed Txs</div>
                     <div className="mt-1 text-base font-semibold">
                       {data ? data.txCount.toLocaleString() : "—"}
@@ -414,10 +413,10 @@ export function ChainalysisAmlView() {
                   </div>
                 </div>
 
-                <div className={`border-t pt-3 space-y-2 ${s.border}`}>
+                <div className="pt-2 space-y-2">
                   <div className="text-xs font-semibold">Classification: {data?.entityType ?? "—"}</div>
                   {(data?.risk.factors ?? []).map((f, i) => (
-                    <div key={i} className={`flex items-center justify-between rounded-lg border px-3 py-2 text-xs ${s.subCard}`}>
+                    <div key={i} className={`flex items-center justify-between rounded-xl px-3 py-2 text-xs ${s.subCard}`}>
                       <span>{f.label}</span>
                       <span className="font-mono text-[11px] font-semibold">{f.impact}</span>
                     </div>
@@ -426,28 +425,28 @@ export function ChainalysisAmlView() {
               </div>
 
               {/* On-Chain Transaction Trace Table */}
-              <div className={`lg:col-span-7 rounded-xl border p-4 space-y-3 ${s.card}`}>
+              <div className={`lg:col-span-7 rounded-xl p-4 sm:p-5 space-y-3 ${s.card}`}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold">Live Transaction Graph Trace</h3>
                   <span className={`font-mono text-[11px] ${s.muted}`}>
                     Chain: {data?.chain === "ethereum" ? "Ethereum Mainnet" : "Bitcoin UTXO"}
                   </span>
                 </div>
-                <div className={`overflow-x-auto rounded-lg border ${s.border}`}>
-                  <table className="w-full text-xs font-mono tabular-nums border-collapse">
+                <div className={`overflow-x-auto rounded-xl p-2 ${s.subCard}`}>
+                  <table className="w-full text-xs font-mono tabular-nums border-separate border-spacing-y-1">
                     <thead>
-                      <tr className={`border-b ${s.border} ${s.thBg}`}>
-                        <th className="py-2 px-3 text-left font-medium">Tx Hash / ID</th>
+                      <tr className={s.thBg}>
+                        <th className="py-2 px-3 text-left font-medium rounded-l-lg">Tx Hash / ID</th>
                         <th className="py-2 px-3 text-left font-medium">Block</th>
                         <th className="py-2 px-3 text-left font-medium">UTC Time</th>
                         <th className="py-2 px-3 text-right font-medium">Value ({data?.nativeUnit ?? "BTC"})</th>
-                        <th className="py-2 px-3 text-right font-medium">Network Fee</th>
+                        <th className="py-2 px-3 text-right font-medium rounded-r-lg">Network Fee</th>
                       </tr>
                     </thead>
-                    <tbody className={`divide-y ${s.border}`}>
+                    <tbody>
                       {(data?.recentTxs ?? []).map((tx) => (
-                        <tr key={tx.txid} className={s.rowHover}>
-                          <td className="py-2 px-3 text-emerald-500">
+                        <tr key={tx.txid} className={`transition-colors ${s.rowHover}`}>
+                          <td className="py-2 px-3 text-emerald-500 rounded-l-lg">
                             {tx.txid.slice(0, 12)}…{tx.txid.slice(-6)}
                           </td>
                           <td className="py-2 px-3">{tx.blockHeight ? `#${tx.blockHeight}` : "Mempool"}</td>
@@ -455,7 +454,7 @@ export function ChainalysisAmlView() {
                           <td className="py-2 px-3 text-right">
                             {tx.amountNative.toFixed(4)} {data?.nativeUnit ?? "BTC"}
                           </td>
-                          <td className={`py-2 px-3 text-right ${s.muted}`}>{tx.feeDisplay}</td>
+                          <td className={`py-2 px-3 text-right rounded-r-lg ${s.muted}`}>{tx.feeDisplay}</td>
                         </tr>
                       ))}
                       {data && data.recentTxs.length === 0 && (
@@ -550,12 +549,12 @@ export function MessariResearchView() {
         return (
           <div className="space-y-4">
             {fetchError && !loading && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-300">
                 <span>Live protocol intelligence temporarily unavailable ({fetchError}).</span>
                 <button
                   type="button"
                   onClick={() => void load()}
-                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                  className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-medium hover:bg-rose-500/30"
                 >
                   Retry
                 </button>
@@ -563,23 +562,23 @@ export function MessariResearchView() {
             )}
           <div className="grid gap-5 lg:grid-cols-12">
             {/* Supply & FDV Schedules */}
-            <div className={`lg:col-span-7 rounded-xl border p-4 space-y-3 ${s.card}`}>
+            <div className={`lg:col-span-7 rounded-xl p-4 sm:p-5 space-y-3 ${s.card}`}>
               <h3 className="text-sm font-semibold">Token Supply Schedules &amp; Circulating vs. FDV</h3>
-              <div className={`overflow-x-auto rounded-lg border ${s.border}`}>
-                <table className="w-full text-xs font-mono tabular-nums border-collapse">
+              <div className={`overflow-x-auto rounded-xl p-2 ${s.subCard}`}>
+                <table className="w-full text-xs font-mono tabular-nums border-separate border-spacing-y-1">
                   <thead>
-                    <tr className={`border-b ${s.border} ${s.thBg}`}>
-                      <th className="py-2.5 px-3 text-left font-sans font-semibold">Asset</th>
+                    <tr className={s.thBg}>
+                      <th className="py-2.5 px-3 text-left font-sans font-semibold rounded-l-lg">Asset</th>
                       <th className="py-2.5 px-3 text-right font-medium">Spot</th>
                       <th className="py-2.5 px-3 text-right font-medium">Market Cap</th>
                       <th className="py-2.5 px-3 text-right font-medium">FDV</th>
-                      <th className="py-2.5 px-3 text-right font-medium">Float %</th>
+                      <th className="py-2.5 px-3 text-right font-medium rounded-r-lg">Float %</th>
                     </tr>
                   </thead>
-                  <tbody className={`divide-y ${s.border}`}>
+                  <tbody>
                     {(data?.tokenomics ?? []).map((t) => (
-                      <tr key={t.symbol} className={s.rowHover}>
-                        <td className="py-2.5 px-3 font-sans">
+                      <tr key={t.symbol} className={`transition-colors ${s.rowHover}`}>
+                        <td className="py-2.5 px-3 font-sans rounded-l-lg">
                           <span className="font-semibold">{t.symbol}</span>{" "}
                           <span className={s.muted}>{t.name}</span>
                         </td>
@@ -588,7 +587,7 @@ export function MessariResearchView() {
                         </td>
                         <td className="py-2.5 px-3 text-right">{formatCompactCurrency(t.marketCap)}</td>
                         <td className="py-2.5 px-3 text-right">{formatCompactCurrency(t.fdv)}</td>
-                        <td className="py-2.5 px-3 text-right text-emerald-500 font-semibold">
+                        <td className="py-2.5 px-3 text-right text-emerald-500 font-semibold rounded-r-lg">
                           {t.floatPct.toFixed(1)}%
                         </td>
                       </tr>
@@ -606,7 +605,7 @@ export function MessariResearchView() {
             </div>
 
             {/* Live Snapshot DAO Governance */}
-            <div className={`lg:col-span-5 rounded-xl border p-4 space-y-3 ${s.card}`}>
+            <div className={`lg:col-span-5 rounded-xl p-4 sm:p-5 space-y-3 ${s.card}`}>
               <div className="flex items-center justify-between gap-2">
                 <h3 className="text-sm font-semibold">DAO Governance Proposals</h3>
                 <div className="flex items-center gap-1">
@@ -615,9 +614,9 @@ export function MessariResearchView() {
                       key={st}
                       type="button"
                       onClick={() => setGovFilter(st)}
-                      className={`rounded-md border px-2 py-1 text-[11px] capitalize whitespace-nowrap shrink-0 ${
+                      className={`rounded-lg px-2.5 py-1 text-[11px] capitalize whitespace-nowrap shrink-0 ${
                         govFilter === st
-                          ? "border-emerald-500 bg-emerald-500/15 text-emerald-400"
+                          ? "bg-emerald-500/20 text-emerald-400"
                           : `${s.subCard} ${s.muted}`
                       }`}
                     >
@@ -629,7 +628,7 @@ export function MessariResearchView() {
 
               <div className="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
                 {proposals.map((p) => (
-                  <div key={p.id} className={`rounded-lg border p-3 text-xs space-y-1.5 ${s.subCard}`}>
+                  <div key={p.id} className={`rounded-xl p-3.5 text-xs space-y-1.5 ${s.subCard}`}>
                     <div className="flex items-center justify-between font-mono text-[11px]">
                       <span className="font-semibold text-emerald-500">{p.dao}</span>
                       <span className={p.state === "active" ? "text-amber-500 uppercase" : s.muted}>
@@ -706,12 +705,12 @@ export function NansenArkhamView() {
         return (
           <div className="space-y-4">
             {fetchError && !loading && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-300">
                 <span>Live whale flow telemetry temporarily unavailable ({fetchError}).</span>
                 <button
                   type="button"
                   onClick={() => void load()}
-                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                  className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-medium hover:bg-rose-500/30"
                 >
                   Retry
                 </button>
@@ -719,13 +718,13 @@ export function NansenArkhamView() {
             )}
           <div className="grid gap-5 lg:grid-cols-12">
             {/* Stablecoin Liquidity Flows */}
-            <div className={`lg:col-span-4 rounded-xl border p-4 space-y-3 ${s.card}`}>
+            <div className={`lg:col-span-4 rounded-xl p-4 sm:p-5 space-y-3 ${s.card}`}>
               <h3 className="text-sm font-semibold">Stablecoin Supply &amp; 24h Net Flow</h3>
               <div className="space-y-2">
                 {(data?.stablecoins ?? []).map((st) => (
                   <div
                     key={st.symbol}
-                    className={`flex items-center justify-between rounded-lg border px-3 py-2.5 font-mono text-xs tabular-nums ${s.subCard}`}
+                    className={`flex items-center justify-between rounded-xl px-3.5 py-2.5 font-mono text-xs tabular-nums ${s.subCard}`}
                   >
                     <div>
                       <div className="font-semibold font-sans">{st.symbol}</div>
@@ -745,29 +744,29 @@ export function NansenArkhamView() {
 
             {/* Live Exchange Whale Tape + On-Chain ETH Transfers */}
             <div className="lg:col-span-8 space-y-5">
-              <div className={`rounded-xl border p-4 space-y-3 ${s.card}`}>
+              <div className={`rounded-xl p-4 sm:p-5 space-y-3 ${s.card}`}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold">
                     Live Ethereum Mainnet Whale Transfers {data?.ethBlockNumber ? `(Block #${data.ethBlockNumber.toLocaleString()})` : ""}
                   </h3>
                 </div>
-                <div className={`overflow-x-auto rounded-lg border ${s.border}`}>
-                  <table className="w-full text-xs font-mono tabular-nums border-collapse">
+                <div className={`overflow-x-auto rounded-xl p-2 ${s.subCard}`}>
+                  <table className="w-full text-xs font-mono tabular-nums border-separate border-spacing-y-1">
                     <thead>
-                      <tr className={`border-b ${s.border} ${s.thBg}`}>
-                        <th className="py-2 px-3 text-left font-medium">Tx Hash</th>
+                      <tr className={s.thBg}>
+                        <th className="py-2 px-3 text-left font-medium rounded-l-lg">Tx Hash</th>
                         <th className="py-2 px-3 text-left font-medium">From</th>
                         <th className="py-2 px-3 text-left font-medium">To</th>
-                        <th className="py-2 px-3 text-right font-medium">Value (ETH)</th>
+                        <th className="py-2 px-3 text-right font-medium rounded-r-lg">Value (ETH)</th>
                       </tr>
                     </thead>
-                    <tbody className={`divide-y ${s.border}`}>
+                    <tbody>
                       {(data?.ethWhaleTxs ?? []).map((tx) => (
-                        <tr key={tx.hash} className={s.rowHover}>
-                          <td className="py-2 px-3 text-emerald-500">{tx.hash.slice(0, 12)}…</td>
+                        <tr key={tx.hash} className={`transition-colors ${s.rowHover}`}>
+                          <td className="py-2 px-3 text-emerald-500 rounded-l-lg">{tx.hash.slice(0, 12)}…</td>
                           <td className={`py-2 px-3 ${s.muted}`}>{tx.from.slice(0, 10)}…</td>
                           <td className={`py-2 px-3 ${s.muted}`}>{tx.to.slice(0, 10)}…</td>
-                          <td className="py-2 px-3 text-right font-semibold">{tx.valueEth.toFixed(2)} ETH</td>
+                          <td className="py-2 px-3 text-right font-semibold rounded-r-lg">{tx.valueEth.toFixed(2)} ETH</td>
                         </tr>
                       ))}
                     </tbody>
@@ -775,23 +774,23 @@ export function NansenArkhamView() {
                 </div>
               </div>
 
-              <div className={`rounded-xl border p-4 space-y-3 ${s.card}`}>
+              <div className={`rounded-xl p-4 sm:p-5 space-y-3 ${s.card}`}>
                 <h3 className="text-sm font-semibold">Largest Live Spot Block Executions (BTC &amp; ETH)</h3>
-                <div className={`overflow-x-auto rounded-lg border ${s.border}`}>
-                  <table className="w-full text-xs font-mono tabular-nums border-collapse">
+                <div className={`overflow-x-auto rounded-xl p-2 ${s.subCard}`}>
+                  <table className="w-full text-xs font-mono tabular-nums border-separate border-spacing-y-1">
                     <thead>
-                      <tr className={`border-b ${s.border} ${s.thBg}`}>
-                        <th className="py-2 px-3 text-left font-medium">Time (UTC)</th>
+                      <tr className={s.thBg}>
+                        <th className="py-2 px-3 text-left font-medium rounded-l-lg">Time (UTC)</th>
                         <th className="py-2 px-3 text-left font-medium">Pair</th>
                         <th className="py-2 px-3 text-left font-medium">Taker Side</th>
                         <th className="py-2 px-3 text-right font-medium">Exec Price</th>
-                        <th className="py-2 px-3 text-right font-medium">Notional</th>
+                        <th className="py-2 px-3 text-right font-medium rounded-r-lg">Notional</th>
                       </tr>
                     </thead>
-                    <tbody className={`divide-y ${s.border}`}>
+                    <tbody>
                       {(data?.whaleTrades ?? []).map((tr) => (
-                        <tr key={tr.id} className={s.rowHover}>
-                          <td className={`py-2 px-3 ${s.muted}`}>{tr.time}</td>
+                        <tr key={tr.id} className={`transition-colors ${s.rowHover}`}>
+                          <td className={`py-2 px-3 rounded-l-lg ${s.muted}`}>{tr.time}</td>
                           <td className="py-2 px-3 font-semibold">{tr.asset}/USDT</td>
                           <td
                             className={`py-2 px-3 font-semibold ${
@@ -801,7 +800,7 @@ export function NansenArkhamView() {
                             {tr.side}
                           </td>
                           <td className="py-2 px-3 text-right">${tr.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</td>
-                          <td className="py-2 px-3 text-right font-semibold">{formatCompactCurrency(tr.notionalUsd)}</td>
+                          <td className="py-2 px-3 text-right font-semibold rounded-r-lg">{formatCompactCurrency(tr.notionalUsd)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -901,12 +900,12 @@ export function DefillamaTerminalView() {
         return (
           <div className="space-y-5">
             {fetchError && !loading && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-300">
                 <span>Live DeFiLlama TVL &amp; fee feed temporarily unavailable ({fetchError}).</span>
                 <button
                   type="button"
                   onClick={() => void load()}
-                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                  className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-medium hover:bg-rose-500/30"
                 >
                   Retry
                 </button>
@@ -915,7 +914,7 @@ export function DefillamaTerminalView() {
             {/* Global Chain Dominance Strip */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {(data?.chains ?? []).slice(0, 5).map((c) => (
-                <div key={c.name} className={`rounded-xl border p-3.5 ${s.card}`}>
+                <div key={c.name} className={`rounded-xl p-3.5 ${s.card}`}>
                   <div className={`text-[11px] ${s.muted}`}>{c.name} TVL</div>
                   <div className="mt-1 font-mono text-lg font-semibold text-emerald-500 tabular-nums">
                     {formatCompactCurrency(c.tvl)}
@@ -931,9 +930,9 @@ export function DefillamaTerminalView() {
                     key={c}
                     type="button"
                     onClick={() => setCat(c)}
-                    className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium whitespace-nowrap shrink-0 ${
+                    className={`rounded-xl px-3 py-1.5 text-xs font-medium whitespace-nowrap shrink-0 ${
                       cat === c
-                        ? "border-emerald-500 bg-emerald-500/15 text-emerald-400"
+                        ? "bg-emerald-500/20 text-emerald-400"
                         : `${s.subCard} ${s.muted}`
                     }`}
                   >
@@ -948,29 +947,29 @@ export function DefillamaTerminalView() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Filter protocols..."
-                  className={`w-full rounded-lg border pl-9 pr-3 py-2 text-xs outline-none ${s.input}`}
+                  className={`w-full rounded-xl pl-9 pr-3 py-2 text-xs outline-none ${s.input}`}
                 />
               </div>
             </div>
 
-            <div className={`overflow-x-auto rounded-xl border ${s.card}`}>
-              <table className="w-full text-xs font-mono tabular-nums border-collapse">
+            <div className={`overflow-x-auto rounded-xl p-2 ${s.card}`}>
+              <table className="w-full text-xs font-mono tabular-nums border-separate border-spacing-y-1">
                 <thead>
-                  <tr className={`border-b ${s.border} ${s.thBg}`}>
-                    <th className="py-2.5 px-3 text-left font-sans font-semibold">Protocol</th>
+                  <tr className={s.thBg}>
+                    <th className="py-2.5 px-3 text-left font-sans font-semibold rounded-l-lg">Protocol</th>
                     <th className="py-2.5 px-3 text-left font-sans font-semibold">Category</th>
                     <th className="py-2.5 px-3 text-right font-medium">TVL</th>
                     <th className="py-2.5 px-3 text-right font-medium">1D Chg</th>
                     <th className="py-2.5 px-3 text-right font-medium">24h Fees</th>
                     <th className="py-2.5 px-3 text-right font-medium">Ann. Fees</th>
                     <th className="py-2.5 px-3 text-right font-medium">MCap/TVL</th>
-                    <th className="py-2.5 px-3 text-right font-medium">P/F Ratio</th>
+                    <th className="py-2.5 px-3 text-right font-medium rounded-r-lg">P/F Ratio</th>
                   </tr>
                 </thead>
-                <tbody className={`divide-y ${s.border}`}>
+                <tbody>
                   {filteredProtocols.map((p) => (
-                    <tr key={p.name} className={s.rowHover}>
-                      <td className="py-2.5 px-3 font-sans font-semibold">
+                    <tr key={p.name} className={`transition-colors ${s.rowHover}`}>
+                      <td className="py-2.5 px-3 font-sans font-semibold rounded-l-lg">
                         {p.name} <span className={`font-mono text-[10px] ${s.muted}`}>{p.symbol}</span>
                       </td>
                       <td className={`py-2.5 px-3 font-sans ${s.muted}`}>{p.category}</td>
@@ -988,7 +987,7 @@ export function DefillamaTerminalView() {
                       <td className="py-2.5 px-3 text-right">
                         {p.mcapTvl !== null ? `${p.mcapTvl.toFixed(2)}×` : "—"}
                       </td>
-                      <td className="py-2.5 px-3 text-right text-emerald-500 font-semibold">
+                      <td className="py-2.5 px-3 text-right text-emerald-500 font-semibold rounded-r-lg">
                         {p.pfRatio !== null ? `${p.pfRatio.toFixed(1)}×` : "—"}
                       </td>
                     </tr>
@@ -1069,12 +1068,12 @@ export function CoinMetricsKaikoView() {
         return (
           <div className="space-y-5">
             {fetchError && !loading && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-300">
                 <span>Live multi-venue orderbook feed temporarily unavailable ({fetchError}).</span>
                 <button
                   type="button"
                   onClick={() => void load(symbol)}
-                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                  className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-medium hover:bg-rose-500/30"
                 >
                   Retry
                 </button>
@@ -1087,9 +1086,9 @@ export function CoinMetricsKaikoView() {
                     key={sym}
                     type="button"
                     onClick={() => setSymbol(sym)}
-                    className={`rounded-lg border px-3.5 py-1.5 font-mono text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
+                    className={`rounded-xl px-3.5 py-1.5 font-mono text-xs font-semibold transition-colors whitespace-nowrap shrink-0 ${
                       symbol === sym
-                        ? "border-emerald-500 bg-emerald-500/15 text-emerald-400"
+                        ? "bg-emerald-500/20 text-emerald-400"
                         : `${s.subCard} ${s.muted}`
                     }`}
                   >
@@ -1116,7 +1115,7 @@ export function CoinMetricsKaikoView() {
             {/* Venue Comparison Cards */}
             <div className="grid gap-4 lg:grid-cols-3">
               {(data?.venues ?? []).map((v) => (
-                <div key={v.venue} className={`rounded-xl border p-4 space-y-3 ${s.card}`}>
+                <div key={v.venue} className={`rounded-xl p-4 sm:p-5 space-y-3 ${s.card}`}>
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold">{v.venue}</h3>
                     <span className="font-mono text-xs text-emerald-500 tabular-nums">
@@ -1125,13 +1124,13 @@ export function CoinMetricsKaikoView() {
                   </div>
 
                   <div className="grid grid-cols-2 gap-2 font-mono text-xs tabular-nums">
-                    <div className={`rounded-lg border p-2.5 ${s.subCard}`}>
+                    <div className={`rounded-xl p-2.5 ${s.subCard}`}>
                       <div className={s.muted}>Best Bid / Ask</div>
                       <div className="mt-1 font-semibold">
                         ${v.bestBid.toFixed(2)} / ${v.bestAsk.toFixed(2)}
                       </div>
                     </div>
-                    <div className={`rounded-lg border p-2.5 ${s.subCard}`}>
+                    <div className={`rounded-xl p-2.5 ${s.subCard}`}>
                       <div className={s.muted}>$100K / $500K Slippage</div>
                       <div className="mt-1 font-semibold text-amber-500">
                         {v.slip100kBps.toFixed(2)} / {v.slip500kBps.toFixed(2)} bps
@@ -1140,25 +1139,25 @@ export function CoinMetricsKaikoView() {
                   </div>
 
                   {/* Top L2 Book Snapshot */}
-                  <div className={`rounded-lg border overflow-hidden ${s.border}`}>
-                    <table className="w-full text-[11px] font-mono tabular-nums border-collapse">
+                  <div className={`rounded-xl p-2 overflow-hidden ${s.subCard}`}>
+                    <table className="w-full text-[11px] font-mono tabular-nums border-separate border-spacing-y-0.5">
                       <thead>
-                        <tr className={`border-b ${s.border} ${s.thBg}`}>
-                          <th className="py-1.5 px-2.5 text-left font-medium">Bid Size</th>
+                        <tr className={s.thBg}>
+                          <th className="py-1.5 px-2.5 text-left font-medium rounded-l-md">Bid Size</th>
                           <th className="py-1.5 px-2.5 text-right font-medium text-emerald-500">Bid</th>
                           <th className="py-1.5 px-2.5 text-left font-medium text-rose-500">Ask</th>
-                          <th className="py-1.5 px-2.5 text-right font-medium">Ask Size</th>
+                          <th className="py-1.5 px-2.5 text-right font-medium rounded-r-md">Ask Size</th>
                         </tr>
                       </thead>
-                      <tbody className={`divide-y ${s.border}`}>
+                      <tbody>
                         {v.topBids.slice(0, 6).map((b, i) => {
                           const a = v.topAsks[i];
                           return (
-                            <tr key={i} className={s.rowHover}>
-                              <td className="py-1 px-2.5">{b.size.toFixed(3)}</td>
+                            <tr key={i} className={`transition-colors ${s.rowHover}`}>
+                              <td className="py-1 px-2.5 rounded-l-md">{b.size.toFixed(3)}</td>
                               <td className="py-1 px-2.5 text-right text-emerald-500">${b.price.toFixed(2)}</td>
                               <td className="py-1 px-2.5 text-rose-500">{a ? `$${a.price.toFixed(2)}` : "—"}</td>
-                              <td className="py-1 px-2.5 text-right">{a ? a.size.toFixed(3) : "—"}</td>
+                              <td className="py-1 px-2.5 text-right rounded-r-md">{a ? a.size.toFixed(3) : "—"}</td>
                             </tr>
                           );
                         })}

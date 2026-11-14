@@ -4,7 +4,7 @@ import WhopBadge from "./whop-badge";
 export default function RulesVsFundamental() {
   return (
     <section className="mx-auto max-w-7xl px-5 py-16">
-      <div className="rounded-2xl border border-line bg-ink-900/50 p-6 sm:p-10 backdrop-blur">
+      <div className="rounded-2xl bg-ink-900/55 p-6 sm:p-10 backdrop-blur">
         <div className="max-w-3xl">
           <div className="flex items-center gap-2">
             <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">
@@ -22,8 +22,8 @@ export default function RulesVsFundamental() {
 
         <div className="mt-10 grid gap-6 lg:grid-cols-2">
           {/* Traditional Fundamental Ratio Approach (Simply Wall St Style) */}
-          <div className="rounded-xl border border-line/80 bg-ink-950 p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-line/60 pb-3">
+          <div className="rounded-2xl bg-ink-950/75 p-6 sm:p-7 space-y-4">
+            <div className="flex items-center justify-between pb-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-rose-400">
                 Traditional Ratio Models (Simply Wall St Style)
               </span>
@@ -58,8 +58,8 @@ export default function RulesVsFundamental() {
           </div>
 
           {/* NextWallStreet Quantitative Momentum Engine */}
-          <div className="rounded-xl border border-gold/40 bg-gradient-to-br from-ink-900 to-ink-950 p-6 space-y-4 shadow-lg">
-            <div className="flex items-center justify-between border-b border-line/60 pb-3">
+          <div className="rounded-2xl bg-gradient-to-br from-ink-900/90 to-ink-950/90 p-6 sm:p-7 space-y-4 shadow-lg">
+            <div className="flex items-center justify-between pb-2">
               <span className="text-xs font-semibold uppercase tracking-wider text-gold-bright flex items-center gap-1.5">
                 <Cpu className="h-4 w-4 text-gold" />
                 NextWallStreet Quantitative Engine

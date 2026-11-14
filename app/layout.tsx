@@ -1,5 +1,20 @@
 import type { Metadata } from "next";
+import { IBM_Plex_Sans, Newsreader } from "next/font/google";
 import "./globals.css";
+
+const ibmPlexSans = IBM_Plex_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-bloomberg-sans",
+  display: "swap",
+});
+
+const newsreader = Newsreader({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-wsj-serif",
+  display: "swap",
+});
 import SiteHeader from "@/components/site-header";
 import SiteFooter from "@/components/site-footer";
 import LivePricesProvider from "@/components/live-prices";
@@ -43,7 +58,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
   const delayed = false;
 
   return (
-    <html lang="en">
+    <html lang="en" className={`${ibmPlexSans.variable} ${newsreader.variable}`}>
       <head>
         <script
           dangerouslySetInnerHTML={{

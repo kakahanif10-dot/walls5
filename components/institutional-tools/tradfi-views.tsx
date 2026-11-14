@@ -15,15 +15,14 @@ import {
 
 function useSharedStyles(isLight: boolean) {
   return {
-    card: isLight ? "bg-white border-slate-200 text-slate-900" : "bg-zinc-950/75 border-zinc-800 text-zinc-100",
-    subCard: isLight ? "bg-slate-50 border-slate-200" : "bg-zinc-900/60 border-zinc-800",
+    card: isLight ? "bg-white text-slate-900" : "bg-ink-950/75 text-zinc-100",
+    subCard: isLight ? "bg-slate-50 text-slate-900" : "bg-ink-900/65 text-zinc-100",
     muted: isLight ? "text-slate-500" : "text-zinc-400",
-    border: isLight ? "border-slate-200" : "border-zinc-800",
     input: isLight
-      ? "bg-white border-slate-300 text-slate-900 focus:border-emerald-600"
-      : "bg-zinc-900 border-zinc-700 text-zinc-100 focus:border-emerald-500",
-    rowHover: isLight ? "hover:bg-slate-50" : "hover:bg-zinc-900/60",
-    thBg: isLight ? "bg-slate-50 text-slate-600" : "bg-zinc-900/90 text-zinc-400",
+      ? "bg-slate-50 text-slate-900 focus:ring-1 focus:ring-emerald-600/40"
+      : "bg-ink-900/90 text-zinc-100 focus:ring-1 focus:ring-emerald-500/40",
+    rowHover: isLight ? "hover:bg-slate-100/70" : "hover:bg-ink-900/50",
+    thBg: isLight ? "bg-slate-100 text-slate-600" : "bg-ink-900/90 text-zinc-400",
   };
 }
 
@@ -87,12 +86,12 @@ export function BloombergDeskView() {
         return (
           <div className="space-y-5">
             {fetchError && !loading && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-300">
                 <span>Live terminal data temporarily unavailable ({fetchError}).</span>
                 <button
                   type="button"
                   onClick={() => void load()}
-                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                  className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-medium hover:bg-rose-500/30"
                 >
                   Retry
                 </button>
@@ -106,7 +105,7 @@ export function BloombergDeskView() {
                   window.location.href = `/ticker/${encodeURIComponent(command.trim().toUpperCase())}`;
                 }
               }}
-              className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-3 rounded-xl border p-3.5 ${s.card}`}
+              className={`flex flex-col sm:flex-row items-stretch sm:items-center gap-3 rounded-xl p-3.5 ${s.card}`}
             >
               <label htmlFor="bbg-cmd" className="font-mono text-xs font-semibold text-amber-500 whitespace-nowrap shrink-0">
                 COMMAND &lt;GO&gt;
@@ -117,11 +116,11 @@ export function BloombergDeskView() {
                 value={command}
                 onChange={(e) => setCommand(e.target.value.toUpperCase())}
                 placeholder="Enter ticker symbol (NVDA, AAPL, BTC, SOL)..."
-                className={`flex-1 rounded-lg border px-3 py-1.5 font-mono text-xs uppercase outline-none ${s.input}`}
+                className={`flex-1 rounded-xl px-3 py-2 font-mono text-xs uppercase outline-none ${s.input}`}
               />
               <button
                 type="submit"
-                className="rounded-lg bg-amber-500 px-4 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-amber-400 transition-colors whitespace-nowrap shrink-0"
+                className="rounded-xl bg-amber-500 px-4 py-2 text-xs font-semibold text-zinc-950 hover:bg-amber-400 transition-colors whitespace-nowrap shrink-0"
               >
                 Load Security &lt;GO&gt;
               </button>
@@ -130,25 +129,25 @@ export function BloombergDeskView() {
             {/* 3-Column Bento Grid: Equities | Fixed Income & FX | Crypto & Wire */}
             <div className="grid gap-5 lg:grid-cols-12">
               {/* Equities Monitor */}
-              <div className={`lg:col-span-5 rounded-xl border p-4 space-y-3 ${s.card}`}>
+              <div className={`lg:col-span-5 rounded-xl p-4 sm:p-5 space-y-3 ${s.card}`}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold">US Equities &amp; Benchmarks</h3>
                   <span className={`font-mono text-[11px] ${s.muted}`}>Yahoo Live</span>
                 </div>
-                <div className={`overflow-x-auto rounded-lg border ${s.border}`}>
-                  <table className="w-full text-xs border-collapse font-mono tabular-nums">
+                <div className={`overflow-x-auto rounded-xl p-2 ${s.subCard}`}>
+                  <table className="w-full text-xs border-separate border-spacing-y-1 font-mono tabular-nums">
                     <thead>
-                      <tr className={`border-b ${s.border} ${s.thBg}`}>
-                        <th className="py-2 px-3 text-left font-medium">Ticker</th>
+                      <tr className={s.thBg}>
+                        <th className="py-2 px-3 text-left font-medium rounded-l-lg">Ticker</th>
                         <th className="py-2 px-3 text-right font-medium">Last</th>
                         <th className="py-2 px-3 text-right font-medium">Chg %</th>
-                        <th className="py-2 px-3 text-right font-medium">Vol</th>
+                        <th className="py-2 px-3 text-right font-medium rounded-r-lg">Vol</th>
                       </tr>
                     </thead>
-                    <tbody className={`divide-y ${s.border}`}>
+                    <tbody>
                       {(data?.equities ?? []).map((eq) => (
-                        <tr key={eq.symbol} className={s.rowHover}>
-                          <td className="py-2 px-3 font-semibold">
+                        <tr key={eq.symbol} className={`transition-colors ${s.rowHover}`}>
+                          <td className="py-2 px-3 font-semibold rounded-l-lg">
                             <Link href={`/ticker/${eq.symbol}`} className="hover:text-emerald-500">
                               {eq.symbol}
                             </Link>
@@ -162,7 +161,7 @@ export function BloombergDeskView() {
                             {eq.changePct >= 0 ? "+" : ""}
                             {eq.changePct.toFixed(2)}%
                           </td>
-                          <td className={`py-2 px-3 text-right ${s.muted}`}>
+                          <td className={`py-2 px-3 text-right rounded-r-lg ${s.muted}`}>
                             {(eq.volume / 1e6).toFixed(1)}M
                           </td>
                         </tr>
@@ -180,7 +179,7 @@ export function BloombergDeskView() {
               </div>
 
               {/* US Treasury Yield Curve & ECB FX */}
-              <div className={`lg:col-span-4 rounded-xl border p-4 space-y-4 ${s.card}`}>
+              <div className={`lg:col-span-4 rounded-xl p-4 sm:p-5 space-y-4 ${s.card}`}>
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold">US Treasury Yield Curve</h3>
                   {spread2s10s !== null && (
@@ -198,7 +197,7 @@ export function BloombergDeskView() {
                 <div className="grid grid-cols-2 gap-2.5">
                   {(data?.yieldCurve ?? []).length > 0 ? (
                     (data?.yieldCurve ?? []).map((y) => (
-                      <div key={y.tenor} className={`rounded-lg border p-3 ${s.subCard}`}>
+                      <div key={y.tenor} className={`rounded-xl p-3 ${s.subCard}`}>
                         <div className={`text-[11px] ${s.muted}`}>{y.tenor}</div>
                         <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
                           {y.yieldPct.toFixed(2)}%
@@ -206,13 +205,13 @@ export function BloombergDeskView() {
                       </div>
                     ))
                   ) : (
-                    <div className={`col-span-2 rounded-lg border p-4 text-center text-xs ${s.subCard} ${s.muted}`}>
+                    <div className={`col-span-2 rounded-xl p-4 text-center text-xs ${s.subCard} ${s.muted}`}>
                       {loading ? "Syncing US Treasury yields..." : "Live Treasury curve unavailable."}
                     </div>
                   )}
                 </div>
 
-                <div className={`border-t pt-3 ${s.border}`}>
+                <div className="pt-2">
                   <div className="flex items-center justify-between mb-2">
                     <h4 className="text-xs font-semibold">ECB Spot FX Crosses</h4>
                     <span className={`font-mono text-[11px] ${s.muted}`}>Frankfurter</span>
@@ -235,7 +234,7 @@ export function BloombergDeskView() {
               </div>
 
               {/* Digital Spot & SEC Wire */}
-              <div className={`lg:col-span-3 rounded-xl border p-4 space-y-4 ${s.card}`}>
+              <div className={`lg:col-span-3 rounded-xl p-4 sm:p-5 space-y-4 ${s.card}`}>
                 <div>
                   <h3 className="text-sm font-semibold mb-2.5">24/7 Crypto Benchmark</h3>
                   <div className="space-y-2">
@@ -243,7 +242,7 @@ export function BloombergDeskView() {
                       (data?.crypto ?? []).map((c) => (
                         <div
                           key={c.symbol}
-                          className={`flex items-center justify-between rounded-lg border px-3 py-2 font-mono text-xs tabular-nums ${s.subCard}`}
+                          className={`flex items-center justify-between rounded-xl px-3 py-2 font-mono text-xs tabular-nums ${s.subCard}`}
                         >
                           <span className="font-semibold">{c.symbol}/USD</span>
                           <div className="text-right">
@@ -256,14 +255,14 @@ export function BloombergDeskView() {
                         </div>
                       ))
                     ) : (
-                      <div className={`rounded-lg border p-3 text-center text-xs ${s.subCard} ${s.muted}`}>
+                      <div className={`rounded-xl p-3 text-center text-xs ${s.subCard} ${s.muted}`}>
                         {loading ? "Syncing crypto benchmark..." : "Live crypto feed unavailable."}
                       </div>
                     )}
                   </div>
                 </div>
 
-                <div className={`border-t pt-3 ${s.border}`}>
+                <div className="pt-2">
                   <h4 className="text-xs font-semibold mb-2">SEC EDGAR Regulatory Wire</h4>
                   <div className="space-y-2">
                     {(data?.headlines ?? []).length > 0 ? (
@@ -273,7 +272,7 @@ export function BloombergDeskView() {
                           href={h.url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className={`block rounded-lg border p-2.5 text-xs transition-colors ${s.subCard} hover:border-emerald-500/50`}
+                          className={`block rounded-xl p-2.5 text-xs transition-colors ${s.subCard} hover:opacity-90`}
                         >
                           <div className={`flex items-center justify-between text-[10px] font-mono ${s.muted}`}>
                             <span>{h.source}</span>
@@ -283,7 +282,7 @@ export function BloombergDeskView() {
                         </a>
                       ))
                     ) : (
-                      <div className={`rounded-lg border p-3 text-center text-xs ${s.subCard} ${s.muted}`}>
+                      <div className={`rounded-xl p-3 text-center text-xs ${s.subCard} ${s.muted}`}>
                         {loading ? "Syncing SEC EDGAR filings..." : "SEC EDGAR wire unavailable."}
                       </div>
                     )}
@@ -482,9 +481,9 @@ export function ExcelDcfView() {
                     key={t}
                     type="button"
                     onClick={() => setSymbol(t)}
-                    className={`rounded-lg border px-3 py-1.5 font-mono text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                    className={`rounded-xl px-3 py-1.5 font-mono text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
                       symbol === t
-                        ? "border-emerald-500 bg-emerald-500/15 text-emerald-400"
+                        ? "bg-emerald-500/20 text-emerald-400"
                         : `${s.subCard} ${s.muted}`
                     }`}
                   >
@@ -500,12 +499,12 @@ export function ExcelDcfView() {
             </div>
 
             {seedError && !loading && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-300">
                 <span>Live SEC EDGAR / market fundamentals temporarily unavailable ({seedError}).</span>
                 <button
                   type="button"
                   onClick={() => void load(symbol)}
-                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                  className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-medium hover:bg-rose-500/30"
                 >
                   Retry
                 </button>
@@ -514,7 +513,7 @@ export function ExcelDcfView() {
 
             <div className="grid gap-5 lg:grid-cols-12">
               {/* Left Column: Excel Assumption Cells */}
-              <div className={`lg:col-span-4 rounded-xl border p-4 space-y-4 ${s.card}`}>
+              <div className={`lg:col-span-4 rounded-xl p-4 sm:p-5 space-y-4 ${s.card}`}>
                 <h3 className="text-sm font-semibold">Operating &amp; WACC Assumptions</h3>
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   {(
@@ -541,13 +540,13 @@ export function ExcelDcfView() {
                         value={cell.val ?? ""}
                         placeholder={loading ? "…" : "—"}
                         onChange={(e) => cell.set(Number(e.target.value) || 0)}
-                        className={`w-full rounded-lg border px-2.5 py-1.5 font-mono text-xs tabular-nums outline-none ${s.input}`}
+                        className={`w-full rounded-xl px-2.5 py-2 font-mono text-xs tabular-nums outline-none ${s.input}`}
                       />
                     </label>
                   ))}
                 </div>
 
-                <div className={`border-t pt-3 space-y-1.5 font-mono text-xs tabular-nums ${s.border}`}>
+                <div className="pt-2 space-y-1.5 font-mono text-xs tabular-nums">
                   <div className="flex justify-between">
                     <span className={s.muted}>Cost of Equity (CAPM)</span>
                     <span>{wacc ? `${wacc.costOfEquityPct.toFixed(2)}%` : "—"}</span>
@@ -567,13 +566,13 @@ export function ExcelDcfView() {
               <div className="lg:col-span-8 space-y-5">
                 {/* Headline Valuation Strip */}
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                  <div className={`rounded-xl border p-3.5 ${s.card}`}>
+                  <div className={`rounded-xl p-3.5 ${s.card}`}>
                     <div className={`text-[11px] ${s.muted}`}>Implied Share Price</div>
                     <div className="mt-1 font-mono text-xl font-semibold text-emerald-500 tabular-nums">
                       {dcf ? `$${dcf.impliedSharePriceUsd.toFixed(2)}` : "—"}
                     </div>
                   </div>
-                  <div className={`rounded-xl border p-3.5 ${s.card}`}>
+                  <div className={`rounded-xl p-3.5 ${s.card}`}>
                     <div className={`text-[11px] ${s.muted}`}>Implied Upside</div>
                     <div
                       className={`mt-1 font-mono text-xl font-semibold tabular-nums ${
@@ -585,13 +584,13 @@ export function ExcelDcfView() {
                         : "—"}
                     </div>
                   </div>
-                  <div className={`rounded-xl border p-3.5 ${s.card}`}>
+                  <div className={`rounded-xl p-3.5 ${s.card}`}>
                     <div className={`text-[11px] ${s.muted}`}>Enterprise Value</div>
                     <div className="mt-1 font-mono text-xl font-semibold tabular-nums">
                       {dcf ? formatCompactCurrency(dcf.enterpriseValueM * 1e6) : "—"}
                     </div>
                   </div>
-                  <div className={`rounded-xl border p-3.5 ${s.card}`}>
+                  <div className={`rounded-xl p-3.5 ${s.card}`}>
                     <div className={`text-[11px] ${s.muted}`}>PV of TV / EV</div>
                     <div className="mt-1 font-mono text-xl font-semibold tabular-nums">
                       {dcf ? `${dcf.tvShareOfEvPct.toFixed(1)}%` : "—"}
@@ -600,62 +599,62 @@ export function ExcelDcfView() {
                 </div>
 
                 {/* 5-Year Unlevered Free Cash Flow Sheet */}
-                <div className={`rounded-xl border p-4 space-y-3 ${s.card}`}>
+                <div className={`rounded-xl p-4 sm:p-5 space-y-3 ${s.card}`}>
                   <h3 className="text-sm font-semibold">5-Year Unlevered Free Cash Flow Schedule ($M)</h3>
                   {!dcf ? (
-                    <div className={`rounded-lg border p-6 text-center text-xs font-mono ${s.border} ${s.muted}`}>
+                    <div className={`rounded-xl p-6 text-center text-xs font-mono ${s.subCard} ${s.muted}`}>
                       {loading ? "Syncing live SEC EDGAR financial schedule..." : "Live DCF cash-flow schedule unavailable."}
                     </div>
                   ) : (
-                  <div className={`overflow-x-auto rounded-lg border ${s.border}`}>
-                    <table className="w-full text-xs font-mono tabular-nums border-collapse">
+                  <div className={`overflow-x-auto rounded-xl p-2 ${s.subCard}`}>
+                    <table className="w-full text-xs font-mono tabular-nums border-separate border-spacing-y-1">
                       <thead>
-                        <tr className={`border-b ${s.border} ${s.thBg}`}>
-                          <th className="py-2 px-3 text-left font-medium">Line Item ($M)</th>
-                          {dcf.projections.map((p) => (
-                            <th key={p.year} className="py-2 px-3 text-right font-medium">
+                        <tr className={s.thBg}>
+                          <th className="py-2 px-3 text-left font-medium rounded-l-lg">Line Item ($M)</th>
+                          {dcf.projections.map((p, idx) => (
+                            <th key={p.year} className={`py-2 px-3 text-right font-medium ${idx === dcf.projections.length - 1 ? "rounded-r-lg" : ""}`}>
                               FY+{p.year}
                             </th>
                           ))}
                         </tr>
                       </thead>
-                      <tbody className={`divide-y ${s.border}`}>
-                        <tr>
-                          <td className="py-2 px-3 font-sans font-medium">Revenue</td>
-                          {dcf.projections.map((p) => (
-                            <td key={p.year} className="py-2 px-3 text-right">
+                      <tbody>
+                        <tr className={`transition-colors ${s.rowHover}`}>
+                          <td className="py-2 px-3 font-sans font-medium rounded-l-lg">Revenue</td>
+                          {dcf.projections.map((p, idx) => (
+                            <td key={p.year} className={`py-2 px-3 text-right ${idx === dcf.projections.length - 1 ? "rounded-r-lg" : ""}`}>
                               {Math.round(p.revenueM).toLocaleString()}
                             </td>
                           ))}
                         </tr>
-                        <tr>
-                          <td className="py-2 px-3 font-sans font-medium">EBITDA</td>
-                          {dcf.projections.map((p) => (
-                            <td key={p.year} className="py-2 px-3 text-right">
+                        <tr className={`transition-colors ${s.rowHover}`}>
+                          <td className="py-2 px-3 font-sans font-medium rounded-l-lg">EBITDA</td>
+                          {dcf.projections.map((p, idx) => (
+                            <td key={p.year} className={`py-2 px-3 text-right ${idx === dcf.projections.length - 1 ? "rounded-r-lg" : ""}`}>
                               {Math.round(p.ebitdaM).toLocaleString()}
                             </td>
                           ))}
                         </tr>
-                        <tr>
-                          <td className="py-2 px-3 font-sans font-medium">NOPAT</td>
-                          {dcf.projections.map((p) => (
-                            <td key={p.year} className="py-2 px-3 text-right">
+                        <tr className={`transition-colors ${s.rowHover}`}>
+                          <td className="py-2 px-3 font-sans font-medium rounded-l-lg">NOPAT</td>
+                          {dcf.projections.map((p, idx) => (
+                            <td key={p.year} className={`py-2 px-3 text-right ${idx === dcf.projections.length - 1 ? "rounded-r-lg" : ""}`}>
                               {Math.round(p.nopatM).toLocaleString()}
                             </td>
                           ))}
                         </tr>
-                        <tr className="font-semibold text-emerald-500">
-                          <td className="py-2 px-3 font-sans">Unlevered FCF</td>
-                          {dcf.projections.map((p) => (
-                            <td key={p.year} className="py-2 px-3 text-right">
+                        <tr className={`font-semibold text-emerald-500 transition-colors ${s.rowHover}`}>
+                          <td className="py-2 px-3 font-sans rounded-l-lg">Unlevered FCF</td>
+                          {dcf.projections.map((p, idx) => (
+                            <td key={p.year} className={`py-2 px-3 text-right ${idx === dcf.projections.length - 1 ? "rounded-r-lg" : ""}`}>
                               {Math.round(p.ufcfM).toLocaleString()}
                             </td>
                           ))}
                         </tr>
-                        <tr>
-                          <td className={`py-2 px-3 font-sans ${s.muted}`}>PV of FCF</td>
-                          {dcf.projections.map((p) => (
-                            <td key={p.year} className={`py-2 px-3 text-right ${s.muted}`}>
+                        <tr className={`transition-colors ${s.rowHover}`}>
+                          <td className={`py-2 px-3 font-sans rounded-l-lg ${s.muted}`}>PV of FCF</td>
+                          {dcf.projections.map((p, idx) => (
+                            <td key={p.year} className={`py-2 px-3 text-right ${idx === dcf.projections.length - 1 ? "rounded-r-lg" : ""} ${s.muted}`}>
                               {Math.round(p.pvFcfM).toLocaleString()}
                             </td>
                           ))}
@@ -667,39 +666,40 @@ export function ExcelDcfView() {
                 </div>
 
                 {/* 5x5 Sensitivity Table */}
-                <div className={`rounded-xl border p-4 space-y-3 ${s.card}`}>
+                <div className={`rounded-xl p-4 sm:p-5 space-y-3 ${s.card}`}>
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-semibold">WACC vs. Terminal Growth Sensitivity ($)</h3>
                     <span className={`font-mono text-[11px] ${s.muted}`}>Implied Equity Price / Share</span>
                   </div>
                   {!dcf || currentPriceUsd === null ? (
-                    <div className={`rounded-lg border p-6 text-center text-xs font-mono ${s.border} ${s.muted}`}>
+                    <div className={`rounded-xl p-6 text-center text-xs font-mono ${s.subCard} ${s.muted}`}>
                       {loading ? "Computing sensitivity matrix from live WACC..." : "Live sensitivity grid unavailable."}
                     </div>
                   ) : (
-                  <div className={`overflow-x-auto rounded-lg border ${s.border}`}>
-                    <table className="w-full text-xs font-mono tabular-nums border-collapse">
+                  <div className={`overflow-x-auto rounded-xl p-2 ${s.subCard}`}>
+                    <table className="w-full text-xs font-mono tabular-nums border-separate border-spacing-y-1">
                       <thead>
-                        <tr className={`border-b ${s.border} ${s.thBg}`}>
-                          <th className="py-2 px-3 text-left font-medium">WACC \ TGR</th>
-                          {dcf.sensitivityGrid[0]?.cells.map((c) => (
-                            <th key={c.terminalGrowthPct} className="py-2 px-3 text-right font-medium">
+                        <tr className={s.thBg}>
+                          <th className="py-2 px-3 text-left font-medium rounded-l-lg">WACC \ TGR</th>
+                          {dcf.sensitivityGrid[0]?.cells.map((c, idx, arr) => (
+                            <th key={c.terminalGrowthPct} className={`py-2 px-3 text-right font-medium ${idx === arr.length - 1 ? "rounded-r-lg" : ""}`}>
                               {c.terminalGrowthPct.toFixed(2)}%
                             </th>
                           ))}
                         </tr>
                       </thead>
-                      <tbody className={`divide-y ${s.border}`}>
-                        {dcf.sensitivityGrid.map((row, rIdx) => (
-                          <tr key={row.waccPct}>
-                            <td className={`py-2 px-3 font-semibold ${s.thBg}`}>{row.waccPct.toFixed(2)}%</td>
-                            {row.cells.map((cell, cIdx) => {
+                      <tbody>
+                        {dcf.sensitivityGrid.map((row) => (
+                          <tr key={row.waccPct} className={`transition-colors ${s.rowHover}`}>
+                            <td className={`py-2 px-3 font-semibold rounded-l-lg ${s.thBg}`}>{row.waccPct.toFixed(2)}%</td>
+                            {row.cells.map((cell, cIdx, arr) => {
+                              const rIdx = dcf.sensitivityGrid.indexOf(row);
                               const isCenter = rIdx === 2 && cIdx === 2;
                               const aboveSpot = cell.impliedPriceUsd >= currentPriceUsd;
                               return (
                                 <td
                                   key={cell.terminalGrowthPct}
-                                  className={`py-2 px-3 text-right ${
+                                  className={`py-2 px-3 text-right ${cIdx === arr.length - 1 ? "rounded-r-lg" : ""} ${
                                     isCenter
                                       ? "bg-emerald-500/20 text-emerald-400 font-bold"
                                       : aboveSpot
@@ -823,12 +823,12 @@ export function CapitalIqCompsView() {
         return (
           <div className="space-y-4">
             {fetchError && !loading && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-300">
                 <span>Live peer valuation feed temporarily unavailable ({fetchError}).</span>
                 <button
                   type="button"
                   onClick={() => void load()}
-                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                  className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-medium hover:bg-rose-500/30"
                 >
                   Retry
                 </button>
@@ -842,7 +842,7 @@ export function CapitalIqCompsView() {
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Filter peers by ticker, company, or sector..."
-                  className={`w-full rounded-lg border pl-9 pr-3 py-2 text-xs outline-none ${s.input}`}
+                  className={`w-full rounded-xl pl-9 pr-3 py-2 text-xs outline-none ${s.input}`}
                 />
               </div>
               {medians && (
@@ -859,11 +859,11 @@ export function CapitalIqCompsView() {
               )}
             </div>
 
-            <div className={`overflow-x-auto rounded-xl border ${s.card}`}>
-              <table className="w-full text-xs border-collapse font-mono tabular-nums">
+            <div className={`overflow-x-auto rounded-xl p-2 ${s.card}`}>
+              <table className="w-full text-xs border-separate border-spacing-y-1 font-mono tabular-nums">
                 <thead>
-                  <tr className={`border-b ${s.border} ${s.thBg}`}>
-                    <th className="py-3 px-3 text-left font-sans font-semibold">Company</th>
+                  <tr className={s.thBg}>
+                    <th className="py-3 px-3 text-left font-sans font-semibold rounded-l-lg">Company</th>
                     <th className="py-3 px-3 text-right font-medium">Spot</th>
                     <th className="py-3 px-3 text-right font-medium">
                       <button type="button" onClick={() => toggleSort("mcapM")} className="inline-flex items-center gap-1">
@@ -886,17 +886,17 @@ export function CapitalIqCompsView() {
                         P/E <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </th>
-                    <th className="py-3 px-3 text-right font-medium">
+                    <th className="py-3 px-3 text-right font-medium rounded-r-lg">
                       <button type="button" onClick={() => toggleSort("ebitdaMarginPct")} className="inline-flex items-center gap-1">
                         EBITDA % <ArrowUpDown className="h-3 w-3" />
                       </button>
                     </th>
                   </tr>
                 </thead>
-                <tbody className={`divide-y ${s.border}`}>
+                <tbody>
                   {rows.map((r) => (
-                    <tr key={r.symbol} className={s.rowHover}>
-                      <td className="py-2.5 px-3 font-sans">
+                    <tr key={r.symbol} className={`transition-colors ${s.rowHover}`}>
+                      <td className="py-2.5 px-3 font-sans rounded-l-lg">
                         <div className="font-semibold">
                           <Link href={`/ticker/${r.symbol}`} className="hover:text-emerald-500">
                             {r.symbol}
@@ -917,7 +917,7 @@ export function CapitalIqCompsView() {
                       <td className="py-2.5 px-3 text-right">{r.evToRev.toFixed(1)}×</td>
                       <td className="py-2.5 px-3 text-right">{r.evToEbitda.toFixed(1)}×</td>
                       <td className="py-2.5 px-3 text-right">{r.peRatio > 0 ? `${r.peRatio.toFixed(1)}×` : "N/M"}</td>
-                      <td className="py-2.5 px-3 text-right font-semibold text-emerald-500">
+                      <td className="py-2.5 px-3 text-right font-semibold text-emerald-500 rounded-r-lg">
                         {r.ebitdaMarginPct.toFixed(1)}%
                       </td>
                     </tr>
@@ -1016,12 +1016,12 @@ export function AlphaSenseSearchView() {
         return (
           <div className="space-y-4">
             {fetchError && !loading && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-300">
                 <span>Live SEC EDGAR filings feed temporarily unavailable ({fetchError}).</span>
                 <button
                   type="button"
                   onClick={() => void load(symbol)}
-                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                  className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-medium hover:bg-rose-500/30"
                 >
                   Retry
                 </button>
@@ -1034,9 +1034,9 @@ export function AlphaSenseSearchView() {
                     key={t}
                     type="button"
                     onClick={() => setSymbol(t)}
-                    className={`rounded-lg border px-2.5 py-1.5 font-mono text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                    className={`rounded-xl px-3 py-1.5 font-mono text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
                       symbol === t
-                        ? "border-emerald-500 bg-emerald-500/15 text-emerald-400"
+                        ? "bg-emerald-500/20 text-emerald-400"
                         : `${s.subCard} ${s.muted}`
                     }`}
                   >
@@ -1051,11 +1051,11 @@ export function AlphaSenseSearchView() {
                     key={f}
                     type="button"
                     onClick={() => setFormFilter(f)}
-                    className={`rounded-lg border px-2.5 py-1.5 font-mono text-xs transition-colors whitespace-nowrap shrink-0 ${
+                    className={`rounded-xl px-3 py-1.5 font-mono text-xs transition-colors whitespace-nowrap shrink-0 ${
                       formFilter === f
                         ? isLight
-                          ? "bg-slate-900 border-slate-900 text-white"
-                          : "bg-zinc-100 border-zinc-100 text-zinc-950 font-semibold"
+                          ? "bg-slate-900 text-white"
+                          : "bg-zinc-100 text-zinc-950 font-semibold"
                         : `${s.subCard} ${s.muted}`
                     }`}
                   >
@@ -1073,7 +1073,7 @@ export function AlphaSenseSearchView() {
                   value={keyword}
                   onChange={(e) => setKeyword(e.target.value)}
                   placeholder="Search filings by form, date, accession number, or topic..."
-                  className={`w-full rounded-lg border pl-9 pr-3 py-2 text-xs outline-none ${s.input}`}
+                  className={`w-full rounded-xl pl-9 pr-3 py-2 text-xs outline-none ${s.input}`}
                 />
               </div>
               <div className={`text-xs ${s.muted}`}>
@@ -1081,21 +1081,21 @@ export function AlphaSenseSearchView() {
               </div>
             </div>
 
-            <div className={`overflow-x-auto rounded-xl border ${s.card}`}>
-              <table className="w-full text-xs border-collapse">
+            <div className={`overflow-x-auto rounded-xl p-2 ${s.card}`}>
+              <table className="w-full text-xs border-separate border-spacing-y-1">
                 <thead>
-                  <tr className={`border-b ${s.border} ${s.thBg}`}>
-                    <th className="py-2.5 px-3 text-left font-semibold">Form</th>
+                  <tr className={s.thBg}>
+                    <th className="py-2.5 px-3 text-left font-semibold rounded-l-lg">Form</th>
                     <th className="py-2.5 px-3 text-left font-semibold">Filing Date</th>
                     <th className="py-2.5 px-3 text-left font-semibold">Document Summary</th>
                     <th className="py-2.5 px-3 text-left font-semibold">Accession #</th>
-                    <th className="py-2.5 px-3 text-right font-semibold">Primary Source</th>
+                    <th className="py-2.5 px-3 text-right font-semibold rounded-r-lg">Primary Source</th>
                   </tr>
                 </thead>
-                <tbody className={`divide-y ${s.border}`}>
+                <tbody>
                   {filtered.map((item) => (
-                    <tr key={item.accessionNumber} className={s.rowHover}>
-                      <td className="py-2.5 px-3 font-mono font-semibold text-emerald-500 whitespace-nowrap">
+                    <tr key={item.accessionNumber} className={`transition-colors ${s.rowHover}`}>
+                      <td className="py-2.5 px-3 font-mono font-semibold text-emerald-500 whitespace-nowrap rounded-l-lg">
                         {item.form}
                       </td>
                       <td className="py-2.5 px-3 font-mono tabular-nums whitespace-nowrap">
@@ -1105,7 +1105,7 @@ export function AlphaSenseSearchView() {
                       <td className={`py-2.5 px-3 font-mono tabular-nums ${s.muted}`}>
                         {item.accessionNumber}
                       </td>
-                      <td className="py-2.5 px-3 text-right">
+                      <td className="py-2.5 px-3 text-right rounded-r-lg">
                         <a
                           href={item.url}
                           target="_blank"
@@ -1228,12 +1228,12 @@ export function TradingViewScreenerView() {
         return (
           <div className="space-y-5">
             {fetchError && !loading && (
-              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+              <div className="flex items-center justify-between gap-3 rounded-xl bg-rose-500/15 px-4 py-3 text-xs text-rose-300">
                 <span>Live OHLCV candlestick feed temporarily unavailable ({fetchError}).</span>
                 <button
                   type="button"
                   onClick={() => void load(symbol)}
-                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                  className="rounded-lg bg-rose-500/20 px-2.5 py-1 font-medium hover:bg-rose-500/30"
                 >
                   Retry
                 </button>
@@ -1247,9 +1247,9 @@ export function TradingViewScreenerView() {
                     key={sym}
                     type="button"
                     onClick={() => setSymbol(sym)}
-                    className={`rounded-lg border px-3 py-1.5 font-mono text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+                    className={`rounded-xl px-3 py-1.5 font-mono text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
                       symbol === sym
-                        ? "border-emerald-500 bg-emerald-500/15 text-emerald-400"
+                        ? "bg-emerald-500/20 text-emerald-400"
                         : `${s.subCard} ${s.muted}`
                     }`}
                   >
@@ -1275,7 +1275,7 @@ export function TradingViewScreenerView() {
             </div>
 
             {/* Interactive SVG OHLC Candlestick + SMA-20 Chart */}
-            <div className={`rounded-xl border p-4 ${s.card}`}>
+            <div className={`rounded-xl p-4 sm:p-5 ${s.card}`}>
               <div className="flex items-center justify-between mb-3 text-xs">
                 <span className="font-semibold">
                   {symbol} Daily Candlestick &amp; 20-Day SMA Overlay (Live OHLCV)
@@ -1361,27 +1361,27 @@ export function TradingViewScreenerView() {
             </div>
 
             {/* Live Multi-Asset Technical Screener */}
-            <div className={`overflow-x-auto rounded-xl border ${s.card}`}>
-              <table className="w-full text-xs border-collapse font-mono tabular-nums">
+            <div className={`overflow-x-auto rounded-xl p-2 ${s.card}`}>
+              <table className="w-full text-xs border-separate border-spacing-y-1 font-mono tabular-nums">
                 <thead>
-                  <tr className={`border-b ${s.border} ${s.thBg}`}>
-                    <th className="py-2.5 px-3 text-left font-sans font-semibold">Asset</th>
+                  <tr className={s.thBg}>
+                    <th className="py-2.5 px-3 text-left font-sans font-semibold rounded-l-lg">Asset</th>
                     <th className="py-2.5 px-3 text-left font-sans font-semibold">Class</th>
                     <th className="py-2.5 px-3 text-right font-medium">Price</th>
                     <th className="py-2.5 px-3 text-right font-medium">24h Chg</th>
                     <th className="py-2.5 px-3 text-right font-medium">RSI (14)</th>
                     <th className="py-2.5 px-3 text-right font-medium">SMA (20)</th>
-                    <th className="py-2.5 px-3 text-right font-sans font-semibold">Signal State</th>
+                    <th className="py-2.5 px-3 text-right font-sans font-semibold rounded-r-lg">Signal State</th>
                   </tr>
                 </thead>
-                <tbody className={`divide-y ${s.border}`}>
+                <tbody>
                   {(data?.screener ?? []).map((row) => (
                     <tr
                       key={row.symbol}
                       onClick={() => setSymbol(row.symbol)}
-                      className={`cursor-pointer ${s.rowHover}`}
+                      className={`cursor-pointer transition-colors ${s.rowHover}`}
                     >
-                      <td className="py-2.5 px-3 font-semibold text-emerald-500">{row.symbol}</td>
+                      <td className="py-2.5 px-3 font-semibold text-emerald-500 rounded-l-lg">{row.symbol}</td>
                       <td className={`py-2.5 px-3 font-sans ${s.muted}`}>{row.assetClass}</td>
                       <td className="py-2.5 px-3 text-right">${row.price.toFixed(2)}</td>
                       <td
@@ -1394,7 +1394,7 @@ export function TradingViewScreenerView() {
                       </td>
                       <td className="py-2.5 px-3 text-right">{row.rsi14.toFixed(1)}</td>
                       <td className="py-2.5 px-3 text-right">${row.sma20.toFixed(2)}</td>
-                      <td className="py-2.5 px-3 text-right font-sans font-medium">{row.bias}</td>
+                      <td className="py-2.5 px-3 text-right font-sans font-medium rounded-r-lg">{row.bias}</td>
                     </tr>
                   ))}
                 </tbody>

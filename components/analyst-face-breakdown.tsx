@@ -58,11 +58,11 @@ No opinions, only mathematical invalidation. Audit the model here: https://nextw
   };
 
   return (
-    <div className="rounded-2xl border border-gold/40 bg-ink-900/90 p-6 sm:p-7 shadow-xl space-y-6">
+    <div className="rounded-2xl bg-ink-900/65 p-6 sm:p-8 shadow-xl space-y-6">
       {/* Header with Lead Analyst Persona */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-line/60 pb-5">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
         <div className="flex items-center gap-3.5">
-          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-gold/40 to-bone/20 p-[1.5px]">
+          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-gold/30 to-bone/15 p-[1.5px]">
             <div className="flex h-full w-full items-center justify-center rounded-2xl bg-ink-950 font-display text-base font-bold text-gold-bright">
               DO
             </div>
@@ -85,7 +85,7 @@ No opinions, only mathematical invalidation. Audit the model here: https://nextw
           <button
             type="button"
             onClick={handleCopy}
-            className="flex items-center gap-1.5 rounded-xl border border-line bg-ink-950 px-3 py-2 text-xs font-medium text-bone hover:border-gold/40 hover:text-gold-bright transition"
+            className="flex items-center gap-1.5 rounded-xl bg-ink-950/80 px-3.5 py-2 text-xs font-medium text-bone hover:bg-ink-950 hover:text-gold-bright transition"
           >
             {copied ? <Check className="h-3.5 w-3.5 text-emerald-400" /> : <Share2 className="h-3.5 w-3.5 text-muted" />}
             <span>{copied ? "Copied" : "Copy Thesis"}</span>
@@ -106,27 +106,27 @@ No opinions, only mathematical invalidation. Audit the model here: https://nextw
 
       {/* Deterministic Quantitative Data Grid */}
       <div>
-        <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center justify-between mb-2.5">
           <span className="text-[10px] font-semibold uppercase tracking-wider text-muted flex items-center gap-1">
             <Activity className="h-3 w-3 text-gold" />
             Deterministic Quant Pipeline · Verified Real-Time Feeds
           </span>
           <span className="text-[10px] font-mono text-emerald-400">Quantitative Feed Active ✓</span>
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
-          <div className="rounded-lg border border-line bg-ink-950 p-2.5">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs font-mono">
+          <div className="rounded-xl bg-ink-950/75 px-4 py-3">
             <span className="text-[10px] text-muted block">Last Close</span>
             <span className="text-bone font-bold text-sm">${lastPrice.toFixed(2)}</span>
           </div>
-          <div className="rounded-lg border border-line bg-ink-950 p-2.5">
+          <div className="rounded-xl bg-ink-950/75 px-4 py-3">
             <span className="text-[10px] text-muted block">Model Invalidation</span>
             <span className="text-down font-bold text-sm">${invalidationLevel.toFixed(2)}</span>
           </div>
-          <div className="rounded-lg border border-line bg-ink-950 p-2.5">
+          <div className="rounded-xl bg-ink-950/75 px-4 py-3">
             <span className="text-[10px] text-muted block">Support / Target</span>
             <span className="text-bone text-xs">${supportLevel.toFixed(2)} / ${resistanceLevel.toFixed(2)}</span>
           </div>
-          <div className="rounded-lg border border-line bg-ink-950 p-2.5">
+          <div className="rounded-xl bg-ink-950/75 px-4 py-3">
             <span className="text-[10px] text-muted block">20 / 50 / 200 SMA</span>
             <span className="text-bone text-xs">${sma20.toFixed(0)} / ${sma50.toFixed(0)} / ${sma200.toFixed(0)}</span>
           </div>
@@ -136,7 +136,7 @@ No opinions, only mathematical invalidation. Audit the model here: https://nextw
       {/* The Two Core Analytical Pillars */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Core Pillar 1: Why This Trend Is Structurally Valid */}
-        <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-5 space-y-2">
+        <div className="rounded-xl bg-emerald-950/25 p-5 space-y-2">
           <div className="flex items-center gap-2 text-emerald-400 font-semibold text-xs uppercase tracking-wider">
             <TrendingUp className="h-4 w-4" />
             <span>1. Why This Trend Is Structurally Valid</span>
@@ -148,7 +148,7 @@ No opinions, only mathematical invalidation. Audit the model here: https://nextw
         </div>
 
         {/* Core Pillar 2: Invalidation Level — Where The Thesis Dies */}
-        <div className="rounded-xl border border-rose-500/30 bg-rose-950/20 p-5 space-y-2">
+        <div className="rounded-xl bg-rose-950/25 p-5 space-y-2">
           <div className="flex items-center gap-2 text-rose-400 font-semibold text-xs uppercase tracking-wider">
             <ShieldAlert className="h-4 w-4" />
             <span>2. Invalidation Level: Where My Thesis Breaks</span>
@@ -160,7 +160,7 @@ No opinions, only mathematical invalidation. Audit the model here: https://nextw
         </div>
       </div>
 
-      <div className="border-t border-line/60 pt-3 text-[11px] text-muted flex items-center justify-between">
+      <div className="pt-2 text-[11px] text-muted flex items-center justify-between">
         <span>Wall Street Standard: Rules-based momentum and deterministic invalidation stops.</span>
         <span className="text-gold font-mono">NextWallStreet Quantitative Desk</span>
       </div>

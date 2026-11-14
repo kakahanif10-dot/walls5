@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, HelpCircle, ShieldCheck, Check } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 
 interface FAQItem {
   question: string;
@@ -50,8 +50,8 @@ export default function AcademyFAQ() {
   };
 
   return (
-    <div className="rounded-2xl border border-line bg-ink-900/60 p-6 sm:p-10 shadow-xl space-y-8">
-      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-line/60 pb-6">
+    <div className="rounded-2xl bg-ink-900/55 p-6 sm:p-8 shadow-xl space-y-8">
+      <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pb-2">
         <div>
           <span className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">
             Membership Architecture &amp; FAQ
@@ -64,20 +64,19 @@ export default function AcademyFAQ() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 py-2.5 text-xs text-gold-bright shrink-0">
-          <ShieldCheck className="h-4 w-4 text-gold shrink-0" />
-          <span>$1,487 USD One-Time · Lifetime Access</span>
+        <div className="rounded-xl bg-gold/15 px-4 py-2.5 text-xs font-medium text-gold-bright shrink-0">
+          $1,487 USD One-Time · Lifetime Access
         </div>
       </div>
 
       {/* Included Benefits Ledger */}
-      <div className="overflow-hidden rounded-xl border border-line bg-ink-950">
-        <div className="grid grid-cols-[1fr_auto] bg-ink-900 text-xs font-semibold text-bone border-b border-line p-3 sm:p-4">
+      <div className="overflow-hidden rounded-xl bg-ink-950/65 p-2 space-y-1.5">
+        <div className="grid grid-cols-[1fr_auto] rounded-lg bg-ink-900/90 text-xs font-semibold text-bone px-4 py-3">
           <div className="text-muted">Feature &amp; Curriculum Scope</div>
           <div className="text-right text-gold-bright">Lifetime Premium ($1,487 USD)</div>
         </div>
 
-        <div className="divide-y divide-line/60 text-xs">
+        <div className="space-y-1 text-xs">
           {[
             "All 4 Quantitative Curriculums (Structure, Crypto, Portfolio Sizing, Speculative Risk)",
             "All 60 HD Watchable Video Masterclasses",
@@ -88,12 +87,11 @@ export default function AcademyFAQ() {
           ].map((feature) => (
             <div
               key={feature}
-              className="grid grid-cols-[1fr_auto] p-3 sm:p-4 items-center hover:bg-ink-900/40 transition-colors gap-4"
+              className="grid grid-cols-[1fr_auto] rounded-lg px-4 py-3 items-center hover:bg-ink-900/50 transition-colors gap-4"
             >
               <div className="text-bone/90 font-medium">{feature}</div>
-              <div className="text-right text-emerald-400 font-mono text-[11px] font-semibold flex items-center gap-1.5">
-                <Check className="h-4 w-4" />
-                <span>Included</span>
+              <div className="text-right text-emerald-400 font-mono text-[11px] font-semibold">
+                Included
               </div>
             </div>
           ))}
@@ -107,10 +105,10 @@ export default function AcademyFAQ() {
           return (
             <div
               key={index}
-              className={`rounded-xl border transition-all duration-200 overflow-hidden ${
+              className={`rounded-xl transition-all duration-200 overflow-hidden ${
                 isOpen
-                  ? "border-gold/50 bg-ink-900 shadow-md"
-                  : "border-line bg-ink-900/40 hover:border-gold/30"
+                  ? "bg-ink-900/90 shadow-md"
+                  : "bg-ink-950/60 hover:bg-ink-900/65"
               }`}
             >
               <button
@@ -118,11 +116,8 @@ export default function AcademyFAQ() {
                 onClick={() => toggle(index)}
                 className="w-full flex items-center justify-between gap-4 p-5 text-left select-none"
               >
-                <span className="flex items-center gap-3">
-                  <HelpCircle className="h-4 w-4 text-gold shrink-0" />
-                  <span className="font-display text-base text-bone font-medium">
-                    {item.question}
-                  </span>
+                <span className="font-display text-base text-bone font-medium">
+                  {item.question}
                 </span>
                 <ChevronDown
                   className={`h-4 w-4 text-muted shrink-0 transition-transform duration-200 ${
@@ -132,7 +127,7 @@ export default function AcademyFAQ() {
               </button>
 
               {isOpen && (
-                <div className="px-5 pb-5 pt-1 border-t border-line/60 text-xs text-muted leading-relaxed animate-in fade-in duration-150">
+                <div className="px-5 pb-5 pt-1 text-xs text-muted leading-relaxed animate-in fade-in duration-150">
                   <p>{item.answer}</p>
                 </div>
               )}
@@ -141,10 +136,9 @@ export default function AcademyFAQ() {
         })}
       </div>
 
-      <div className="rounded-xl border border-gold/30 bg-ink-950 p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <div className="rounded-xl bg-ink-950/75 p-5 sm:p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <p className="font-semibold text-bone text-sm flex items-center gap-1.5">
-            <ShieldCheck className="h-4 w-4 text-gold" />
+          <p className="font-semibold text-bone text-sm">
             Lifetime Premium Checkout &amp; Activation
           </p>
           <p className="text-xs text-muted mt-1">

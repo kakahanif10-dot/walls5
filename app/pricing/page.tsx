@@ -30,15 +30,15 @@ const FAQ = [
 export default function PricingPage() {
   return (
     <div>
-      <section className="grain border-b border-line/60">
-        <div className="mx-auto max-w-7xl px-5 py-14 text-center">
+      <section className="grain">
+        <div className="mx-auto max-w-7xl px-5 py-10 sm:py-12 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">
             Lifetime Premium · $1,487 USD
           </p>
-          <h1 className="mx-auto mt-4 max-w-2xl font-display text-4xl leading-tight text-bone sm:text-5xl">
+          <h1 className="mx-auto mt-3 max-w-2xl font-display text-3xl leading-tight text-bone sm:text-5xl">
             Analysis you can audit. One-time lifetime purchase.
           </h1>
-          <p className="mx-auto mt-5 max-w-xl text-[15px] leading-relaxed text-muted">
+          <p className="mx-auto mt-4 max-w-xl text-[15px] leading-relaxed text-muted">
             Get every research piece, full crypto and meme-coin coverage, all four Academy courses,
             32 trade tools, score-change alerts, and model portfolio access with one lifetime
             purchase.
@@ -46,14 +46,14 @@ export default function PricingPage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-12">
+      <section className="mx-auto max-w-7xl px-5 py-8 sm:py-10">
         <PricingPlans faqList={FAQ} />
 
-        <div className="mt-12 text-center text-xs text-muted">
+        <div className="mt-10 text-center text-xs text-muted">
           Questions on the scoring math? Review our{" "}
           <Link
             href="/disclaimer"
-            className="text-bone/85 underline decoration-line underline-offset-2 hover:text-gold-bright"
+            className="text-bone/85 underline decoration-muted/40 underline-offset-2 hover:text-gold-bright"
           >
             methodology &amp; disclosures
           </Link>

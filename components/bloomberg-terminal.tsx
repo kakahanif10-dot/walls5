@@ -328,9 +328,9 @@ export default function BloombergTerminal() {
   }, [chartPoints]);
 
   return (
-    <div className="w-full bg-[#050609] text-[#f2efe8] font-mono select-none rounded-2xl border border-[#d8ab5a]/25 overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.75)]">
+    <div className="w-full bg-[#050609] text-[#f2efe8] font-mono select-none rounded-2xl overflow-hidden shadow-[0_24px_60px_rgba(0,0,0,0.75)]">
       {/* 1. TOP GLOBAL WORKSTATION STATUS STRIP */}
-      <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/[0.08] bg-[#080a0f] px-4 py-2.5 text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-3 bg-[#090c12] px-5 py-3 text-xs">
         <div className="flex flex-wrap items-center gap-3">
           <div className="flex items-center gap-2">
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-400 animate-pulse" />
@@ -338,23 +338,23 @@ export default function BloombergTerminal() {
               DUAL-SCREEN EXECUTION DESK
             </span>
           </div>
-          <span className="text-stone-600 hidden sm:inline">|</span>
+          <span className="text-stone-600 hidden sm:inline">·</span>
           <span className="text-[11px] text-sky-300 font-semibold hidden md:inline">
             METRO CORE [NY-DC04]
           </span>
-          <span className="rounded bg-[#d8ab5a]/10 border border-[#d8ab5a]/30 px-2 py-0.5 text-[10px] text-[#f0c979] font-semibold">
+          <span className="rounded-md bg-[#d8ab5a]/15 px-2.5 py-0.5 text-[10px] text-[#f0c979] font-semibold">
             DESK ID: 3824-INSTITUTIONAL · {activeTab}
           </span>
         </div>
 
         <div className="flex items-center gap-4 text-xs font-mono">
-          <div className="hidden lg:flex items-center gap-3 text-stone-400 text-[11px] tabular-nums">
+          <div className="hidden lg:flex items-center gap-3.5 text-stone-400 text-[11px] tabular-nums">
             <span>NYC: <strong className="text-[#f2efe8]">{clocks.nyc}</strong></span>
             <span>LON: <strong className="text-[#f2efe8]">{clocks.lon}</strong></span>
             <span>TKO: <strong className="text-[#f2efe8]">{clocks.tko}</strong></span>
           </div>
 
-          <div className="flex items-center gap-1.5 border-l border-white/10 pl-3">
+          <div className="flex items-center gap-1.5 rounded-xl bg-[#050609]/80 p-1">
             <button
               onClick={() => setDeskViewMode("dual")}
               className={`rounded-md px-2.5 py-1 text-[10px] font-bold transition ${
@@ -388,7 +388,7 @@ export default function BloombergTerminal() {
             </button>
             <button
               onClick={() => setSoundEnabled(!soundEnabled)}
-              className="text-stone-400 hover:text-[#f0c979] ml-1"
+              className="text-stone-400 hover:text-[#f0c979] ml-1 px-1"
               title={soundEnabled ? "Mute Terminal Beeps" : "Enable Terminal Audio Beeps"}
             >
               {soundEnabled ? <Volume2 className="h-4 w-4 text-emerald-400" /> : <VolumeX className="h-4 w-4" />}
@@ -398,12 +398,12 @@ export default function BloombergTerminal() {
       </div>
 
       {/* 2. DUAL MONITOR CONTAINER */}
-      <div className="p-3 sm:p-4 bg-[#050609]">
-        <div className={`grid gap-4 ${deskViewMode === "dual" ? "xl:grid-cols-2" : "grid-cols-1"}`}>
+      <div className="p-4 sm:p-5 bg-[#050609]">
+        <div className={`grid gap-5 ${deskViewMode === "dual" ? "xl:grid-cols-2" : "grid-cols-1"}`}>
           {/* MONITOR 1: NEWS WIRE & GIP TECHNICAL CHART */}
           {(deskViewMode === "dual" || deskViewMode === "screen1") && (
-            <div className="rounded-xl border border-white/[0.1] bg-[#080a0f] p-2 shadow-[0_16px_40px_rgba(0,0,0,0.75)] flex flex-col justify-between">
-              <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#0d1017] rounded-t-lg px-3 py-1.5 text-xs text-stone-300">
+            <div className="rounded-2xl bg-[#080a0f] p-3 shadow-[0_16px_40px_rgba(0,0,0,0.75)] flex flex-col justify-between gap-2.5">
+              <div className="flex items-center justify-between bg-[#0d1017] rounded-xl px-3.5 py-2 text-xs text-stone-300">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-[#f0c979]" />
                   <span className="font-bold tracking-wider text-[#f0c979]">
@@ -417,7 +417,7 @@ export default function BloombergTerminal() {
               </div>
 
               {/* Monitor 1 Command Bar */}
-              <div className="flex items-center gap-2 bg-[#050609] p-2 border-b border-white/[0.07]">
+              <div className="flex items-center gap-2 rounded-xl bg-[#050609] p-2.5">
                 <span className="text-emerald-400 font-black text-xs">&lt;CMD&gt;</span>
                 <input
                   type="text"
@@ -426,30 +426,30 @@ export default function BloombergTerminal() {
                   onKeyDown={(e) => {
                     if (e.key === "Enter") executeCommand(commandInput);
                   }}
-                  className="flex-1 rounded-md bg-[#090c12] border border-[#d8ab5a]/35 px-2.5 py-1 text-xs text-[#f0c979] font-mono uppercase focus:outline-none focus:border-emerald-400"
+                  className="flex-1 rounded-lg bg-[#0d1017] px-3 py-1.5 text-xs text-[#f0c979] font-mono uppercase focus:outline-none focus:ring-1 focus:ring-emerald-400/50"
                 />
                 <button
                   onClick={() => executeCommand(commandInput)}
-                  className="rounded-md bg-gradient-to-r from-[#d8ab5a] to-[#f0c979] hover:brightness-110 px-3 py-1 text-xs font-black text-[#050609] uppercase transition"
+                  className="rounded-lg bg-gradient-to-r from-[#d8ab5a] to-[#f0c979] hover:brightness-110 px-3.5 py-1.5 text-xs font-black text-[#050609] uppercase transition"
                 >
                   &lt;GO&gt;
                 </button>
               </div>
 
               {/* Screen 1 Inner Split */}
-              <div className="grid lg:grid-cols-[1.05fr_1.15fr] gap-2 p-2 bg-[#06080d] flex-1">
+              <div className="grid lg:grid-cols-[1.05fr_1.15fr] gap-3 flex-1">
                 {/* LEFT COLUMN: LIVE INSTITUTIONAL WIRE */}
-                <div className="rounded-lg border border-white/[0.08] bg-[#090c12] p-2.5 flex flex-col justify-between overflow-hidden">
-                  <div className="border-b border-white/[0.07] pb-1.5 mb-2 flex items-center justify-between">
+                <div className="rounded-xl bg-[#0b0e16] p-3.5 flex flex-col justify-between overflow-hidden">
+                  <div className="pb-2 mb-2.5 flex items-center justify-between">
                     <span className="text-[11px] font-bold text-[#f0c979] uppercase tracking-wider">
                       TOP STORIES: GLOBAL MARKETS WIRE
                     </span>
                     <span className="text-[10px] text-rose-400 font-bold animate-pulse">● LIVE WIRE</span>
                   </div>
 
-                  <div className="space-y-2 h-[340px] overflow-y-auto pr-1 text-xs font-mono">
+                  <div className="space-y-2.5 h-[340px] overflow-y-auto pr-1 text-xs font-mono">
                     {displayedNews.length === 0 ? (
-                      <div className="flex h-full items-center justify-center rounded-lg border border-white/[0.06] bg-[#050609] p-4 text-center text-xs text-stone-400">
+                      <div className="flex h-full items-center justify-center rounded-xl bg-[#050609] p-4 text-center text-xs text-stone-400">
                         Syncing live institutional news wire...
                       </div>
                     ) : (
@@ -460,10 +460,10 @@ export default function BloombergTerminal() {
                             setSelectedNewsId(news.id);
                             executeCommand(`${news.symbol} US Equity GIP <GO>`);
                           }}
-                          className={`cursor-pointer rounded-lg p-2 border transition ${
+                          className={`cursor-pointer rounded-xl p-2.5 transition ${
                             selectedNewsId === news.id
-                              ? "bg-[#d8ab5a]/10 border-[#d8ab5a]/50 text-[#f2efe8]"
-                              : "bg-[#050609] border-white/[0.06] hover:border-[#d8ab5a]/35"
+                              ? "bg-[#d8ab5a]/15 text-[#f2efe8]"
+                              : "bg-[#050609]/85 hover:bg-[#10141f]"
                           }`}
                         >
                           <div className="flex items-center justify-between text-[10px] text-stone-400">
@@ -494,15 +494,15 @@ export default function BloombergTerminal() {
                     )}
                   </div>
 
-                  <div className="border-t border-white/[0.07] pt-1.5 mt-2 flex items-center justify-between text-[10px] text-stone-400">
+                  <div className="pt-2 mt-2.5 flex items-center justify-between text-[10px] text-stone-400">
                     <span>LIVE WIRE FEED ACTIVE</span>
                     <span className="text-emerald-400">TYPE &lt;NEWS&gt; FOR FEED</span>
                   </div>
                 </div>
 
                 {/* RIGHT COLUMN: GIP TECHNICAL INTRADAY CHART */}
-                <div className="rounded-lg border border-white/[0.08] bg-[#090c12] p-2.5 flex flex-col justify-between tabular-nums">
-                  <div className="border-b border-white/[0.07] pb-1.5 text-xs">
+                <div className="rounded-xl bg-[#0b0e16] p-3.5 flex flex-col justify-between tabular-nums">
+                  <div className="pb-2 text-xs">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-[#f0c979] text-sm tracking-wide">
                         {activeSymbol} US Equity GIP
@@ -631,20 +631,20 @@ export default function BloombergTerminal() {
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between border-t border-white/[0.07] pt-1.5 text-[10px]">
+                  <div className="flex items-center justify-between pt-2 text-[10px]">
                     <div className="flex items-center gap-2">
                       <button
                         onClick={() => setChartMode("mountain")}
-                        className={`rounded px-2 py-0.5 font-semibold transition ${
-                          chartMode === "mountain" ? "bg-sky-400 text-[#050609]" : "text-stone-400 hover:text-white"
+                        className={`rounded-md px-2.5 py-1 font-semibold transition ${
+                          chartMode === "mountain" ? "bg-sky-400 text-[#050609]" : "bg-white/[0.04] text-stone-400 hover:text-white"
                         }`}
                       >
                         AREA CURVE
                       </button>
                       <button
                         onClick={() => setChartMode("candle")}
-                        className={`rounded px-2 py-0.5 font-semibold transition ${
-                          chartMode === "candle" ? "bg-emerald-400 text-[#050609]" : "text-stone-400 hover:text-white"
+                        className={`rounded-md px-2.5 py-1 font-semibold transition ${
+                          chartMode === "candle" ? "bg-emerald-400 text-[#050609]" : "bg-white/[0.04] text-stone-400 hover:text-white"
                         }`}
                       >
                         CANDLES
@@ -657,7 +657,7 @@ export default function BloombergTerminal() {
                 </div>
               </div>
 
-              <div className="border-t border-white/[0.07] py-1.5 text-center bg-[#0d1017] rounded-b-lg text-[10px] tracking-widest text-stone-500 font-semibold uppercase">
+              <div className="py-2 text-center bg-[#0d1017] rounded-xl text-[10px] tracking-widest text-stone-500 font-semibold uppercase">
                 NEXTWALL QUANTITATIVE · EXECUTION DISPLAY 1
               </div>
             </div>
@@ -665,8 +665,8 @@ export default function BloombergTerminal() {
 
           {/* MONITOR 2: WEIF MATRIX & LEVEL 2 ORDER DEPTH */}
           {(deskViewMode === "dual" || deskViewMode === "screen2") && (
-            <div className="rounded-xl border border-white/[0.1] bg-[#080a0f] p-2 shadow-[0_16px_40px_rgba(0,0,0,0.75)] flex flex-col justify-between">
-              <div className="flex items-center justify-between border-b border-white/[0.08] bg-[#0d1017] rounded-t-lg px-3 py-1.5 text-xs text-stone-300">
+            <div className="rounded-2xl bg-[#080a0f] p-3 shadow-[0_16px_40px_rgba(0,0,0,0.75)] flex flex-col justify-between gap-2.5">
+              <div className="flex items-center justify-between bg-[#0d1017] rounded-xl px-3.5 py-2 text-xs text-stone-300">
                 <div className="flex items-center gap-2">
                   <span className="h-2 w-2 rounded-full bg-emerald-400" />
                   <span className="font-bold tracking-wider text-emerald-400">
@@ -679,17 +679,17 @@ export default function BloombergTerminal() {
                 </div>
               </div>
 
-              <div className="grid grid-rows-[0.9fr_1.3fr] gap-2 p-2 bg-[#06080d] flex-1 tabular-nums">
+              <div className="grid grid-rows-[0.9fr_1.3fr] gap-3 flex-1 tabular-nums">
                 {/* WEIF MATRIX */}
-                <div className="rounded-lg border border-white/[0.08] bg-[#090c12] p-2.5 overflow-hidden">
-                  <div className="flex items-center justify-between border-b border-white/[0.07] pb-1 mb-2">
+                <div className="rounded-xl bg-[#0b0e16] p-3.5 overflow-hidden">
+                  <div className="flex items-center justify-between pb-1.5 mb-2.5">
                     <span className="text-[11px] font-bold text-[#f0c979] uppercase tracking-wider">
                       WEIF · WORLD EQUITY &amp; COMMODITY MATRIX
                     </span>
                     <span className="text-[10px] text-emerald-400 font-mono">REAL-TIME GLOBAL FEED</span>
                   </div>
 
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs font-mono">
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs font-mono">
                     {(weifTiles.length > 0
                       ? weifTiles
                       : [
@@ -710,13 +710,13 @@ export default function BloombergTerminal() {
                           else if (ASSET_BY_SYMBOL[item.sym]) setActiveSymbol(item.sym);
                           else setActiveSymbol("NVDA");
                         }}
-                        className="cursor-pointer rounded-md bg-[#050609] p-2 border border-white/[0.06] hover:border-[#d8ab5a]/45 transition"
+                        className="cursor-pointer rounded-xl bg-[#050609]/85 p-2.5 hover:bg-[#10141f] transition"
                       >
                         <div className="flex items-center justify-between text-[10px] text-stone-400">
                           <span className="font-bold text-[#f2efe8]">{item.sym}</span>
                           <span className="text-[9px] text-stone-500">{item.name}</span>
                         </div>
-                        <div className="flex items-baseline justify-between mt-0.5">
+                        <div className="flex items-baseline justify-between mt-1">
                           <span className="text-stone-200 font-bold">{item.px}</span>
                           <span className={item.up ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>
                             {item.chg}
@@ -728,17 +728,17 @@ export default function BloombergTerminal() {
                 </div>
 
                 {/* LEVEL 2 DEPTH & TAPE */}
-                <div className="grid sm:grid-cols-[1.2fr_0.8fr] gap-2">
-                  <div className="rounded-lg border border-white/[0.08] bg-[#090c12] p-2.5 flex flex-col justify-between">
-                    <div className="flex items-center justify-between border-b border-white/[0.07] pb-1 mb-1 text-[10px]">
+                <div className="grid sm:grid-cols-[1.2fr_0.8fr] gap-3">
+                  <div className="rounded-xl bg-[#0b0e16] p-3.5 flex flex-col justify-between">
+                    <div className="flex items-center justify-between pb-1.5 mb-2 text-[10px]">
                       <span className="font-bold text-emerald-400">BID DEPTH (BUY ORDERS)</span>
                       <span className="font-bold text-rose-400">ASK DEPTH (SELL ORDERS)</span>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-1 text-[10px] font-mono">
+                    <div className="grid grid-cols-2 gap-1.5 text-[10px] font-mono">
                       <div className="space-y-1">
                         {bids.map((b, i) => (
-                          <div key={i} className="relative rounded bg-emerald-950/20 px-1.5 py-0.5 flex justify-between overflow-hidden">
+                          <div key={i} className="relative rounded-md bg-emerald-950/20 px-2 py-0.5 flex justify-between overflow-hidden">
                             <div className="absolute inset-y-0 right-0 bg-emerald-500/20" style={{ width: `${b.pct}%` }} />
                             <span className="relative z-10 text-emerald-400 font-bold">${b.price.toFixed(2)}</span>
                             <span className="relative z-10 text-stone-300">{b.size.toLocaleString()}</span>
@@ -748,7 +748,7 @@ export default function BloombergTerminal() {
 
                       <div className="space-y-1">
                         {asks.map((a, i) => (
-                          <div key={i} className="relative rounded bg-rose-950/20 px-1.5 py-0.5 flex justify-between overflow-hidden">
+                          <div key={i} className="relative rounded-md bg-rose-950/20 px-2 py-0.5 flex justify-between overflow-hidden">
                             <div className="absolute inset-y-0 left-0 bg-rose-500/20" style={{ width: `${a.pct}%` }} />
                             <span className="relative z-10 text-stone-300">{a.size.toLocaleString()}</span>
                             <span className="relative z-10 text-rose-400 font-bold">${a.price.toFixed(2)}</span>
@@ -757,7 +757,7 @@ export default function BloombergTerminal() {
                       </div>
                     </div>
 
-                    <div className="border-t border-white/[0.07] pt-1 mt-1 flex items-center justify-between text-[9px] text-stone-400">
+                    <div className="pt-2 mt-2 flex items-center justify-between text-[9px] text-stone-400">
                       <span>
                         SPREAD:{" "}
                         {asks[0] && bids[0]
@@ -770,15 +770,15 @@ export default function BloombergTerminal() {
                     </div>
                   </div>
 
-                  <div className="rounded-lg border border-white/[0.08] bg-[#090c12] p-2.5 flex flex-col justify-between">
-                    <div className="flex items-center justify-between border-b border-white/[0.07] pb-1 mb-1 text-[10px]">
+                  <div className="rounded-xl bg-[#0b0e16] p-3.5 flex flex-col justify-between">
+                    <div className="flex items-center justify-between pb-1.5 mb-2 text-[10px]">
                       <span className="font-bold text-sky-300">TIME &amp; SALES (TAPE)</span>
                       <span className="text-stone-500">EXCH: NMS</span>
                     </div>
 
                     <div className="space-y-1 text-[10px] font-mono h-[145px] overflow-y-auto pr-0.5">
                       {tape.map((t) => (
-                        <div key={t.id} className="flex items-center justify-between border-b border-white/[0.04] pb-0.5">
+                        <div key={t.id} className="flex items-center justify-between rounded-md px-1.5 py-0.5 odd:bg-white/[0.02]">
                           <span className="text-stone-500">{t.time}</span>
                           <span className={t.side === "BUY" ? "text-emerald-400 font-bold" : "text-rose-400 font-bold"}>
                             ${t.price.toFixed(2)}
@@ -788,14 +788,14 @@ export default function BloombergTerminal() {
                       ))}
                     </div>
 
-                    <div className="border-t border-white/[0.07] pt-1 text-[9px] text-stone-400 text-center">
+                    <div className="pt-2 text-[9px] text-stone-400 text-center">
                       TAPE FEED: {tape.length} LIVE PRINTS
                     </div>
                   </div>
                 </div>
               </div>
 
-              <div className="border-t border-white/[0.07] py-1.5 text-center bg-[#0d1017] rounded-b-lg text-[10px] tracking-widest text-stone-500 font-semibold uppercase">
+              <div className="py-2 text-center bg-[#0d1017] rounded-xl text-[10px] tracking-widest text-stone-500 font-semibold uppercase">
                 NEXTWALL QUANTITATIVE · EXECUTION DISPLAY 2
               </div>
             </div>
@@ -805,9 +805,9 @@ export default function BloombergTerminal() {
 
       {/* 3. SPECIALTY HARDWARE KEYBOARD DECK */}
       {showKeyboard && (
-        <div className="border-t border-white/[0.08] bg-[#080a0f] px-4 py-3.5 shadow-2xl">
+        <div className="bg-[#080a0f] px-5 py-4">
           <div className="mx-auto max-w-7xl">
-            <div className="flex items-center justify-between mb-2.5">
+            <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Keyboard className="h-4 w-4 text-[#d8ab5a]" />
                 <span className="text-xs font-bold uppercase tracking-wider text-[#f0c979]">
@@ -827,21 +827,21 @@ export default function BloombergTerminal() {
               </div>
             </div>
 
-            <div className="grid gap-1.5 p-2.5 rounded-xl bg-[#050609] border border-white/[0.08] shadow-inner">
+            <div className="grid gap-2 p-3 rounded-xl bg-[#050609]">
               <div className="flex flex-wrap gap-1.5">
                 {[
-                  { key: "HELP", style: "border-sky-400/40 bg-sky-500/15 text-sky-300 hover:bg-sky-500/25" },
-                  { key: "GOVT", style: "border-[#d8ab5a]/45 bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
-                  { key: "CORP", style: "border-[#d8ab5a]/45 bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
-                  { key: "MTGE", style: "border-emerald-400/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25" },
-                  { key: "M-MKT", style: "border-rose-400/40 bg-rose-500/15 text-rose-300 hover:bg-rose-500/25" },
-                  { key: "MUNI", style: "border-violet-400/40 bg-violet-500/15 text-violet-300 hover:bg-violet-500/25" },
-                  { key: "PFD", style: "border-pink-400/40 bg-pink-500/15 text-pink-300 hover:bg-pink-500/25" },
-                  { key: "EQUITY", style: "border-emerald-400/40 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25" },
-                  { key: "CMDTY", style: "border-[#d8ab5a]/45 bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
-                  { key: "INDEX", style: "border-sky-400/40 bg-sky-500/15 text-sky-300 hover:bg-sky-500/25" },
-                  { key: "CURNCY", style: "border-[#d8ab5a]/45 bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
-                  { key: "CLIENT", style: "border-white/25 bg-white/10 text-[#f2efe8] hover:bg-white/15" },
+                  { key: "HELP", style: "bg-sky-500/15 text-sky-300 hover:bg-sky-500/25" },
+                  { key: "GOVT", style: "bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
+                  { key: "CORP", style: "bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
+                  { key: "MTGE", style: "bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25" },
+                  { key: "M-MKT", style: "bg-rose-500/15 text-rose-300 hover:bg-rose-500/25" },
+                  { key: "MUNI", style: "bg-violet-500/15 text-violet-300 hover:bg-violet-500/25" },
+                  { key: "PFD", style: "bg-pink-500/15 text-pink-300 hover:bg-pink-500/25" },
+                  { key: "EQUITY", style: "bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25" },
+                  { key: "CMDTY", style: "bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
+                  { key: "INDEX", style: "bg-sky-500/15 text-sky-300 hover:bg-sky-500/25" },
+                  { key: "CURNCY", style: "bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
+                  { key: "CLIENT", style: "bg-white/10 text-[#f2efe8] hover:bg-white/15" },
                 ].map((k) => (
                   <button
                     key={k.key}
@@ -851,7 +851,7 @@ export default function BloombergTerminal() {
                       else if (k.key === "CMDTY") executeCommand("XAU <CMDTY> GIP <GO>");
                       else executeCommand(`${k.key} <GO>`);
                     }}
-                    className={`flex-1 min-w-[56px] sm:min-w-[72px] py-1.5 rounded-md border text-[10px] sm:text-[11px] font-bold uppercase tracking-wider active:scale-95 transition ${k.style}`}
+                    className={`flex-1 min-w-[56px] sm:min-w-[72px] py-2 rounded-lg text-[10px] sm:text-[11px] font-bold uppercase tracking-wider active:scale-95 transition ${k.style}`}
                   >
                     &lt;{k.key}&gt;
                   </button>
@@ -860,17 +860,17 @@ export default function BloombergTerminal() {
 
               <div className="flex flex-wrap gap-1.5">
                 {[
-                  { label: "CANCEL", action: "CANCEL", style: "border-rose-500/50 bg-rose-500/20 text-rose-200 hover:bg-rose-500/30" },
-                  { label: "NEWS", action: "NEWS <GO>", style: "border-[#d8ab5a]/45 bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
-                  { label: "TOP", action: "TOP <GO>", style: "border-[#d8ab5a]/45 bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
-                  { label: "GIP (CHART)", action: "GIP <GO>", style: "border-sky-400/45 bg-sky-500/15 text-sky-300 hover:bg-sky-500/25" },
-                  { label: "DES (FACTS)", action: "DES <GO>", style: "border-[#d8ab5a]/45 bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
-                  { label: "L2 (DEPTH)", action: "L2 <GO>", style: "border-violet-400/45 bg-violet-500/15 text-violet-300 hover:bg-violet-500/25" },
-                  { label: "IB (CHAT)", action: "IB <GO>", style: "border-sky-400/45 bg-sky-500/15 text-sky-300 hover:bg-sky-500/25" },
-                  { label: "WEIF", action: "WEIF <GO>", style: "border-[#d8ab5a]/45 bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
-                  { label: "PRINT", action: "PRINT", style: "border-white/15 bg-white/[0.06] text-stone-300 hover:bg-white/10" },
-                  { label: "MENU", action: "MENU", style: "border-emerald-400/45 bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25" },
-                  { label: "<GO>", action: "GO", style: "bg-gradient-to-r from-[#d8ab5a] to-[#f0c979] text-[#050609] font-black flex-[1.5] hover:brightness-110 border border-[#f0c979]" },
+                  { label: "CANCEL", action: "CANCEL", style: "bg-rose-500/20 text-rose-200 hover:bg-rose-500/30" },
+                  { label: "NEWS", action: "NEWS <GO>", style: "bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
+                  { label: "TOP", action: "TOP <GO>", style: "bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
+                  { label: "GIP (CHART)", action: "GIP <GO>", style: "bg-sky-500/15 text-sky-300 hover:bg-sky-500/25" },
+                  { label: "DES (FACTS)", action: "DES <GO>", style: "bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
+                  { label: "L2 (DEPTH)", action: "L2 <GO>", style: "bg-violet-500/15 text-violet-300 hover:bg-violet-500/25" },
+                  { label: "IB (CHAT)", action: "IB <GO>", style: "bg-sky-500/15 text-sky-300 hover:bg-sky-500/25" },
+                  { label: "WEIF", action: "WEIF <GO>", style: "bg-[#d8ab5a]/15 text-[#f0c979] hover:bg-[#d8ab5a]/25" },
+                  { label: "PRINT", action: "PRINT", style: "bg-white/[0.06] text-stone-300 hover:bg-white/10" },
+                  { label: "MENU", action: "MENU", style: "bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25" },
+                  { label: "<GO>", action: "GO", style: "bg-gradient-to-r from-[#d8ab5a] to-[#f0c979] text-[#050609] font-black flex-[1.5] hover:brightness-110" },
                 ].map((k) => (
                   <button
                     key={k.label}
@@ -878,7 +878,7 @@ export default function BloombergTerminal() {
                       if (k.action === "GO") executeCommand(commandInput);
                       else executeCommand(k.action);
                     }}
-                    className={`flex-1 min-w-[64px] sm:min-w-[85px] py-2 rounded-md border text-[10px] sm:text-xs font-bold uppercase tracking-wider active:scale-95 transition ${k.style}`}
+                    className={`flex-1 min-w-[64px] sm:min-w-[85px] py-2 rounded-lg text-[10px] sm:text-xs font-bold uppercase tracking-wider active:scale-95 transition ${k.style}`}
                   >
                     {k.label}
                   </button>
@@ -890,7 +890,7 @@ export default function BloombergTerminal() {
       )}
 
       {!showKeyboard && (
-        <div className="bg-[#080a0f] border-t border-white/[0.08] px-4 py-2 flex justify-end">
+        <div className="bg-[#080a0f] px-5 py-2.5 flex justify-end">
           <button
             onClick={() => setShowKeyboard(true)}
             className="text-[11px] font-bold text-[#f0c979] hover:underline flex items-center gap-1.5"

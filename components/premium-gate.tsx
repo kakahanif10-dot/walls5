@@ -15,7 +15,7 @@ export default function PremiumGate({
   if (isUnlocked) {
     return (
       <div>
-        <div className="mb-6 flex items-center justify-between gap-2 rounded-lg border border-gold/30 bg-gold/5 px-4 py-2.5 text-xs text-gold-bright">
+        <div className="mb-6 flex items-center justify-between gap-2 rounded-xl bg-gold/10 px-4 py-2.5 text-xs text-gold-bright">
           <div className="flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-gold" />
             <span>Lifetime Premium active. Institutional models and invalidation stops unlocked.</span>
@@ -27,7 +27,7 @@ export default function PremiumGate({
   }
 
   return (
-    <div className="rounded-xl border border-gold/40 bg-ink-900/95 p-7 text-center space-y-4">
+    <div className="rounded-2xl bg-ink-900/75 p-6 sm:p-7 text-center space-y-4">
       <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">
         Lifetime Premium
       </p>
@@ -46,7 +46,7 @@ export default function PremiumGate({
         </button>
         <Link
           href="/pricing"
-          className="rounded-full border border-line px-5 py-2.5 text-sm text-bone transition hover:border-gold/40"
+          className="rounded-full bg-ink-950/75 px-5 py-2.5 text-sm text-bone transition hover:bg-ink-850 hover:text-gold-bright"
         >
           Purchase details
         </Link>

@@ -260,9 +260,9 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
   }, [assetSearch]);
 
   return (
-    <div className="rounded-xl border border-line bg-ink-900/80 p-5 sm:p-6 backdrop-blur">
+    <div className="rounded-2xl bg-ink-900/55 p-6 sm:p-7 backdrop-blur">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-line/60 pb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-2">
         <div>
           <div className="flex items-center gap-2">
             <span className="flex h-6 w-6 items-center justify-center rounded-md bg-gold/20 text-gold-bright">
@@ -286,7 +286,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
           <button
             type="button"
             onClick={() => setIsAssetSelectorOpen((v) => !v)}
-            className="flex items-center gap-2 rounded-lg border border-line bg-ink-850 px-3 py-1.5 text-xs text-bone hover:border-gold/50 transition-colors"
+            className="flex items-center gap-2 rounded-xl bg-ink-950/75 px-3.5 py-2 text-xs text-bone hover:bg-ink-950 transition-colors"
           >
             <span className="font-mono font-bold text-gold-bright">${symbol}</span>
             <span className="text-muted truncate max-w-[100px]">{currentAsset?.name}</span>
@@ -294,13 +294,13 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
           </button>
 
           {isAssetSelectorOpen && (
-            <div className="absolute right-0 mt-1 w-64 rounded-xl border border-line bg-ink-900 shadow-2xl z-50 p-2 animate-in fade-in zoom-in-95">
+            <div className="absolute right-0 mt-1.5 w-64 rounded-xl bg-ink-900 shadow-2xl z-50 p-2.5 animate-in fade-in zoom-in-95">
               <input
                 type="text"
                 placeholder="Search symbol (e.g. BTC, NVDA, SOL)..."
                 value={assetSearch}
                 onChange={(e) => setAssetSearch(e.target.value)}
-                className="w-full rounded-md border border-line bg-ink-950 px-2.5 py-1.5 text-xs text-bone placeholder:text-muted/60 focus:border-gold focus:outline-none"
+                className="w-full rounded-lg bg-ink-950 px-2.5 py-1.5 text-xs text-bone placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-gold/40"
                 autoFocus
               />
               <div className="mt-1.5 max-h-48 overflow-y-auto space-y-0.5">
@@ -347,10 +347,10 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
                   key={preset}
                   type="button"
                   onClick={() => setAccountSize(preset)}
-                  className={`flex-1 rounded border py-1 font-mono text-[11px] transition ${
+                  className={`flex-1 rounded-lg py-1.5 font-mono text-[11px] transition ${
                     accountSize === preset
-                      ? "border-gold bg-gold/15 font-bold text-gold-bright"
-                      : "border-line bg-ink-850 text-muted hover:border-gold/40 hover:text-bone"
+                      ? "bg-gold/20 font-bold text-gold-bright"
+                      : "bg-ink-950/75 text-muted hover:bg-ink-950 hover:text-bone"
                   }`}
                 >
                   ${preset >= 1000 ? `${preset / 1000}k` : preset}
@@ -364,7 +364,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
               step="1000"
               value={accountSize}
               onChange={(e) => setAccountSize(Math.max(1, Number(e.target.value)))}
-              className="mt-2 w-full rounded-lg border border-line bg-ink-850 px-3 py-1.5 font-mono text-sm text-bone focus:border-gold focus:outline-none"
+              className="mt-2 w-full rounded-xl bg-ink-950/80 px-3.5 py-2 font-mono text-sm text-bone focus:outline-none focus:ring-1 focus:ring-gold/40"
             />
           </div>
 
@@ -386,10 +386,10 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
                   key={preset}
                   type="button"
                   onClick={() => setAccountRiskPct(preset)}
-                  className={`flex-1 rounded border py-1 font-mono text-[11px] transition ${
+                  className={`flex-1 rounded-lg py-1.5 font-mono text-[11px] transition ${
                     accountRiskPct === preset
-                      ? "border-gold bg-gold/15 font-bold text-gold-bright"
-                      : "border-line bg-ink-850 text-muted hover:border-gold/40 hover:text-bone"
+                      ? "bg-gold/20 font-bold text-gold-bright"
+                      : "bg-ink-950/75 text-muted hover:bg-ink-950 hover:text-bone"
                   }`}
                 >
                   {preset}%
@@ -414,7 +414,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
           </div>
 
           {/* 3. Market Price, Invalidation, and Volatility Inputs */}
-          <div className="grid grid-cols-2 gap-3 border-t border-line/60 pt-4">
+          <div className="grid grid-cols-2 gap-3 pt-2">
             <div>
               <label htmlFor="entry-price-input" className="block text-[11px] text-muted">Current Entry Price ($)</label>
               <input
@@ -426,7 +426,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
                   setHasManualPriceEdit(true);
                   setPrice(Number(e.target.value));
                 }}
-                className="mt-1 w-full rounded-lg border border-line bg-ink-850 px-2.5 py-1.5 font-mono text-xs text-bone focus:border-gold focus:outline-none"
+                className="mt-1 w-full rounded-xl bg-ink-950/80 px-3 py-2 font-mono text-xs text-bone focus:outline-none focus:ring-1 focus:ring-gold/40"
               />
             </div>
 
@@ -440,7 +440,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
                 step="any"
                 value={invalidationLevel}
                 onChange={(e) => setInvalidationLevel(Number(e.target.value))}
-                className="mt-1 w-full rounded-lg border border-line bg-ink-850 px-2.5 py-1.5 font-mono text-xs text-bone focus:border-gold focus:outline-none"
+                className="mt-1 w-full rounded-xl bg-ink-950/80 px-3 py-2 font-mono text-xs text-bone focus:outline-none focus:ring-1 focus:ring-gold/40"
               />
             </div>
           </div>
@@ -472,13 +472,13 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
           </div>
 
           {/* Volatility Dampener Toggle & Reset Button */}
-          <div className="flex items-center justify-between border-t border-line/60 pt-3 text-xs">
+          <div className="flex items-center justify-between pt-2 text-xs">
             <label className="flex items-center gap-2 cursor-pointer text-muted hover:text-bone">
               <input
                 type="checkbox"
                 checked={useVolAdjustment}
                 onChange={(e) => setUseVolAdjustment(e.target.checked)}
-                className="rounded border-line bg-ink-850 text-gold focus:ring-0"
+                className="rounded bg-ink-950 accent-gold focus:ring-0"
               />
               <span>Apply Volatility Parity Dampener</span>
             </label>
@@ -495,14 +495,14 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
 
           {/* User Preferences Persistence in Firestore */}
           {user && (
-            <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-950/20 px-3 py-2 text-xs">
+            <div className="flex items-center justify-between rounded-xl bg-emerald-950/30 px-3.5 py-2.5 text-xs">
               <span className="text-[11px] text-emerald-300">
                 {savedPreferenceNotice ? "✓ Risk defaults saved to Firestore!" : "Save these risk defaults to your account"}
               </span>
               <button
                 type="button"
                 onClick={savePreferencesToFirestore}
-                className="rounded bg-emerald-500/20 px-2 py-0.5 text-[10px] font-semibold text-emerald-300 hover:bg-emerald-500/30 transition-colors"
+                className="rounded-lg bg-emerald-500/20 px-2.5 py-1 text-[10px] font-semibold text-emerald-300 hover:bg-emerald-500/30 transition-colors"
               >
                 Save
               </button>
@@ -513,7 +513,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
         {/* Right Column: Suggested Sizing & Risk Analysis Cards */}
         <div className="space-y-4">
           {/* Main Sizing Result Banner */}
-          <div className="rounded-xl border border-gold/40 bg-gradient-to-br from-gold/[0.12] via-ink-850 to-ink-900 p-5">
+          <div className="rounded-2xl bg-gradient-to-br from-gold/[0.14] via-ink-950/85 to-ink-950 p-5 sm:p-6">
             <div className="flex items-center justify-between">
               <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold-bright">
                 Suggested Position Size
@@ -538,7 +538,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
                 <span>Allocation</span>
                 <span>Max Safe Cap: {calculations.maxAllocationPct}%</span>
               </div>
-              <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-line">
+              <div className="mt-1.5 h-2 w-full overflow-hidden rounded-full bg-ink-900">
                 <div
                   className={`h-full rounded-full transition-all duration-300 ${
                     calculations.isCapped ? "bg-amber-400" : "bg-gradient-to-r from-emerald-400 to-gold"
@@ -550,7 +550,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
 
             {/* Cap Warning if hit */}
             {calculations.isCapped && (
-              <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 p-2.5 text-xs text-amber-200">
+              <div className="mt-3 flex items-start gap-2 rounded-xl bg-amber-500/15 p-3 text-xs text-amber-200">
                 <AlertTriangle className="h-4 w-4 shrink-0 text-amber-400 mt-0.5" />
                 <p className="leading-snug">
                   <strong className="text-amber-300">Position Capped:</strong> Size was throttled to {calculations.maxAllocationPct}% by the {calculations.capReason} to guard against adverse gap risk.
@@ -560,8 +560,8 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
           </div>
 
           {/* Risk Metrics Breakdown Grid */}
-          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-            <div className="rounded-lg border border-line bg-ink-850 p-3">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+            <div className="rounded-xl bg-ink-950/75 px-4 py-3">
               <span className="text-[10px] uppercase tracking-wider text-muted">Dollar Risk (1R)</span>
               <p className="mt-1 font-mono text-base font-bold text-down">
                 -${calculations.actualDollarRisk.toLocaleString(undefined, { maximumFractionDigits: 0 })}
@@ -569,7 +569,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
               <p className="text-[10px] text-muted/70">{calculations.actualRiskPct.toFixed(2)}% portfolio</p>
             </div>
 
-            <div className="rounded-lg border border-line bg-ink-850 p-3">
+            <div className="rounded-xl bg-ink-950/75 px-4 py-3">
               <span className="text-[10px] uppercase tracking-wider text-muted">Stop Distance</span>
               <p className="mt-1 font-mono text-base font-bold text-bone">
                 {calculations.stopDistancePct.toFixed(2)}%
@@ -579,7 +579,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
               </p>
             </div>
 
-            <div className="rounded-lg border border-line bg-ink-850 p-3 col-span-2 sm:col-span-1">
+            <div className="rounded-xl bg-ink-950/75 px-4 py-3 col-span-2 sm:col-span-1">
               <span className="text-[10px] uppercase tracking-wider text-muted">Vol Factor</span>
               <p className="mt-1 font-mono text-base font-bold text-gold-bright">
                 {(calculations.volDampener * 100).toFixed(0)}%
@@ -589,7 +589,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
           </div>
 
           {/* Profit Target Levels (Risk-Reward Multiples) */}
-          <div className="rounded-xl border border-line bg-ink-850/60 p-4">
+          <div className="rounded-xl bg-ink-950/65 p-4">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold uppercase tracking-wider text-bone flex items-center gap-1.5">
                 <TrendingUp className="h-3.5 w-3.5 text-up" />
@@ -598,8 +598,8 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
               <span className="text-[10px] text-muted">Derived from Invalidation Delta</span>
             </div>
 
-            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
-              <div className="rounded-lg border border-line/60 bg-ink-900 p-2">
+            <div className="mt-3 grid grid-cols-3 gap-2.5 text-center">
+              <div className="rounded-xl bg-ink-900/75 p-2.5">
                 <span className="text-[10px] uppercase font-mono text-muted">1R Target</span>
                 <p className="mt-0.5 font-mono text-xs font-bold text-bone">
                   ${calculations.target1R.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
@@ -607,7 +607,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
                 <span className="text-[10px] text-emerald-400 font-mono">+${calculations.actualDollarRisk.toFixed(0)}</span>
               </div>
 
-              <div className="rounded-lg border border-gold/40 bg-gold/[0.08] p-2">
+              <div className="rounded-xl bg-gold/[0.12] p-2.5">
                 <span className="text-[10px] uppercase font-mono text-gold-bright">2R Target</span>
                 <p className="mt-0.5 font-mono text-xs font-bold text-gold-bright">
                   ${calculations.target2R.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}
@@ -615,7 +615,7 @@ ${calculations.isCapped ? `Note: Capped by ${calculations.capReason}` : ""}`;
                 <span className="text-[10px] text-emerald-400 font-mono">+${calculations.profitAt2R.toFixed(0)}</span>
               </div>
 
-              <div className="rounded-lg border border-line/60 bg-ink-900 p-2">
+              <div className="rounded-xl bg-ink-900/75 p-2.5">
                 <span className="text-[10px] uppercase font-mono text-muted">3R Runner</span>
                 <p className="mt-0.5 font-mono text-xs font-bold text-bone">
                   ${calculations.target3R.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 4 })}

@@ -19,19 +19,18 @@ export default function WorkflowMatrix({
   const [stackFilter, setStackFilter] = useState<"all" | "traditional" | "digital">("all");
 
   const surface = isLight
-    ? "bg-white border-slate-200 text-slate-900"
-    : "bg-zinc-950/75 border-zinc-800 text-zinc-100";
+    ? "bg-white text-slate-900"
+    : "bg-ink-950/75 text-zinc-100";
   const subText = isLight ? "text-slate-600" : "text-zinc-400";
-  const borderHair = isLight ? "border-slate-200" : "border-zinc-800/80";
-  const rowHover = isLight ? "hover:bg-slate-50" : "hover:bg-zinc-900/60";
-  const segWrap = isLight ? "bg-slate-100 border-slate-200" : "bg-zinc-900 border-zinc-800";
+  const rowHover = isLight ? "hover:bg-slate-100/70" : "hover:bg-ink-900/50";
+  const segWrap = isLight ? "bg-slate-100" : "bg-ink-900";
 
   const filteredTools = INSTITUTIONAL_TOOL_SPECS.filter(
     (t) => stackFilter === "all" || t.stack === stackFilter,
   );
 
   return (
-    <section className={`rounded-2xl border p-5 space-y-5 ${surface}`}>
+    <section className={`rounded-2xl p-5 space-y-5 ${surface}`}>
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
           <h3 className="text-base font-semibold tracking-tight">
@@ -43,7 +42,7 @@ export default function WorkflowMatrix({
           </p>
         </div>
 
-        <div className={`inline-flex items-center gap-1 rounded-lg border p-1 self-start ${segWrap}`}>
+        <div className={`inline-flex items-center gap-1 rounded-xl p-1 self-start ${segWrap}`}>
           {(
             [
               { id: "all", label: "Side-by-Side" },
@@ -76,20 +75,20 @@ export default function WorkflowMatrix({
       </div>
 
       {/* Comparison Matrix Table */}
-      <div className={`overflow-x-auto rounded-xl border ${borderHair}`}>
-        <table className="w-full text-left text-xs border-collapse">
+      <div className={`overflow-x-auto rounded-xl p-2 ${isLight ? "bg-slate-50" : "bg-ink-900/50"}`}>
+        <table className="w-full text-left text-xs border-separate border-spacing-y-1">
           <thead>
-            <tr className={`border-b ${borderHair} ${isLight ? "bg-slate-50" : "bg-zinc-900/80"}`}>
-              <th className="py-3 px-4 font-semibold w-44">Focus Area</th>
+            <tr className={isLight ? "bg-slate-100" : "bg-ink-900/90"}>
+              <th className="py-3 px-4 font-semibold w-44 rounded-l-lg">Focus Area</th>
               {stackFilter !== "digital" && (
                 <th className="py-3 px-4 font-semibold">Traditional Wall Street Stack</th>
               )}
               {stackFilter !== "traditional" && (
-                <th className="py-3 px-4 font-semibold">Digital Asset &amp; Crypto Stack</th>
+                <th className="py-3 px-4 font-semibold rounded-r-lg">Digital Asset &amp; Crypto Stack</th>
               )}
             </tr>
           </thead>
-          <tbody className={`divide-y ${borderHair}`}>
+          <tbody>
             {WORKFLOW_COMPARISON_MATRIX.map((row) => (
               <tr key={row.focusArea} className={`transition-colors ${rowHover}`}>
                 <td className="py-3 px-4 font-medium whitespace-nowrap">{row.focusArea}</td>
@@ -117,14 +116,14 @@ export default function WorkflowMatrix({
             <Link
               key={tool.slug}
               href={tool.href}
-              className={`group flex items-center justify-between gap-2 rounded-xl border px-3.5 py-2.5 text-xs transition-colors ${
+              className={`group flex items-center justify-between gap-2 rounded-xl px-3.5 py-2.5 text-xs transition-colors ${
                 isCurrent
                   ? isLight
-                    ? "border-emerald-600 bg-emerald-50/70 text-emerald-950 font-semibold"
-                    : "border-emerald-500/60 bg-emerald-500/10 text-emerald-200 font-semibold"
+                    ? "bg-emerald-50 text-emerald-950 font-semibold"
+                    : "bg-emerald-500/15 text-emerald-200 font-semibold"
                   : isLight
-                    ? "border-slate-200 hover:border-slate-300 bg-slate-50/60 text-slate-800"
-                    : "border-zinc-800 hover:border-zinc-700 bg-zinc-900/50 text-zinc-200"
+                    ? "bg-slate-50 hover:bg-slate-100 text-slate-800"
+                    : "bg-ink-900/60 hover:bg-ink-850 text-zinc-200"
               }`}
             >
               <div className="min-w-0">

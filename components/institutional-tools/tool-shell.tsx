@@ -36,17 +36,17 @@ export default function InstitutionalToolShell({
   const sources = activeSources && activeSources.length > 0 ? activeSources : spec.freeApis;
 
   const containerCls = isLight
-    ? "bg-slate-50 text-slate-900 border-slate-200"
-    : "bg-[#0b0e14] text-zinc-100 border-zinc-800";
+    ? "bg-slate-50 text-slate-900"
+    : "bg-ink-900/55 text-zinc-100";
   const mutedCls = isLight ? "text-slate-500" : "text-zinc-400";
   const btnCls = isLight
-    ? "bg-white border-slate-200 text-slate-700 hover:bg-slate-100"
-    : "bg-zinc-900 border-zinc-800 text-zinc-200 hover:bg-zinc-800";
+    ? "bg-white text-slate-700 hover:bg-slate-100 shadow-xs"
+    : "bg-ink-950/75 text-zinc-200 hover:bg-ink-850";
 
   return (
-    <div className={`min-w-0 rounded-2xl border p-4 sm:p-5 md:p-6 space-y-6 transition-colors ${containerCls}`}>
+    <div className={`min-w-0 rounded-2xl p-5 sm:p-6 space-y-6 transition-colors ${containerCls}`}>
       {/* Institutional Header Bar */}
-      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 border-b pb-5 border-inherit">
+      <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-4 pb-2">
         <div className="min-w-0 space-y-1.5">
           {/* Unboxed typographic metadata (Zero-Pill Rule) */}
           <div className={`flex flex-wrap items-center gap-2 text-xs ${mutedCls}`}>
@@ -76,7 +76,7 @@ export default function InstitutionalToolShell({
               onClick={onRefresh}
               disabled={loading}
               aria-label="Refresh live API feed"
-              className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${btnCls}`}
+              className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${btnCls}`}
             >
               <RefreshCw className={`h-3.5 w-3.5 ${loading ? "animate-spin" : ""}`} aria-hidden="true" />
               <span>{loading ? "Syncing..." : "Sync Live"}</span>
@@ -86,11 +86,11 @@ export default function InstitutionalToolShell({
             type="button"
             onClick={() => setShowCompare((v) => !v)}
             aria-expanded={showCompare}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
               showCompare
                 ? isLight
-                  ? "bg-slate-900 border-slate-900 text-white"
-                  : "bg-zinc-100 border-zinc-100 text-zinc-950"
+                  ? "bg-slate-900 text-white"
+                  : "bg-zinc-100 text-zinc-950"
                 : btnCls
             }`}
           >
@@ -101,7 +101,7 @@ export default function InstitutionalToolShell({
             type="button"
             onClick={() => setThemeMode((m) => (m === "dark" ? "light" : "dark"))}
             aria-label={`Switch to ${isLight ? "dark" : "light"} mode`}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${btnCls}`}
+            className={`inline-flex items-center gap-1.5 rounded-xl px-3.5 py-2 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${btnCls}`}
           >
             {isLight ? <Moon className="h-3.5 w-3.5" aria-hidden="true" /> : <Sun className="h-3.5 w-3.5" aria-hidden="true" />}
             <span>{isLight ? "Dark" : "Light"}</span>
@@ -117,14 +117,14 @@ export default function InstitutionalToolShell({
             <Link
               key={item.slug}
               href={item.href}
-              className={`rounded-lg border px-2.5 py-1.5 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
+              className={`rounded-xl px-3 py-1.5 text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${
                 active
                   ? isLight
-                    ? "border-emerald-600 bg-emerald-600 text-white"
-                    : "border-emerald-500/60 bg-emerald-500/15 text-emerald-300"
+                    ? "bg-emerald-600 text-white"
+                    : "bg-emerald-500/20 text-emerald-300"
                   : isLight
-                    ? "border-slate-200 bg-white text-slate-600 hover:text-slate-900"
-                    : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:text-zinc-100"
+                    ? "bg-white text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                    : "bg-ink-950/75 text-zinc-400 hover:bg-ink-850 hover:text-zinc-100"
               }`}
             >
               {item.shortLabel}

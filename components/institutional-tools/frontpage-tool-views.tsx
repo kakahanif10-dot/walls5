@@ -56,33 +56,35 @@ export function WhaleAlertToolView() {
       onRefresh={load}
     >
       {({ isLight }) => {
-        const card = isLight ? "bg-white border-slate-200 text-slate-900" : "bg-zinc-950/75 border-zinc-800 text-zinc-100";
+        const card = isLight ? "bg-white text-slate-900" : "bg-ink-950/75 text-zinc-100";
+        const rowBg = isLight ? "bg-slate-50/80 hover:bg-slate-100" : "hover:bg-ink-900/50";
+        const headBg = isLight ? "bg-slate-100 text-slate-600" : "bg-ink-900/80 text-zinc-400";
         const muted = isLight ? "text-slate-500" : "text-zinc-400";
-        const border = isLight ? "border-slate-200" : "border-zinc-800";
+        const chipBg = isLight ? "bg-white text-slate-600 hover:bg-slate-100" : "bg-ink-950/65 text-zinc-400 hover:bg-ink-850";
         const report = data?.report;
 
         return (
           <div className="space-y-5">
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-              <div className={`rounded-xl border p-4 ${card}`}>
+              <div className={`rounded-xl p-4 ${card}`}>
                 <p className={`text-[11px] uppercase tracking-wider ${muted}`}>Tracked Whale Volume</p>
                 <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
                   {report ? formatUsdCompact(report.totalTrackedUsd) : "—"}
                 </p>
               </div>
-              <div className={`rounded-xl border p-4 ${card}`}>
+              <div className={`rounded-xl p-4 ${card}`}>
                 <p className={`text-[11px] uppercase tracking-wider ${muted}`}>Largest Single Print</p>
                 <p className="mt-1 font-mono text-2xl font-bold tabular-nums text-emerald-400">
                   {report ? formatUsdCompact(report.largestPrintUsd) : "—"}
                 </p>
               </div>
-              <div className={`rounded-xl border p-4 ${card}`}>
+              <div className={`rounded-xl p-4 ${card}`}>
                 <p className={`text-[11px] uppercase tracking-wider ${muted}`}>Net Smart-Money Bias</p>
                 <p className="mt-1 font-mono text-2xl font-bold text-[#f0c979]">
                   {report?.netFlowBias ?? "—"}
                 </p>
               </div>
-              <div className={`rounded-xl border p-4 ${card}`}>
+              <div className={`rounded-xl p-4 ${card}`}>
                 <p className={`text-[11px] uppercase tracking-wider ${muted}`}>ETH Head Block</p>
                 <p className="mt-1 font-mono text-2xl font-bold tabular-nums">
                   {report?.ethBlockNumber ? `#${report.ethBlockNumber.toLocaleString()}` : "Live"}
@@ -96,10 +98,10 @@ export function WhaleAlertToolView() {
                   key={tab}
                   type="button"
                   onClick={() => setFilter(tab)}
-                  className={`rounded-lg border px-3 py-1.5 text-xs font-mono font-semibold transition ${
+                  className={`rounded-xl px-3.5 py-1.5 text-xs font-mono font-semibold transition ${
                     filter === tab
-                      ? "border-[#d8ab5a] bg-[#d8ab5a]/15 text-[#f0c979]"
-                      : `${border} ${muted}`
+                      ? "bg-[#d8ab5a]/20 text-[#f0c979]"
+                      : chipBg
                   }`}
                 >
                   {tab}
@@ -107,22 +109,22 @@ export function WhaleAlertToolView() {
               ))}
             </div>
 
-            <div className={`overflow-x-auto rounded-xl border ${card}`}>
-              <table className="w-full text-left text-xs">
-                <thead className={`border-b ${border} text-[10px] uppercase tracking-wider ${muted}`}>
+            <div className={`overflow-x-auto rounded-xl p-2 ${card}`}>
+              <table className="w-full text-left text-xs border-separate border-spacing-y-1">
+                <thead className={`text-[10px] uppercase tracking-wider ${headBg}`}>
                   <tr>
-                    <th className="px-4 py-3">Time</th>
-                    <th className="px-4 py-3">Asset</th>
-                    <th className="px-4 py-3">Channel</th>
-                    <th className="px-4 py-3">Direction</th>
-                    <th className="px-4 py-3 text-right">Size</th>
-                    <th className="px-4 py-3 text-right">USD Value</th>
-                    <th className="px-4 py-3">On-Chain / Tape Detail</th>
+                    <th className="px-4 py-2.5 rounded-l-lg">Time</th>
+                    <th className="px-4 py-2.5">Asset</th>
+                    <th className="px-4 py-2.5">Channel</th>
+                    <th className="px-4 py-2.5">Direction</th>
+                    <th className="px-4 py-2.5 text-right">Size</th>
+                    <th className="px-4 py-2.5 text-right">USD Value</th>
+                    <th className="px-4 py-2.5 rounded-r-lg">On-Chain / Tape Detail</th>
                   </tr>
                 </thead>
-                <tbody className={`divide-y ${border}`}>
+                <tbody>
                   {items.map((item) => (
-                    <tr key={item.id}>
+                    <tr key={item.id} className={`transition ${rowBg}`}>
                       <td className={`px-4 py-3 font-mono whitespace-nowrap ${muted}`}>{item.timestamp}</td>
                       <td className="px-4 py-3 font-mono font-bold text-[#f0c979]">{item.asset}</td>
                       <td className="px-4 py-3 font-mono whitespace-nowrap">{item.channel}</td>
@@ -183,14 +185,15 @@ export function AiSentimentToolView() {
       onRefresh={load}
     >
       {({ isLight }) => {
-        const card = isLight ? "bg-white border-slate-200 text-slate-900" : "bg-zinc-950/75 border-zinc-800 text-zinc-100";
+        const card = isLight ? "bg-white text-slate-900" : "bg-ink-950/75 text-zinc-100";
+        const subCard = isLight ? "bg-slate-50 text-slate-900" : "bg-ink-900/70 text-zinc-100";
         const muted = isLight ? "text-slate-500" : "text-zinc-400";
         const r = data?.report;
 
         return (
           <div className="space-y-5">
             <div className="grid gap-5 lg:grid-cols-12">
-              <div className={`lg:col-span-5 rounded-xl border p-5 space-y-4 ${card}`}>
+              <div className={`lg:col-span-5 rounded-xl p-5 space-y-4 ${card}`}>
                 <div className="flex items-center justify-between">
                   <span className="inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#f0c979]">
                     <BrainCircuit className="h-4 w-4" />
@@ -216,14 +219,14 @@ export function AiSentimentToolView() {
                 <p className={`text-xs leading-relaxed ${muted}`}>{r?.deskSummary ?? ""}</p>
               </div>
 
-              <div className={`lg:col-span-7 rounded-xl border p-5 space-y-4 ${card}`}>
+              <div className={`lg:col-span-7 rounded-xl p-5 space-y-4 ${card}`}>
                 <h3 className="text-sm font-semibold flex items-center gap-2">
                   <Activity className="h-4 w-4 text-emerald-400" />
                   <span>Live Telemetry Drivers</span>
                 </h3>
                 <div className="grid gap-3 sm:grid-cols-3">
                   {(r?.drivers ?? []).map((drv) => (
-                    <div key={drv.label} className={`rounded-xl border p-3.5 ${card}`}>
+                    <div key={drv.label} className={`rounded-xl p-3.5 ${subCard}`}>
                       <p className={`text-[11px] ${muted}`}>{drv.label}</p>
                       <p
                         className={`mt-1.5 font-mono text-xs font-semibold ${
@@ -240,15 +243,15 @@ export function AiSentimentToolView() {
                   ))}
                 </div>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1 font-mono text-xs tabular-nums">
-                  <div className={`rounded-lg border p-3 ${card}`}>
+                  <div className={`rounded-xl p-3 ${subCard}`}>
                     <p className={`font-sans text-[11px] ${muted}`}>Equities Pulse</p>
                     <p className="mt-1 text-base font-bold">{r ? `${r.equityPulseScore}/100` : "—"}</p>
                   </div>
-                  <div className={`rounded-lg border p-3 ${card}`}>
+                  <div className={`rounded-xl p-3 ${subCard}`}>
                     <p className={`font-sans text-[11px] ${muted}`}>Breadth (60+)</p>
                     <p className="mt-1 text-base font-bold">{r ? `${r.equityBreadthPct}%` : "—"}</p>
                   </div>
-                  <div className={`rounded-lg border p-3 ${card}`}>
+                  <div className={`rounded-xl p-3 ${subCard}`}>
                     <p className={`font-sans text-[11px] ${muted}`}>BTC 24h Flow</p>
                     <p className="mt-1 text-base font-bold">
                       {r?.btcChange24h !== null && r?.btcChange24h !== undefined
@@ -256,7 +259,7 @@ export function AiSentimentToolView() {
                         : "—"}
                     </p>
                   </div>
-                  <div className={`rounded-lg border p-3 ${card}`}>
+                  <div className={`rounded-xl p-3 ${subCard}`}>
                     <p className={`font-sans text-[11px] ${muted}`}>BTC Dominance</p>
                     <p className="mt-1 text-base font-bold">
                       {r?.btcDominancePct !== null && r?.btcDominancePct !== undefined
@@ -303,9 +306,10 @@ export function TopSignalsToolView() {
       onRefresh={load}
     >
       {({ isLight }) => {
-        const card = isLight ? "bg-white border-slate-200 text-slate-900" : "bg-zinc-950/75 border-zinc-800 text-zinc-100";
+        const card = isLight ? "bg-white text-slate-900 hover:bg-slate-50" : "bg-ink-950/75 text-zinc-100 hover:bg-ink-900/80";
+        const rowBg = isLight ? "bg-slate-50/80 hover:bg-slate-100" : "hover:bg-ink-900/50";
+        const headBg = isLight ? "bg-slate-100 text-slate-600" : "bg-ink-900/80 text-zinc-400";
         const muted = isLight ? "text-slate-500" : "text-zinc-400";
-        const border = isLight ? "border-slate-200" : "border-zinc-800";
 
         return (
           <div className="space-y-5">
@@ -314,13 +318,13 @@ export function TopSignalsToolView() {
                 <Link
                   key={sig.symbol}
                   href={`/ticker/${sig.symbol}`}
-                  className={`rounded-xl border p-5 space-y-3 transition hover:border-[#d8ab5a] ${card}`}
+                  className={`rounded-xl p-5 space-y-3 transition ${card}`}
                 >
                   <div className="flex items-center justify-between">
                     <span className="font-mono text-xs font-bold text-[#f0c979]">
                       SIGNAL #{sig.rank} · {sig.kind.toUpperCase()}
                     </span>
-                    <span className="rounded border border-emerald-500/40 bg-emerald-500/15 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-400">
+                    <span className="rounded-md bg-emerald-500/15 px-2.5 py-0.5 font-mono text-[10px] font-bold text-emerald-400">
                       {sig.stance.toUpperCase()} ({sig.score}/100)
                     </span>
                   </div>
@@ -337,7 +341,7 @@ export function TopSignalsToolView() {
                       </p>
                     </div>
                   </div>
-                  <div className={`grid grid-cols-2 gap-2 border-t pt-3 font-mono text-[11px] ${border}`}>
+                  <div className="grid grid-cols-2 gap-2 pt-2 font-mono text-[11px]">
                     <div>
                       <span className={muted}>Target: </span>
                       <strong className="text-emerald-400">{formatPriceSmart(sig.targetPrice)}</strong>
@@ -352,24 +356,24 @@ export function TopSignalsToolView() {
               ))}
             </div>
 
-            <div className={`overflow-x-auto rounded-xl border ${card}`}>
-              <table className="w-full text-left text-xs">
-                <thead className={`border-b ${border} text-[10px] uppercase tracking-wider ${muted}`}>
+            <div className={`overflow-x-auto rounded-xl p-2 ${isLight ? "bg-white text-slate-900" : "bg-ink-950/75 text-zinc-100"}`}>
+              <table className="w-full text-left text-xs border-separate border-spacing-y-1">
+                <thead className={`text-[10px] uppercase tracking-wider ${headBg}`}>
                   <tr>
-                    <th className="px-4 py-3">Rank</th>
-                    <th className="px-4 py-3">Asset</th>
-                    <th className="px-4 py-3 text-right">Spot Price</th>
-                    <th className="px-4 py-3 text-right">24h</th>
-                    <th className="px-4 py-3 text-right">Score</th>
-                    <th className="px-4 py-3">Stance</th>
-                    <th className="px-4 py-3 text-right">Target</th>
-                    <th className="px-4 py-3 text-right">Invalidation</th>
-                    <th className="px-4 py-3 text-right">R:R</th>
+                    <th className="px-4 py-2.5 rounded-l-lg">Rank</th>
+                    <th className="px-4 py-2.5">Asset</th>
+                    <th className="px-4 py-2.5 text-right">Spot Price</th>
+                    <th className="px-4 py-2.5 text-right">24h</th>
+                    <th className="px-4 py-2.5 text-right">Score</th>
+                    <th className="px-4 py-2.5">Stance</th>
+                    <th className="px-4 py-2.5 text-right">Target</th>
+                    <th className="px-4 py-2.5 text-right">Invalidation</th>
+                    <th className="px-4 py-2.5 text-right rounded-r-lg">R:R</th>
                   </tr>
                 </thead>
-                <tbody className={`divide-y ${border}`}>
+                <tbody>
                   {signals.map((sig) => (
-                    <tr key={sig.symbol}>
+                    <tr key={sig.symbol} className={`transition ${rowBg}`}>
                       <td className="px-4 py-3 font-mono font-bold text-[#f0c979]">#{sig.rank}</td>
                       <td className="px-4 py-3">
                         <Link href={`/ticker/${sig.symbol}`} className="inline-flex items-center gap-1 font-mono font-bold hover:text-[#f0c979]">

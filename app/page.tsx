@@ -38,10 +38,10 @@ function BoardRow({ row }: { row: Row }) {
     <LockedLink
       href={`/ticker/${row.symbol}`}
       deskLabel={`${row.symbol} Trend Dossier`}
-      className="group flex items-center justify-between gap-4 border-b border-line/60 py-3.5 last:border-0"
+      className="font-institutional group flex items-center justify-between gap-4 rounded-xl px-3.5 py-3 transition hover:bg-ink-900/55"
     >
       <div className="flex min-w-0 items-center gap-3">
-        <span className="w-14 shrink-0 font-mono text-sm font-semibold text-bone group-hover:text-gold-bright">
+        <span className="w-14 shrink-0 text-sm font-bold tracking-[0.03em] text-bone group-hover:text-gold-bright">
           {row.symbol}
         </span>
         <span className="hidden truncate text-xs text-muted sm:block">{row.group}</span>
@@ -53,14 +53,18 @@ function BoardRow({ row }: { row: Row }) {
             symbol={row.symbol}
             base={row.price}
             kind={row.kind}
-            className="font-mono text-sm text-bone"
+            className="text-sm font-semibold text-bone tabular-nums"
           />
         </span>
         <span className="w-16 text-right">
-          <LiveChange symbol={row.symbol} change={row.change24h} className="font-mono text-xs" />
+          <LiveChange
+            symbol={row.symbol}
+            change={row.change24h}
+            className="text-xs font-semibold tabular-nums"
+          />
         </span>
         <span
-          className={`hidden w-24 rounded-full border px-2 py-1 text-center text-[11px] sm:inline-block ${stanceColor(row.stance)}`}
+          className={`hidden w-24 rounded-full px-2.5 py-1 text-center text-[11px] font-semibold tracking-[0.02em] sm:inline-block ${stanceColor(row.stance)}`}
         >
           {row.stance}
         </span>
@@ -90,10 +94,10 @@ export default async function HomePage() {
 
   return (
     <div>
-      <section className="grain relative overflow-hidden border-b border-line/60">
-        <div className="mx-auto grid max-w-7xl gap-14 px-5 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:py-24">
+      <section className="grain relative overflow-hidden">
+        <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-16 lg:grid-cols-[1.15fr_0.85fr] lg:gap-16 lg:py-24">
           <div className="rise">
-            <div className="inline-flex items-center gap-2 rounded-full border border-line bg-ink-900 px-3 py-1.5 text-[11px] text-muted">
+            <div className="inline-flex items-center gap-2 rounded-full bg-ink-900/80 px-3.5 py-1.5 text-[11px] text-muted">
               <span className="h-1.5 w-1.5 rounded-full bg-up" />
               Independent research · $1,487 USD One-Time Lifetime Access
             </div>
@@ -112,7 +116,7 @@ export default async function HomePage() {
               Members with zero recurring monthly fees.
             </p>
 
-            <div className="mt-8 flex flex-wrap items-center gap-3">
+            <div className="mt-8 flex flex-wrap items-center gap-3.5">
               <Link
                 href="/pricing"
                 className="rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink-950 transition hover:bg-gold-bright"
@@ -122,7 +126,7 @@ export default async function HomePage() {
               <LockedLink
                 href="/markets"
                 deskLabel="US Equities Board"
-                className="rounded-full border border-line px-6 py-3 text-sm text-bone transition hover:border-gold/40"
+                className="rounded-full bg-ink-900/80 px-6 py-3 text-sm text-bone transition hover:bg-ink-850 hover:text-gold-bright"
               >
                 See today&apos;s board
               </LockedLink>
@@ -133,7 +137,7 @@ export default async function HomePage() {
               digital assets, and speculative markets.
             </p>
 
-            <dl className="mt-10 grid max-w-2xl grid-cols-2 gap-x-6 gap-y-5 border-t border-line/60 pt-7 sm:grid-cols-3 lg:flex lg:items-start lg:justify-between lg:gap-x-4">
+            <dl className="mt-12 grid max-w-2xl grid-cols-2 gap-x-8 gap-y-6 pt-2 sm:grid-cols-3 lg:flex lg:items-start lg:justify-between lg:gap-x-6">
               {[
                 { k: ASSETS.length.toLocaleString(), v: "Assets Tracked" },
                 { k: "70", v: "Research Desks" },
@@ -149,50 +153,64 @@ export default async function HomePage() {
             </dl>
           </div>
 
-          <div className="rise rounded-xl border border-line bg-ink-900/80 p-6 backdrop-blur">
-            <div className="flex items-start justify-between">
+          <div className="rise w-full rounded-2xl bg-ink-900/60 p-6 sm:p-7 backdrop-blur lg:max-w-[440px] lg:justify-self-end">
+            <div className="flex items-start justify-between gap-3">
               <div>
                 <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">
                   Market pulse
                 </p>
-                <p className="mt-1 text-xs text-muted">Composite of equity trend scores</p>
+                <p className="font-institutional mt-1 text-xs text-muted">
+                  Composite of equity trend scores
+                </p>
               </div>
-              <span className="rounded-full border border-gold/40 bg-gold/10 px-2.5 py-1 text-[11px] text-gold-bright">
+              <span className="font-institutional rounded-full bg-gold/15 px-3 py-1 text-[11px] font-semibold tracking-[0.04em] text-gold-bright">
                 {pulse.label}
               </span>
             </div>
 
-            <div className="mt-6 flex items-end gap-3">
-              <span className="font-mono text-5xl text-bone">{pulse.score}</span>
-              <span className="pb-2 text-xs text-muted">/ 100</span>
+            <div className="mt-5 flex items-baseline gap-2.5">
+              <span className="font-luxury-num text-5xl font-medium tracking-[-0.02em] text-bone tabular-nums">
+                {pulse.score}
+              </span>
+              <span className="font-institutional text-xs font-medium tracking-[0.06em] text-muted">
+                / 100
+              </span>
             </div>
-            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-line">
+            <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-ink-950/80">
               <div
                 className="h-full rounded-full bg-gradient-to-r from-gold/60 to-up"
                 style={{ width: `${pulse.score}%` }}
               />
             </div>
 
-            <div className="mt-6 grid grid-cols-2 gap-3">
-              <div className="rounded-lg border border-line bg-ink-850 px-4 py-3">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-muted">Breadth</p>
-                <p className="mt-1 font-mono text-lg text-bone">{pulse.breadth}%</p>
+            <div className="font-institutional mt-5 grid grid-cols-2 gap-3">
+              <div className="rounded-xl bg-ink-950/75 px-4 py-3.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                  Breadth
+                </p>
+                <p className="font-luxury-num mt-1 text-xl font-medium tracking-[-0.01em] text-bone tabular-nums">
+                  {pulse.breadth}%
+                </p>
                 <p className="text-[10px] text-muted/70">names scoring 60+</p>
               </div>
-              <div className="rounded-lg border border-line bg-ink-850 px-4 py-3">
-                <p className="text-[10px] uppercase tracking-[0.14em] text-muted">Risk regime</p>
-                <p className="mt-1 font-mono text-lg text-bone">Elevated</p>
+              <div className="rounded-xl bg-ink-950/75 px-4 py-3.5">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                  Risk regime
+                </p>
+                <p className="font-luxury-num mt-1 text-xl font-medium tracking-[-0.01em] text-bone">
+                  Elevated
+                </p>
                 <p className="text-[10px] text-muted/70">size down, not out</p>
               </div>
             </div>
 
-            <div className="mt-6 border-t border-line/60 pt-4">
+            <div className="mt-4 rounded-xl bg-ink-950/55 px-4 py-3.5 transition hover:bg-ink-950/80">
               <LockedLink
                 href="/research/the-breadth-divergence-playbook-when-five-mega-caps-carry-the-index"
                 deskLabel="Breadth Divergence Playbook Research"
                 className="group flex items-start gap-3"
               >
-                <span className="mt-0.5 text-[10px] font-semibold uppercase tracking-[0.16em] text-gold">
+                <span className="mt-0.5 shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-gold">
                   Latest
                 </span>
                 <span className="text-sm leading-snug text-bone/90 group-hover:text-gold-bright">
@@ -208,10 +226,12 @@ export default async function HomePage() {
 
       <DisclaimerMarquee />
 
-      <FrontpageTriplePoster initialData={frontpageBundle} />
+      <div className="pt-24 sm:pt-36">
+        <FrontpageTriplePoster initialData={frontpageBundle} />
+      </div>
 
-      <section className="mx-auto max-w-7xl px-5 py-16">
-        <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
+      <section className="mx-auto max-w-7xl px-5 py-20">
+        <div className="grid items-start gap-12 lg:grid-cols-[1fr_1.1fr] lg:gap-16">
           <div>
             <h2 className="font-display text-3xl leading-tight text-bone sm:text-4xl">
               One score. One stance. One invalidation level.
@@ -222,7 +242,7 @@ export default async function HomePage() {
               confidence figure that shrinks when the tape gets noisy.
             </p>
 
-            <div className="mt-8 space-y-5">
+            <div className="mt-8 space-y-3.5">
               {[
                 {
                   n: "01",
@@ -240,7 +260,7 @@ export default async function HomePage() {
                   d: "Realized volatility, position in the 52-week range and a risk grade that drives sizing.",
                 },
               ].map((step) => (
-                <div key={step.n} className="flex gap-4 border-t border-line/60 pt-5">
+                <div key={step.n} className="flex gap-4 rounded-xl bg-ink-900/50 px-5 py-4">
                   <span className="font-mono text-xs text-gold">{step.n}</span>
                   <div>
                     <p className="text-sm font-medium text-bone">{step.t}</p>
@@ -251,8 +271,8 @@ export default async function HomePage() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-line bg-ink-900/60 p-6">
-            <div className="flex items-center justify-between">
+          <div className="rounded-2xl bg-ink-900/55 p-6 sm:p-7">
+            <div className="flex items-center justify-between gap-4">
               <h3 className="text-sm font-medium text-bone">Today&apos;s board — equities</h3>
               <LockedLink
                 href="/markets"
@@ -262,7 +282,7 @@ export default async function HomePage() {
                 View all →
               </LockedLink>
             </div>
-            <div className="mt-3">
+            <div className="mt-4 space-y-1.5 rounded-xl bg-ink-950/55 p-2">
               {board.map((row) => (
                 <BoardRow key={row.symbol} row={row} />
               ))}
@@ -275,10 +295,10 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-line/60 bg-ink-900/40">
-        <div className="mx-auto max-w-7xl px-5 py-16">
+      <section className="bg-ink-900/30">
+        <div className="mx-auto max-w-7xl px-5 py-20">
           <h2 className="font-display text-3xl text-bone sm:text-4xl">Three markets. Three honest frameworks.</h2>
-          <div className="mt-8 grid gap-5 md:grid-cols-3">
+          <div className="mt-10 grid gap-6 md:grid-cols-3">
             {[
               {
                 href: "/markets",
@@ -306,7 +326,7 @@ export default async function HomePage() {
                 key={card.href}
                 href={card.href}
                 deskLabel={card.eyebrow}
-                className="group flex flex-col justify-between rounded-xl border border-line bg-ink-900 p-6 transition hover:border-gold/40"
+                className="group flex flex-col justify-between rounded-2xl bg-ink-950/75 p-7 transition hover:bg-ink-900/90"
               >
                 <div>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-gold">
@@ -324,7 +344,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-16">
+      <section className="mx-auto max-w-7xl px-5 py-20">
         <div className="flex items-end justify-between gap-6">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">Research</p>
@@ -339,24 +359,24 @@ export default async function HomePage() {
           </LockedLink>
         </div>
 
-        <div className="mt-8 grid gap-5 md:grid-cols-3">
+        <div className="mt-10 grid gap-6 md:grid-cols-3">
           {featured.map((article) => (
             <LockedLink
               key={article.slug}
               href={`/research/${article.slug}`}
               deskLabel={article.title}
-              className="group flex flex-col rounded-xl border border-line bg-ink-900/60 p-6 transition hover:border-gold/40"
+              className="group flex flex-col rounded-2xl bg-ink-900/55 p-7 transition hover:bg-ink-900/85"
             >
               <div className="flex items-center gap-2 text-[10px] uppercase tracking-[0.14em] text-muted">
                 <span className="text-gold">{article.tags[0]}</span>
-                <span className="text-line">·</span>
+                <span className="text-muted/40">·</span>
                 <span>{article.readMinutes} min</span>
               </div>
               <h3 className="mt-4 font-display text-xl leading-snug text-bone group-hover:text-gold-bright">
                 {article.title}
               </h3>
               <p className="mt-3 text-sm leading-relaxed text-muted">{article.dek}</p>
-              <p className="mt-5 text-xs text-muted/70">
+              <p className="mt-6 text-xs text-muted/70">
                 {article.author} · {article.role}
               </p>
             </LockedLink>
@@ -364,8 +384,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="border-y border-line/60 bg-ink-900/40">
-        <div className="mx-auto grid max-w-7xl gap-12 px-5 py-16 lg:grid-cols-[0.9fr_1.1fr]">
+      <section className="bg-ink-900/30">
+        <div className="mx-auto grid max-w-7xl items-center gap-12 px-5 py-20 lg:grid-cols-[0.9fr_1.1fr] lg:gap-16">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">The Academy</p>
             <h2 className="mt-3 font-display text-3xl leading-tight text-bone sm:text-4xl">
@@ -380,19 +400,19 @@ export default async function HomePage() {
             <LockedLink
               href="/academy"
               deskLabel="NextWallStreet Academy"
-              className="mt-7 inline-block rounded-full border border-line px-5 py-2.5 text-sm text-bone transition hover:border-gold/40"
+              className="mt-8 inline-block rounded-full bg-ink-950/80 px-6 py-3 text-sm text-bone transition hover:bg-ink-850 hover:text-gold-bright"
             >
               Explore the curriculum
             </LockedLink>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-3.5">
             {courses.map((course) => (
               <LockedLink
                 key={course.slug}
                 href={`/academy/${course.slug}`}
                 deskLabel={course.title}
-                className="group flex items-center justify-between gap-4 rounded-xl border border-line bg-ink-900 px-5 py-4 transition hover:border-gold/40"
+                className="group flex items-center justify-between gap-4 rounded-xl bg-ink-950/75 px-6 py-4.5 transition hover:bg-ink-900/90"
               >
                 <div>
                   <p className="text-[10px] uppercase tracking-[0.14em] text-gold">{course.level}</p>
@@ -413,8 +433,8 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-16 pb-4">
-        <div className="grain overflow-hidden rounded-2xl border border-line bg-ink-900 px-7 py-12 text-center lg:px-16">
+      <section className="mx-auto max-w-7xl px-5 py-20 pb-8">
+        <div className="grain mx-auto max-w-4xl overflow-hidden rounded-2xl bg-ink-900/60 px-6 py-10 text-center sm:px-12 sm:py-12">
           <h2 className="mx-auto max-w-2xl font-display text-3xl leading-tight text-bone sm:text-4xl">
             Read the market the way the desk does.
           </h2>
@@ -423,7 +443,7 @@ export default async function HomePage() {
             daily trend scores, exact invalidation levels, 70 Research Desks, 60 Academy Lessons,
             32 Trade Tools, and 1,100+ Community Members with transparent math.
           </p>
-          <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
+          <div className="mt-8 flex flex-wrap items-center justify-center gap-3.5">
             <Link
               href="/pricing"
               className="rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink-950 transition hover:bg-gold-bright"
@@ -433,7 +453,7 @@ export default async function HomePage() {
             <LockedLink
               href="/research"
               deskLabel="Institutional Research"
-              className="rounded-full border border-line px-6 py-3 text-sm text-bone transition hover:border-gold/40"
+              className="rounded-full bg-ink-950/80 px-6 py-3 text-sm text-bone transition hover:bg-ink-850 hover:text-gold-bright"
             >
               Explore Research Desks
             </LockedLink>

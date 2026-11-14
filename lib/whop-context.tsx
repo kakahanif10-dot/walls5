@@ -12,14 +12,7 @@ import { useAuth } from "@/lib/auth-context";
 import { doc, setDoc } from "firebase/firestore";
 import { db } from "@/lib/firebase";
 import { getLifetimeCheckoutUrl } from "@/lib/whop-checkout-links";
-import {
-  CheckCircle2,
-  ExternalLink,
-  ArrowRight,
-  ShieldCheck,
-  KeyRound,
-  X,
-} from "lucide-react";
+import { X } from "lucide-react";
 
 interface WhopContextValue {
   isUnlocked: boolean;
@@ -206,62 +199,54 @@ export function WhopProvider({ children }: { children: ReactNode }) {
             role="dialog"
             aria-modal="true"
             aria-labelledby="lifetime-purchase-title"
-            className="relative w-full max-w-md overflow-hidden rounded-2xl border border-gold/45 bg-gradient-to-b from-[#13110c] via-ink-900 to-ink-950 p-6 sm:p-7 shadow-[0_32px_90px_rgba(0,0,0,0.92)] ring-1 ring-gold/25"
+            className="relative w-full max-w-md overflow-hidden rounded-2xl bg-gradient-to-b from-[#13110c] via-ink-900 to-ink-950 p-7 sm:p-8 shadow-[0_32px_90px_rgba(0,0,0,0.92)]"
           >
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-gold-bright/80 to-transparent" />
-
             <button
               type="button"
               aria-label="Close purchase modal"
               onClick={closeWhopModal}
-              className="absolute right-4 top-4 rounded-lg p-1.5 text-muted transition hover:bg-ink-800 hover:text-bone"
+              className="absolute right-5 top-5 rounded-lg p-1.5 text-muted transition hover:bg-ink-800 hover:text-bone"
             >
               <X className="h-4 w-4" />
             </button>
 
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 pr-8">
-                {isUnlocked && (
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-gold/50 bg-gold/10 text-gold-bright shadow-inner">
-                    <ShieldCheck className="h-5 w-5" />
-                  </div>
-                )}
-                <div className="min-w-0">
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-gold">
-                    Purchase details
-                  </p>
-                  <h3
-                    id="lifetime-purchase-title"
-                    className="mt-0.5 font-display text-xl leading-snug text-bone"
-                  >
-                    {isUnlocked ? "Lifetime Premium Active" : "Continue to Lifetime Premium checkout"}
-                  </h3>
-                </div>
+            <div className="space-y-5">
+              <div className="pr-8">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.24em] text-gold">
+                  Membership &amp; Access
+                </p>
+                <h3
+                  id="lifetime-purchase-title"
+                  className="mt-1.5 font-display text-2xl leading-snug text-bone"
+                >
+                  {isUnlocked ? "Lifetime Premium Active" : "Lifetime Premium"}
+                </h3>
               </div>
 
               {!isUnlocked && deskName && deskName !== "Lifetime Premium" && (
-                <div className="rounded-lg border border-gold/25 bg-gold/[0.06] px-3 py-1.5 text-[11px] text-gold-bright">
-                  Unlocking: <span className="font-semibold text-bone">{deskName}</span>
+                <div className="rounded-lg bg-gold/10 px-3.5 py-2 text-[11px] text-gold-bright">
+                  Selected access: <span className="font-semibold text-bone">{deskName}</span>
                 </div>
               )}
 
-              <p className="text-xs leading-relaxed text-muted">
-                Get every research piece, full crypto and meme-coin coverage, all four Academy
-                courses, score-change alerts, and model portfolio access with one lifetime purchase.
+              <p className="text-xs sm:text-[13px] leading-relaxed text-muted">
+                One-time membership granting permanent access to all 2,038+ daily trend scores, exact
+                invalidation levels, 70 research desks, all four Academy courses, score-change
+                alerts, and all 32 trade tools with zero recurring fees.
               </p>
 
-              {/* Prestigious Summary Ledger */}
-              <div className="rounded-xl border border-gold/30 bg-ink-950/90 p-4 space-y-2.5 shadow-inner">
+              {/* Minimalist Summary Ledger */}
+              <div className="rounded-xl bg-ink-950/80 p-4 space-y-2.5">
                 <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted">Selected Tier:</span>
+                  <span className="text-muted">Membership Tier</span>
                   <span className="font-semibold text-bone">Lifetime Premium</span>
                 </div>
-                <div className="flex items-center justify-between text-xs border-t border-line/50 pt-2">
-                  <span className="text-muted">Payment type:</span>
-                  <span className="font-medium text-bone">One-time · Lifetime</span>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted">Billing Structure</span>
+                  <span className="font-medium text-bone">One-time · Permanent access</span>
                 </div>
-                <div className="flex items-center justify-between text-xs border-t border-line/50 pt-2">
-                  <span className="text-muted">Amount due once:</span>
+                <div className="flex items-center justify-between text-xs pt-1.5">
+                  <span className="text-muted">Total Investment</span>
                   <span className="font-mono text-base font-bold text-gold-bright tabular-nums">
                     $1,487 USD
                   </span>
@@ -270,10 +255,10 @@ export function WhopProvider({ children }: { children: ReactNode }) {
 
               {feedback && (
                 <div
-                  className={`rounded-xl border p-3 text-xs leading-relaxed ${
+                  className={`rounded-xl p-3.5 text-xs leading-relaxed ${
                     feedback.type === "success"
-                      ? "border-emerald-500/50 bg-emerald-950/60 text-emerald-300"
-                      : "border-rose-500/50 bg-rose-950/60 text-rose-300"
+                      ? "bg-emerald-950/70 text-emerald-300"
+                      : "bg-rose-950/70 text-rose-300"
                   }`}
                 >
                   {feedback.message}
@@ -281,53 +266,48 @@ export function WhopProvider({ children }: { children: ReactNode }) {
               )}
 
               {!isUnlocked ? (
-                <div className="space-y-3 pt-1">
+                <div className="space-y-3.5 pt-1">
                   {lifetimeCheckoutUrl ? (
                     <a
                       href={lifetimeCheckoutUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-xs font-bold text-ink-950 transition hover:bg-gold-bright shadow-lg"
+                      className="flex w-full items-center justify-center rounded-full bg-gold px-6 py-3.5 text-xs font-bold tracking-wide text-ink-950 transition hover:bg-gold-bright shadow-lg"
                     >
-                      <ShieldCheck className="h-4 w-4" />
-                      <span>Continue to Lifetime Premium checkout</span>
-                      <ExternalLink className="h-3.5 w-3.5" />
+                      Continue to Lifetime Premium checkout
                     </a>
                   ) : (
                     <button
                       type="button"
                       onClick={() => setShowKeyForm(true)}
-                      className="flex w-full items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-xs font-bold text-ink-950 transition hover:bg-gold-bright shadow-lg"
+                      className="flex w-full items-center justify-center rounded-full bg-gold px-6 py-3.5 text-xs font-bold tracking-wide text-ink-950 transition hover:bg-gold-bright shadow-lg"
                     >
-                      <ShieldCheck className="h-4 w-4" />
-                      <span>Continue to Lifetime Premium checkout</span>
-                      <ArrowRight className="h-3.5 w-3.5" />
+                      Continue to Lifetime Premium checkout
                     </button>
                   )}
 
                   <p className="text-[11px] leading-relaxed text-muted/85 text-center">
-                    You will continue to Whop to complete the one-time $1,487 USD purchase. Access is
-                    activated only after payment verification.
+                    You will continue to Whop to complete the one-time $1,487 USD settlement. Full
+                    platform access activates immediately upon payment verification.
                   </p>
 
-                  <div className="border-t border-line/60 pt-3">
+                  <div className="pt-1">
                     {!showKeyForm ? (
                       <button
                         type="button"
                         onClick={() => setShowKeyForm(true)}
-                        className="flex w-full items-center justify-center gap-1.5 text-[11px] font-medium text-gold-bright hover:underline"
+                        className="flex w-full items-center justify-center text-[11px] font-medium text-gold-bright/90 transition hover:text-gold-bright hover:underline underline-offset-4"
                       >
-                        <KeyRound className="h-3.5 w-3.5" />
-                        <span>Already completed payment? Verify Whop License Key</span>
+                        Already completed payment? Verify Whop License Key
                       </button>
                     ) : (
-                      <div className="space-y-2">
+                      <div className="space-y-2.5 pt-1">
                         <input
                           type="text"
                           value={licenseInput}
                           onChange={(e) => setLicenseInput(e.target.value)}
                           placeholder="Paste Whop License Key..."
-                          className="w-full rounded-xl border border-line bg-ink-950 px-3.5 py-2 text-xs font-mono text-bone placeholder:text-muted/60 focus:border-gold focus:outline-none"
+                          className="w-full rounded-xl bg-ink-950/90 px-3.5 py-2.5 text-xs font-mono text-bone placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-gold/40"
                         />
                         <div className="flex gap-2">
                           <input
@@ -335,13 +315,13 @@ export function WhopProvider({ children }: { children: ReactNode }) {
                             value={emailInput}
                             onChange={(e) => setEmailInput(e.target.value)}
                             placeholder="Whop Checkout Email..."
-                            className="flex-1 rounded-xl border border-line bg-ink-950 px-3.5 py-2 text-xs text-bone placeholder:text-muted/60 focus:border-gold focus:outline-none"
+                            className="flex-1 rounded-xl bg-ink-950/90 px-3.5 py-2.5 text-xs text-bone placeholder:text-muted/60 focus:outline-none focus:ring-1 focus:ring-gold/40"
                           />
                           <button
                             type="button"
                             onClick={() => unlockWithWhop()}
                             disabled={loading || (!licenseInput.trim() && !emailInput.trim())}
-                            className="rounded-xl border border-gold/50 bg-gold/15 px-4 py-2 text-xs font-semibold text-gold-bright transition hover:bg-gold/25 disabled:opacity-40"
+                            className="rounded-xl bg-gold/15 px-4 py-2 text-xs font-semibold text-gold-bright transition hover:bg-gold/25 disabled:opacity-40"
                           >
                             {loading ? "Verifying..." : "Verify"}
                           </button>
@@ -351,18 +331,15 @@ export function WhopProvider({ children }: { children: ReactNode }) {
                   </div>
                 </div>
               ) : (
-                <div className="space-y-3 pt-1">
-                  <div className="flex items-start gap-2.5 rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-3.5 text-xs text-emerald-300">
-                    <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-emerald-400" />
-                    <div className="space-y-1">
-                      <p className="font-semibold text-emerald-200">Lifetime Premium Unlocked</p>
-                      <p className="text-[11px] text-emerald-300/80">
-                        All 2,038+ assets, 70 research decks, all four Academy courses, and all 32 Trade
-                        Tools are permanently active.
-                      </p>
-                    </div>
+                <div className="space-y-4 pt-1">
+                  <div className="rounded-xl bg-emerald-500/12 p-4 text-xs text-emerald-300 space-y-1">
+                    <p className="font-semibold text-emerald-200">Lifetime Premium Unlocked</p>
+                    <p className="text-[11px] leading-relaxed text-emerald-300/85">
+                      All 2,038+ assets, 70 research desks, all four Academy courses, and all 32 Trade
+                      Tools are permanently active on your account.
+                    </p>
                   </div>
-                  <div className="flex items-center justify-between border-t border-line/60 pt-2">
+                  <div className="flex items-center justify-between pt-1">
                     <button
                       type="button"
                       onClick={lockWhop}

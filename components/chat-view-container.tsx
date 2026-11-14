@@ -16,9 +16,9 @@ export default function ChatViewContainer({ initialFloor = "discord" }: ChatView
   const [activeFloor, setActiveFloor] = useState<FloorMode>(initialFloor);
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {/* View Selector Toggle Banner: NWS AI on left, Community Chat on right */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 rounded-xl border border-line/80 bg-ink-900/80 p-3 sm:px-5 text-xs">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-2xl bg-ink-900/60 p-4 sm:px-6 text-xs">
         <div className="flex items-center gap-3">
           <span className="live-dot h-2.5 w-2.5 rounded-full bg-emerald-400 shrink-0 animate-ping" />
           <div>
@@ -33,14 +33,14 @@ export default function ChatViewContainer({ initialFloor = "discord" }: ChatView
         </div>
 
         {/* Floor Switcher: NWS AI on Left, Community Chat on Right */}
-        <div className="flex items-center gap-1.5 rounded-xl border border-line bg-ink-950 p-1 shrink-0">
+        <div className="flex items-center gap-1.5 rounded-xl bg-ink-950/85 p-1.5 shrink-0">
           <button
             type="button"
             onClick={() => setActiveFloor("nws-ai")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono font-semibold transition-all ${
+            className={`flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-mono font-semibold transition-all ${
               activeFloor === "nws-ai"
                 ? "bg-gold text-ink-950 shadow-sm"
-                : "text-muted hover:text-bone"
+                : "text-muted hover:text-bone hover:bg-ink-900/60"
             }`}
             title="NWS AI Quantitative Terminal (Option on left)"
           >
@@ -51,10 +51,10 @@ export default function ChatViewContainer({ initialFloor = "discord" }: ChatView
           <button
             type="button"
             onClick={() => setActiveFloor("split")}
-            className={`hidden md:flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono font-semibold transition-all ${
+            className={`hidden md:flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-mono font-semibold transition-all ${
               activeFloor === "split"
                 ? "bg-gold text-ink-950 shadow-sm"
-                : "text-muted hover:text-bone"
+                : "text-muted hover:text-bone hover:bg-ink-900/60"
             }`}
             title="Split View: NWS AI on Left, Community Chat on Right"
           >
@@ -65,10 +65,10 @@ export default function ChatViewContainer({ initialFloor = "discord" }: ChatView
           <button
             type="button"
             onClick={() => setActiveFloor("discord")}
-            className={`flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono font-semibold transition-all ${
+            className={`flex items-center gap-1.5 rounded-lg px-3.5 py-2 text-xs font-mono font-semibold transition-all ${
               activeFloor === "discord"
                 ? "bg-gold text-ink-950 shadow-sm"
-                : "text-muted hover:text-bone"
+                : "text-muted hover:text-bone hover:bg-ink-900/60"
             }`}
             title="Community Chat Floor (on right)"
           >
@@ -79,9 +79,9 @@ export default function ChatViewContainer({ initialFloor = "discord" }: ChatView
       </div>
 
       {activeFloor === "split" ? (
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-5 items-start">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between rounded-lg border border-gold/30 bg-gold/[0.05] px-3 py-1.5">
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between rounded-xl bg-gold/10 px-4 py-2">
               <span className="font-mono text-xs font-semibold text-gold-bright flex items-center gap-1.5">
                 <BrainCircuit className="h-3.5 w-3.5 text-gold" />
                 NWS AI Quantitative Intelligence (Option · Left)
@@ -97,8 +97,8 @@ export default function ChatViewContainer({ initialFloor = "discord" }: ChatView
             <GeminiQuantTerminal />
           </div>
 
-          <div className="space-y-2">
-            <div className="flex items-center justify-between rounded-lg border border-emerald-500/30 bg-emerald-500/[0.05] px-3 py-1.5">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between rounded-xl bg-emerald-500/10 px-4 py-2">
               <span className="font-mono text-xs font-semibold text-emerald-400 flex items-center gap-1.5">
                 <Users className="h-3.5 w-3.5 text-emerald-400" />
                 Community Chat Floor (1,100+ Traders · Right)

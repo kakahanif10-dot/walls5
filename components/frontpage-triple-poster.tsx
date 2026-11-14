@@ -88,13 +88,13 @@ export default function FrontpageTriplePoster({
       aria-label="Real-Time Market Intelligence Poster"
       className="bg-ink-950"
     >
-      <div className="mx-auto max-w-7xl px-5 py-12 space-y-6">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <div className="mx-auto max-w-7xl px-5 pt-28 pb-16 space-y-8">
+        <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-gold">
               Live Market Desk Brief · Real-Time Feeds
             </p>
-            <h2 className="mt-1 font-display text-2xl sm:text-3xl text-bone">
+            <h2 className="mt-1.5 font-display text-2xl sm:text-3xl text-bone">
               Whale Tape, AI Sentiment &amp; Highest-Conviction Signals
             </h2>
           </div>
@@ -103,7 +103,7 @@ export default function FrontpageTriplePoster({
             type="button"
             onClick={() => void refreshLive()}
             disabled={refreshing}
-            className="inline-flex items-center gap-1.5 rounded-full bg-ink-900/80 px-3.5 py-1.5 font-mono text-[11px] text-muted transition hover:bg-ink-850 hover:text-bone disabled:opacity-50"
+            className="font-institutional inline-flex items-center gap-1.5 rounded-full bg-ink-900/80 px-3.5 py-1.5 text-[11px] font-medium tracking-[0.04em] text-muted transition hover:bg-ink-850 hover:text-bone disabled:opacity-50"
           >
             <RefreshCw className={`h-3 w-3 text-gold-bright ${refreshing ? "animate-spin" : ""}`} />
             <span>Sync Live</span>
@@ -111,10 +111,10 @@ export default function FrontpageTriplePoster({
         </div>
 
         {/* POSTER SECTION 1: LIVE WHALE MOVEMENT FEED (TOOL #30) */}
-        <article className="rounded-2xl bg-ink-900/55 p-6 sm:p-7">
+        <article className="rounded-2xl bg-ink-900/55 p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>
-              <p className="font-mono text-[11px] text-muted">
+              <p className="font-institutional text-[11px] tracking-[0.03em] text-muted">
                 {whales.sources.join(" · ")}
               </p>
               <h3 className="mt-1 font-display text-xl sm:text-2xl text-bone">
@@ -128,11 +128,13 @@ export default function FrontpageTriplePoster({
             )}
           </div>
 
-          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
-            <div className="rounded-xl bg-ink-950/75 px-4 py-3">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted">Net Flow Bias</p>
+          <div className="font-institutional mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4">
+            <div className="rounded-xl bg-ink-950/75 px-4 py-3.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                Net Flow Bias
+              </p>
               <p
-                className={`mt-1 font-mono text-base font-bold ${
+                className={`font-luxury-num mt-1.5 text-xl font-medium tracking-[-0.01em] ${
                   whales.report.netFlowBias === "Accumulation"
                     ? "text-up"
                     : whales.report.netFlowBias === "Distribution"
@@ -143,21 +145,27 @@ export default function FrontpageTriplePoster({
                 {whales.report.netFlowBias}
               </p>
             </div>
-            <div className="rounded-xl bg-ink-950/75 px-4 py-3">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted">Tracked Flow</p>
-              <p className="mt-1 font-mono text-base font-bold text-bone tabular-nums">
+            <div className="rounded-xl bg-ink-950/75 px-4 py-3.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                Tracked Flow
+              </p>
+              <p className="font-luxury-num mt-1.5 text-xl font-medium tracking-[-0.01em] text-bone tabular-nums">
                 {fmtUsdCompact(whales.report.totalTrackedUsd)}
               </p>
             </div>
-            <div className="rounded-xl bg-ink-950/75 px-4 py-3">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted">Largest Print</p>
-              <p className="mt-1 font-mono text-base font-bold text-gold-bright tabular-nums">
+            <div className="rounded-xl bg-ink-950/75 px-4 py-3.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                Largest Print
+              </p>
+              <p className="font-luxury-num mt-1.5 text-xl font-medium tracking-[-0.01em] text-gold-bright tabular-nums">
                 {fmtUsdCompact(whales.report.largestPrintUsd)}
               </p>
             </div>
-            <div className="rounded-xl bg-ink-950/75 px-4 py-3">
-              <p className="text-[10px] uppercase tracking-[0.14em] text-muted">ETH Block</p>
-              <p className="mt-1 font-mono text-base font-bold text-bone tabular-nums">
+            <div className="rounded-xl bg-ink-950/75 px-4 py-3.5">
+              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
+                ETH Block
+              </p>
+              <p className="font-luxury-num mt-1.5 text-xl font-medium tracking-[-0.01em] text-bone tabular-nums">
                 {whales.report.ethBlockNumber > 0
                   ? `#${whales.report.ethBlockNumber.toLocaleString()}`
                   : "Mainnet Live"}
@@ -165,24 +173,24 @@ export default function FrontpageTriplePoster({
             </div>
           </div>
 
-          <div className="mt-4 space-y-1.5 rounded-xl bg-ink-950/55 p-2">
+          <div className="font-institutional mt-4 space-y-1.5 rounded-xl bg-ink-950/55 p-2">
             {topWhales.map((item) => (
               <div
                 key={item.id}
                 className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 rounded-lg px-3 py-2.5 text-xs transition hover:bg-ink-900/45"
               >
                 <div className="flex flex-wrap items-center gap-2.5 min-w-0">
-                  <span className="rounded bg-ink-900/90 px-2 py-0.5 font-mono text-[10px] font-bold text-gold-bright">
+                  <span className="rounded bg-ink-900/90 px-2 py-0.5 text-[10px] font-semibold tracking-[0.12em] text-gold-bright">
                     {item.direction}
                   </span>
-                  <span className="font-mono font-bold text-bone">{item.asset}</span>
-                  <span className="text-bone/85 truncate">{item.summary}</span>
+                  <span className="font-semibold tracking-[0.04em] text-bone">{item.asset}</span>
+                  <span className="text-[12.5px] text-bone/85 truncate">{item.summary}</span>
                 </div>
-                <div className="flex shrink-0 items-center gap-3 font-mono text-[11px] text-muted">
-                  <span className="font-semibold text-gold-bright tabular-nums">
+                <div className="flex shrink-0 items-center gap-3 text-[11.5px] text-muted">
+                  <span className="font-semibold tracking-[0.01em] text-gold-bright tabular-nums">
                     {item.amountLabel}
                   </span>
-                  <span>{item.timestamp}</span>
+                  <span className="text-[11px]">{item.timestamp}</span>
                 </div>
               </div>
             ))}
@@ -190,10 +198,10 @@ export default function FrontpageTriplePoster({
         </article>
 
         {/* POSTER SECTION 2: REAL-TIME AI MARKET SENTIMENT (TOOL #31) */}
-        <article className="rounded-2xl bg-ink-900/55 p-6 sm:p-7">
+        <article className="rounded-2xl bg-ink-900/55 p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>
-              <p className="font-mono text-[11px] text-muted">
+              <p className="font-institutional text-[11px] tracking-[0.03em] text-muted">
                 {sentiment.sources.join(" · ")}
               </p>
               <h3 className="mt-1 font-display text-xl sm:text-2xl text-bone">
@@ -207,21 +215,21 @@ export default function FrontpageTriplePoster({
             )}
           </div>
 
-          <div className="mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+          <div className="font-institutional mt-5 grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
             <div className="rounded-xl bg-ink-950/75 p-5 flex flex-col justify-between">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="text-[10px] uppercase tracking-[0.16em] text-muted">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-muted">
                     Composite AI Sentiment
                   </p>
                   <div className="mt-2 flex items-baseline gap-2">
-                    <span className="font-mono text-4xl font-bold text-bone tabular-nums">
+                    <span className="font-luxury-num text-5xl font-medium tracking-[-0.02em] text-bone tabular-nums">
                       {sentiment.report.compositeScore}
                     </span>
-                    <span className="text-xs text-muted">/ 100</span>
+                    <span className="text-xs font-medium tracking-[0.06em] text-muted">/ 100</span>
                   </div>
                 </div>
-                <span className="rounded-full bg-ink-900/90 px-3 py-1 font-mono text-xs font-semibold text-gold-bright">
+                <span className="rounded-full bg-ink-900/90 px-3 py-1 text-[11px] font-semibold tracking-[0.06em] uppercase text-gold-bright">
                   {sentiment.report.regime}
                 </span>
               </div>
@@ -235,9 +243,9 @@ export default function FrontpageTriplePoster({
 
               <div className="mt-4 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <span className="text-muted">
-                  Posture: <strong className="text-bone">{sentiment.report.stanceBias}</strong>
+                  Posture: <strong className="font-semibold text-bone">{sentiment.report.stanceBias}</strong>
                 </span>
-                <span className="font-mono text-gold-bright">
+                <span className="font-semibold tracking-[0.02em] text-gold-bright tabular-nums">
                   Confidence {sentiment.report.confidencePct}%
                 </span>
               </div>
@@ -248,13 +256,13 @@ export default function FrontpageTriplePoster({
                 {sentiment.report.drivers.map((driver) => (
                   <div
                     key={driver.label}
-                    className="rounded-xl bg-ink-950/75 px-4 py-3"
+                    className="rounded-xl bg-ink-950/75 px-4 py-3.5"
                   >
-                    <p className="text-[10px] uppercase tracking-[0.12em] text-muted">
+                    <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-muted">
                       {driver.label}
                     </p>
                     <p
-                      className={`mt-1.5 font-mono text-xs font-semibold ${
+                      className={`mt-1.5 text-[13px] font-semibold tracking-[-0.01em] tabular-nums ${
                         driver.tone === "bull"
                           ? "text-up"
                           : driver.tone === "bear"
@@ -267,7 +275,7 @@ export default function FrontpageTriplePoster({
                   </div>
                 ))}
               </div>
-              <div className="rounded-xl bg-ink-950/75 px-4 py-3.5 text-xs leading-relaxed text-bone/90">
+              <div className="rounded-xl bg-ink-950/75 px-4 py-3.5 text-[12.5px] leading-relaxed text-bone/90">
                 {sentiment.report.deskSummary}
               </div>
             </div>
@@ -275,10 +283,10 @@ export default function FrontpageTriplePoster({
         </article>
 
         {/* POSTER SECTION 3: TOP 3 SIGNALS TODAY (TOOL #32) */}
-        <article className="rounded-2xl bg-ink-900/55 p-6 sm:p-7">
+        <article className="rounded-2xl bg-ink-900/55 p-6 sm:p-8">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2">
             <div>
-              <p className="font-mono text-[11px] text-muted">
+              <p className="font-institutional text-[11px] tracking-[0.03em] text-muted">
                 {topSignals.sources.join(" · ")}
               </p>
               <h3 className="mt-1 font-display text-xl sm:text-2xl text-bone">
@@ -292,7 +300,7 @@ export default function FrontpageTriplePoster({
             )}
           </div>
 
-          <div className="mt-5 grid gap-4 md:grid-cols-3">
+          <div className="font-institutional mt-5 grid gap-4 md:grid-cols-3">
             {top3Signals.map((sig) => (
               <div
                 key={sig.symbol}
@@ -301,24 +309,24 @@ export default function FrontpageTriplePoster({
                 <div>
                   <div className="flex items-center justify-between gap-2">
                     <div className="flex items-center gap-2">
-                      <span className="rounded-md bg-ink-900/90 px-2 py-0.5 font-mono text-[11px] font-bold text-gold-bright">
+                      <span className="rounded-md bg-ink-900/90 px-2 py-0.5 text-[11px] font-semibold tracking-[0.06em] text-gold-bright tabular-nums">
                         #{sig.rank}
                       </span>
-                      <span className="font-mono text-base font-bold text-bone">
+                      <span className="text-base font-bold tracking-[0.03em] text-bone">
                         {sig.symbol}
                       </span>
                     </div>
-                    <span className="rounded-full bg-ink-900/90 px-2.5 py-0.5 font-mono text-[11px] font-semibold text-gold-bright">
+                    <span className="rounded-full bg-ink-900/90 px-2.5 py-0.5 text-[11px] font-semibold tracking-[0.02em] text-gold-bright tabular-nums">
                       {sig.stance} · {sig.score}/100
                     </span>
                   </div>
 
-                  <p className="mt-1 text-xs text-muted truncate">
+                  <p className="mt-1.5 text-xs text-muted truncate">
                     {sig.name} · {sig.group}
                   </p>
 
-                  <div className="mt-4 flex items-baseline justify-between py-2 font-mono">
-                    <span className="text-lg font-bold text-bone tabular-nums">
+                  <div className="mt-4 flex items-baseline justify-between py-2">
+                    <span className="font-luxury-num text-2xl font-medium tracking-[-0.01em] text-bone tabular-nums">
                       {fmtSpot(sig.price)}
                     </span>
                     <span
@@ -331,29 +339,35 @@ export default function FrontpageTriplePoster({
                     </span>
                   </div>
 
-                  <div className="mt-3 grid grid-cols-3 gap-2 font-mono text-[11px]">
+                  <div className="mt-3 grid grid-cols-3 gap-2 text-xs">
                     <div>
-                      <p className="text-[10px] text-muted">Target</p>
-                      <p className="font-semibold text-up tabular-nums">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                        Target
+                      </p>
+                      <p className="mt-0.5 font-semibold text-up tabular-nums">
                         {fmtSpot(sig.targetPrice)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-muted">Invalidation</p>
-                      <p className="font-semibold text-down tabular-nums">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                        Invalidation
+                      </p>
+                      <p className="mt-0.5 font-semibold text-down tabular-nums">
                         {fmtSpot(sig.invalidationPrice)}
                       </p>
                     </div>
                     <div>
-                      <p className="text-[10px] text-muted">R:R Ratio</p>
-                      <p className="font-semibold text-gold-bright tabular-nums">
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-muted">
+                        R:R Ratio
+                      </p>
+                      <p className="mt-0.5 font-semibold text-gold-bright tabular-nums">
                         {sig.riskReward}
                       </p>
                     </div>
                   </div>
                 </div>
 
-                <p className="mt-4 pt-1 text-[11px] leading-relaxed text-muted">
+                <p className="mt-4 pt-1 text-[11.5px] leading-relaxed text-muted">
                   {sig.rationale}
                 </p>
               </div>

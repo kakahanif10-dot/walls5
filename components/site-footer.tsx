@@ -43,8 +43,8 @@ const COLUMNS = [
 
 export default function SiteFooter() {
   return (
-    <footer className="mt-24 border-t border-line/70 bg-ink-900">
-      <div className="mx-auto max-w-7xl px-5 py-14">
+    <footer className="mt-14 bg-ink-900/70">
+      <div className="mx-auto max-w-7xl px-5 py-12">
         <div className="grid gap-10 md:grid-cols-2 lg:grid-cols-6">
           <div className="lg:col-span-2">
             <Link href="/" className="font-display text-xl text-bone">
@@ -90,7 +90,7 @@ export default function SiteFooter() {
           ))}
         </div>
 
-        <div className="mt-12 border-t border-line/70 pt-8">
+        <div className="mt-10 rounded-xl bg-ink-950/55 p-5 sm:p-6">
           <p className="max-w-4xl text-xs leading-relaxed text-muted/80">
             <strong className="text-bone/80">Not investment advice.</strong> NextWallStreet
             publishes market analysis and educational material only. Nothing here is a
@@ -101,7 +101,7 @@ export default function SiteFooter() {
             predict future results. Do your own research and consult a licensed adviser where
             appropriate.
           </p>
-          <div className="mt-6 flex flex-col gap-3 text-xs text-muted/70 sm:flex-row sm:items-center sm:justify-between">
+          <div className="mt-5 flex flex-col gap-3 text-xs text-muted/70 sm:flex-row sm:items-center sm:justify-between">
             <p>© {new Date().getFullYear()} NextWallStreet. All rights reserved.</p>
             <div className="flex gap-5">
               <Link href="/disclaimer" className="hover:text-bone">
