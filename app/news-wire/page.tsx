@@ -5,7 +5,7 @@ import WhopBadge from "@/components/whop-badge";
 import { Radio, Terminal, Zap, ShieldCheck } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Live News Stream & Query Wire — NextWall Street",
+  title: "Live News Stream & Query Wire — NextWallStreet",
   description:
     "Sub-second financial news aggregator connecting 10,000+ market wires (Reuters, WSJ, SEC Form 8-K, FDA Approvals, BusinessWire) mapped to ticker symbols with Lucene query filtering and WebSocket streaming.",
 };

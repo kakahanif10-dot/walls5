@@ -229,7 +229,7 @@ export default function PositionSizingCalculator({
   }, [price, invalidationLevel, accountSize, accountRiskPct, volatility, useVolAdjustment, currentAsset]);
 
   const copyPositionPlan = () => {
-    const text = `NextWall Street Position Plan:
+    const text = `NextWallStreet Position Plan:
 Asset: $${symbol} (${currentAsset?.name || symbol})
 Entry: $${price.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 6 })}
 Model Invalidation: $${invalidationLevel.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 6 })} (${calculations.stopDistancePct.toFixed(2)}% distance)

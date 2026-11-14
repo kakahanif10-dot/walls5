@@ -11,7 +11,7 @@ import { getWhopCheckoutUrl, type PaidPlanId } from "@/lib/whop-checkout-links";
 const ACCOUNT_BILLING_FAQ = [
   {
     q: "How does the Whop subscription and licensing work?",
-    a: "NextWall Street partners natively with Whop to provide frictionless institutional subscription management. Once you subscribe or enter your Whop API license key (e.g. apik_...), the entire platform unlocks instantly across your active session and cloud profile without manual provisioning or waiting for support.",
+    a: "NextWallStreet partners natively with Whop to provide frictionless institutional subscription management. Once you subscribe or enter your Whop API license key (e.g. apik_...), the entire platform unlocks instantly across your active session and cloud profile without manual provisioning or waiting for support.",
   },
   {
     q: "What payment methods are supported through Whop?",
@@ -19,19 +19,19 @@ const ACCOUNT_BILLING_FAQ = [
   },
   {
     q: "What is the cancellation policy?",
-    a: "You can cancel your subscription at any time with a single click in your Whop customer portal or from your NextWall Street account settings. There are zero hidden fees, cancellation penalties, or multi-month lock-in contracts. Upon cancellation, your institutional access remains fully active until the final day of your current paid billing period.",
+    a: "You can cancel your subscription at any time with a single click in your Whop customer portal or from your NextWallStreet account settings. There are zero hidden fees, cancellation penalties, or multi-month lock-in contracts. Upon cancellation, your institutional access remains fully active until the final day of your current paid billing period.",
   },
   {
     q: "How do I activate or restore my subscription on multiple devices?",
     a: "Click the ✦ MEMBER ONLY badge or the Whop key icon in the navigation bar on any device. Enter your Whop license key or the email address used during checkout to restore full access instantly. If you are signed in with Google, your access automatically synchronizes with your cloud Firestore profile.",
   },
   {
-    q: "How does the 14-day free trial work?",
-    a: "The Premium plan includes a 14-day trial with unhindered access to all 2,000+ scored assets, real-time Discord signals, Day Trade targets, and all 20 video masterclasses. If you cancel before day 14 expires, your card will never be charged.",
+    q: "How does $2,497 One-Time Lifetime Access work?",
+    a: "Lifetime Access is a single one-time payment of $2,497 with zero recurring monthly fees. You receive permanent access to all 2,038+ daily trend scores, exact invalidation levels, the 4-course Academy curriculum, and every future desk update.",
   },
   {
-    q: "Can I switch between monthly and annual billing?",
-    a: "Yes. You can switch between monthly and annual plans at any time directly through Whop. Upgrading to annual billing applies an immediate 20% discount and prorates any unused time from your current monthly cycle.",
+    q: "Can teams switch between monthly and annual institutional billing?",
+    a: "Yes. Institutional multi-seat teams can switch between monthly and annual billing directly through Whop, while individual Lifetime Access members pay once and never face recurring renewals.",
   },
   {
     q: "Do you issue official VAT / sales tax invoices and receipts?",
@@ -155,9 +155,10 @@ export default function PricingPlans({ faqList }: PricingPlansProps) {
       <div className="grid gap-6 lg:grid-cols-3">
         {PLANS.map((plan) => {
           const isCurrent = currentPlan === plan.id;
+          const isLifetime = plan.id === "premium";
           const displayPrice =
-            plan.price === 0
-              ? 0
+            plan.price === 0 || isLifetime
+              ? plan.price
               : cadence === "annual"
               ? Math.round(plan.price * 0.8)
               : plan.price;
@@ -175,7 +176,7 @@ export default function PricingPlans({ faqList }: PricingPlansProps) {
             >
               {plan.highlight && (
                 <span className="absolute -top-3 left-7 rounded-full bg-gold px-3 py-1 text-[10px] font-bold uppercase tracking-[0.14em] text-ink-950 shadow-md">
-                  Most Popular Desk
+                  Lifetime Access · Zero Monthly Fees
                 </span>
               )}
 
@@ -193,10 +194,16 @@ export default function PricingPlans({ faqList }: PricingPlansProps) {
 
               <div className="mt-6 flex items-baseline gap-2">
                 <span className="font-display text-4xl font-bold text-bone">
-                  {displayPrice === 0 ? "Free" : `$${displayPrice}`}
+                  {displayPrice === 0 ? "Free" : `$${displayPrice.toLocaleString("en-US")}`}
                 </span>
                 <span className="text-xs text-muted">
-                  {displayPrice === 0 ? "forever" : cadence === "annual" ? "/month (billed annually)" : plan.cadence}
+                  {displayPrice === 0
+                    ? "forever"
+                    : isLifetime
+                    ? "one-time lifetime"
+                    : cadence === "annual"
+                    ? "/month (billed annually)"
+                    : plan.cadence}
                 </span>
               </div>
 
@@ -262,8 +269,8 @@ export default function PricingPlans({ faqList }: PricingPlansProps) {
               <tr>
                 <th className="px-4 py-3 font-medium">Feature</th>
                 <th className="px-4 py-3 text-center font-medium">Reader (Free)</th>
-                <th className="px-4 py-3 text-center font-medium text-gold">Premium ($29/mo)</th>
-                <th className="px-4 py-3 text-center font-medium">Institutional ($149/mo)</th>
+                <th className="px-4 py-3 text-center font-medium text-gold">Lifetime Access ($2,497 one-time)</th>
+                <th className="px-4 py-3 text-center font-medium">Institutional ($249/mo)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-line/60">
@@ -414,15 +421,19 @@ export default function PricingPlans({ faqList }: PricingPlansProps) {
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted">Billing Cycle:</span>
-                <span className="text-bone capitalize">{cadence}</span>
+                <span className="text-bone capitalize">
+                  {activeModalPlan.id === "premium" ? "One-time lifetime access" : cadence}
+                </span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-muted">Amount Due Today:</span>
                 <span className="font-mono text-sm font-bold text-gold-bright">
                   {activeModalPlan.price === 0
                     ? "$0 (Free)"
+                    : activeModalPlan.id === "premium"
+                    ? `$${activeModalPlan.price.toLocaleString("en-US")} (One-Time Lifetime)`
                     : cadence === "annual"
-                    ? `$${Math.round(activeModalPlan.price * 0.8 * 12)} / year`
+                    ? `$${Math.round(activeModalPlan.price * 0.8 * 12).toLocaleString("en-US")} / year`
                     : `$${activeModalPlan.price} / month`}
                 </span>
               </div>

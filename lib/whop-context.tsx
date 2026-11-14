@@ -37,7 +37,7 @@ export function WhopProvider({ children }: { children: ReactNode }) {
   const { user, profile, updateUserPlan } = useAuth();
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [deskName, setDeskName] = useState<string>("NextWall Street PRO");
+  const [deskName, setDeskName] = useState<string>("NextWallStreet PRO");
   const [licenseInput, setLicenseInput] = useState("");
   const [emailInput, setEmailInput] = useState("");
   const [loading, setLoading] = useState(false);

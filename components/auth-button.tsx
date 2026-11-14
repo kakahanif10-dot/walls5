@@ -60,7 +60,7 @@ export default function AuthButton() {
         if (error) throw error;
         setAuthMsg({
           type: "success",
-          text: passwordInput ? "Authentication successful. Welcome to NextWall Street." : "Verification link sent to your email.",
+          text: passwordInput ? "Authentication successful. Welcome to NextWallStreet." : "Verification link sent to your email.",
         });
       }
       setTimeout(() => {
@@ -200,7 +200,7 @@ export default function AuthButton() {
             <div>
               <span className="text-[10px] font-bold uppercase tracking-widest text-gold flex items-center gap-1.5">
                 <Sparkles className="h-3 w-3" />
-                NextWall Street Terminal Access
+                NextWallStreet Terminal Access
               </span>
               <h3 className="font-display text-2xl text-bone mt-1">
                 {isSignUp ? "Create Subscriber Account" : "Sign In to Terminal"}

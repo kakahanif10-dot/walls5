@@ -5,7 +5,7 @@ import WhopBadge from "@/components/whop-badge";
 import { Monitor, Layers, Activity, Keyboard } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Dual-Screen Charting & Order Desk — NextWall Street",
+  title: "Dual-Screen Charting & Order Desk — NextWallStreet",
   description:
     "Institutional dual-screen trading workstation with intraday price curve charting, Command Line (<GO>), Level 2 order book depth ladder, Time & Sales tape, and interactive hardware shortcut deck.",
 };

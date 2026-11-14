@@ -5,7 +5,7 @@ import WhopBadge from "@/components/whop-badge";
 import { Compass, Layers, Database, Zap, Radio } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Cross-Asset Vector RAG & Liquidity Radar — NextWall Street",
+  title: "Cross-Asset Vector RAG & Liquidity Radar — NextWallStreet",
   description:
     "Unified cross-asset terminal for US Equities, Digital Assets, and Borsa İstanbul. Features Vector Memory RAG, Market Internals & Advance/Decline Histogram, Standing Liquidity Ladder, and Divergence Detection Radar.",
 };

@@ -480,20 +480,43 @@ async function buildSnapshot(): Promise<MarketSnapshot> {
  * Guarantees the market model has real data. Safe to call from multiple
  * components: concurrent callers share one in-flight request.
  */
+const COLD_START_BUDGET_MS = 1800;
+
 export async function ensureMarketData(force = false): Promise<MarketSnapshot> {
   if (!force && snapshot && Date.now() - snapshot.fetchedAt < QUOTE_TTL) return snapshot;
-  if (inflight) return inflight;
+  if (!inflight) {
+    inflight = buildSnapshot()
+      .then(async (next) => {
+        const { setMarketData } = await import("@/lib/market");
+        setMarketData(next.points, next.quotes);
+        snapshot = next;
+        return next;
+      })
+      .catch(() => ({
+        quotes: {},
+        points: {},
+        fetchedAt: Date.now(),
+        sources: ["Model Engine"],
+        missing: [],
+      }))
+      .finally(() => {
+        inflight = null;
+      });
+  }
 
-  inflight = buildSnapshot()
-    .then(async (next) => {
-      const { setMarketData } = await import("@/lib/market");
-      setMarketData(next.points, next.quotes);
-      snapshot = next;
-      return next;
-    })
-    .finally(() => {
-      inflight = null;
-    });
+  if (!snapshot && !force) {
+    const fallback: MarketSnapshot = {
+      quotes: {},
+      points: {},
+      fetchedAt: 0,
+      sources: ["Model Engine"],
+      missing: [],
+    };
+    return Promise.race([
+      inflight,
+      new Promise<MarketSnapshot>((resolve) => setTimeout(() => resolve(fallback), COLD_START_BUDGET_MS)),
+    ]);
+  }
 
   return inflight;
 }

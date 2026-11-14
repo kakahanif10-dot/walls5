@@ -4,7 +4,7 @@ import PipelineStatusDashboard from "@/components/pipeline-status-dashboard";
 import WhopBadge from "@/components/whop-badge";
 
 export const metadata: Metadata = {
-  title: "Backend Data Pipeline & 2,000+ Asset Scoring Engine — NextWall Street",
+  title: "Backend Data Pipeline & 2,000+ Asset Scoring Engine — NextWallStreet",
   description:
     "Real-time pipeline ingesting Nasdaq, Coinbase, Binance, and OKX feeds. Computes 5-component trend scoring, invalidation levels, and realized volatility across 2,000+ assets.",
 };

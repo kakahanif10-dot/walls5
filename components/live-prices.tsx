@@ -21,7 +21,7 @@ export type FeedMeta = {
 };
 
 type FeedResponse = {
-  mode?: "live" | "unavailable";
+  mode?: "live" | "real-time" | "unavailable";
   source?: string;
   asOf?: string | null;
   delayed?: boolean;
@@ -89,7 +89,7 @@ export default function LivePricesProvider({
         const data = (await response.json()) as FeedResponse;
         if (cancelled) return;
 
-        if (data?.mode !== "live" || !data.quotes) {
+        if ((data?.mode !== "live" && data?.mode !== "real-time") || !data.quotes) {
           setMeta((prev) => ({ ...prev, mode: "unavailable" }));
           return;
         }

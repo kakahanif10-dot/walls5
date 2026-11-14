@@ -639,7 +639,7 @@ export default function DiscordLiveChat() {
               type="button"
               onClick={() => setShowServerModal(true)}
               className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-tr from-gold/30 via-gold to-bone p-[1.5px] shadow-lg transition-transform hover:scale-105 active:scale-95"
-              title="NextWall Street Institutional Server — Click for Analytics & Settings"
+              title="NextWallStreet Institutional Server — Click for Analytics & Settings"
             >
               <div className="flex h-full w-full items-center justify-center rounded-2xl bg-ink-900 font-display text-sm font-bold text-gold-bright">
                 NWS
@@ -720,7 +720,7 @@ export default function DiscordLiveChat() {
             >
               <div className="flex items-center gap-2">
                 <Shield className="h-4 w-4 text-gold" />
-                <span className="font-display text-sm font-bold text-bone">NextWall Street</span>
+                <span className="font-display text-sm font-bold text-bone">NextWallStreet</span>
               </div>
               <ChevronDown className={`h-3.5 w-3.5 text-muted transition-transform ${showServerDropdown ? "rotate-180 text-gold" : ""}`} />
             </button>
@@ -1636,7 +1636,7 @@ export default function DiscordLiveChat() {
                   <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse" />
                   Institutional Node Verified
                 </span>
-                <h3 className="font-display text-xl text-bone">NextWall Street Guild Floor</h3>
+                <h3 className="font-display text-xl text-bone">NextWallStreet Guild Floor</h3>
                 <p className="text-xs text-muted">24/7 Algorithmic Trading &amp; Minute Signals Desk</p>
               </div>
             </div>

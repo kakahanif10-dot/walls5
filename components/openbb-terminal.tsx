@@ -40,7 +40,7 @@ export default function OpenBBTerminal() {
       type: "text",
       title: "NextWall Quantitative Risk & CLI Engine v4.3",
       content:
-        "Connected to NextWall Street high-frequency quantitative engine.\nConsolidates 2,000+ asset real-time feeds, US Treasury constant-maturity yields, and portfolio risk models.\nType 'help' or click any command preset below to inspect.",
+        "Connected to NextWallStreet high-frequency quantitative engine.\nConsolidates 2,000+ asset real-time feeds, US Treasury constant-maturity yields, and portfolio risk models.\nType 'help' or click any command preset below to inspect.",
       pythonCodeSnippet:
         'from nextwall.quant import cli\n# Query multi-asset universe\noutput = cli.equity.price.historical("NVDA")\nprint(output.to_dataframe())',
     },

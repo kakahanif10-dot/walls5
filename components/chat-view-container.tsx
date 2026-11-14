@@ -23,7 +23,7 @@ export default function ChatViewContainer({ initialFloor = "discord" }: ChatView
           <span className="live-dot h-2.5 w-2.5 rounded-full bg-emerald-400 shrink-0 animate-ping" />
           <div>
             <div className="font-semibold text-bone text-sm flex items-center gap-2">
-              <span>NextWall Street Community &amp; NWS AI Workspace</span>
+              <span>NextWallStreet Community &amp; NWS AI Workspace</span>
               <WhopBadge size="xs" />
             </div>
             <p className="text-muted text-[11px] mt-0.5">

@@ -5,7 +5,7 @@ import WhopBadge from "@/components/whop-badge";
 import { Terminal, Activity, Compass, DollarSign, Vote } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "516-Panel Macro & Perpetuals Workstation — NextWall Street",
+  title: "516-Panel Macro & Perpetuals Workstation — NextWallStreet",
   description:
     "Modular 516-panel quantitative workstation featuring Fear & Greed composite gauge, Macro Regime Quadrants, 24/7 equity & crypto perpetuals, commodities matrix, and live event prediction order books.",
 };

@@ -52,9 +52,20 @@ function swingLongBadgeColor(bias: string) {
   }
 }
 
-export default function MarketExplorer({ rows }: { rows: Row[] }) {
+type AssetTab = "core" | "speculative";
+
+export default function MarketExplorer({
+  rows,
+  speculativeRows,
+  initialTab = "core",
+}: {
+  rows: Row[];
+  speculativeRows?: Row[];
+  initialTab?: AssetTab;
+}) {
   const { isUnlocked, openWhopModal } = useWhop();
 
+  const [activeTab, setActiveTab] = useState<AssetTab>(initialTab);
   const [query, setQuery] = useState("");
   const [stance, setStance] = useState<(typeof STANCES)[number]>("All");
   const [sector, setSector] = useState<string>("All Sectors");
@@ -62,21 +73,27 @@ export default function MarketExplorer({ rows }: { rows: Row[] }) {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState<number>(0);
 
-  // Extract unique sectors/groups from rows
+  const hasSubTabs = Boolean(speculativeRows && speculativeRows.length > 0);
+  const activeRows = useMemo(
+    () => (hasSubTabs && activeTab === "speculative" ? speculativeRows! : rows),
+    [hasSubTabs, activeTab, speculativeRows, rows],
+  );
+
+  // Extract unique sectors/groups from active rows
   const availableSectors = useMemo(() => {
     const set = new Set<string>();
-    rows.forEach((r) => {
+    activeRows.forEach((r) => {
       if (r.group) {
         const main = r.group.split("/")[0].trim();
         set.add(main);
       }
     });
     return ["All Sectors", ...Array.from(set).slice(0, 8)];
-  }, [rows]);
+  }, [activeRows]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    const list = rows.filter((row) => {
+    const list = activeRows.filter((row) => {
       const matchesQuery =
         !q ||
         row.symbol.toLowerCase().includes(q) ||
@@ -93,7 +110,15 @@ export default function MarketExplorer({ rows }: { rows: Row[] }) {
       if (sort === "name") return a.symbol.localeCompare(b.symbol);
       return (b[sort] as number) - (a[sort] as number);
     });
-  }, [rows, query, stance, sector, sort]);
+  }, [activeRows, query, stance, sector, sort]);
+
+  const handleTabChange = (tab: AssetTab) => {
+    setActiveTab(tab);
+    setSector("All Sectors");
+    setStance("All");
+    setQuery("");
+    setPage(1);
+  };
 
   // Reset to page 1 when filters change
   const handleQueryChange = (val: string) => {
@@ -137,6 +162,51 @@ export default function MarketExplorer({ rows }: { rows: Row[] }) {
 
   return (
     <div>
+      {/* Institutional Sub-Tabs for Consolidated Digital Assets */}
+      {hasSubTabs && (
+        <div
+          role="tablist"
+          aria-label="Digital Assets Universe"
+          className="mb-5 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-line bg-ink-900/70 p-2"
+        >
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "core"}
+              onClick={() => handleTabChange("core")}
+              className={`rounded-lg px-4 py-2 text-xs sm:text-sm font-medium transition-all ${
+                activeTab === "core"
+                  ? "bg-gold text-ink-950 font-semibold shadow-sm"
+                  : "text-muted hover:bg-ink-850 hover:text-bone"
+              }`}
+            >
+              Core Digital Assets (BTC/ETH)
+              <span className="ml-2 font-mono text-[11px] opacity-80">({rows.length})</span>
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={activeTab === "speculative"}
+              onClick={() => handleTabChange("speculative")}
+              className={`rounded-lg px-4 py-2 text-xs sm:text-sm font-medium transition-all ${
+                activeTab === "speculative"
+                  ? "bg-gold text-ink-950 font-semibold shadow-sm"
+                  : "text-muted hover:bg-ink-850 hover:text-bone"
+              }`}
+            >
+              Speculative &amp; High-Beta Risk
+              <span className="ml-2 font-mono text-[11px] opacity-80">({speculativeRows?.length ?? 0})</span>
+            </button>
+          </div>
+          <span className="px-2 text-[11px] text-muted">
+            {activeTab === "speculative"
+              ? "Hard 2% allocation ceiling · liquidity-first risk grading"
+              : "Spot ETF flows, Layer-1/2 infrastructure & macro liquidity"}
+          </span>
+        </div>
+      )}
+
       {/* WSJ Institutional Status Banner & Mode Controls */}
       <div className="mb-4 rounded-xl border border-gold/30 bg-gold/[0.04] p-3.5 sm:p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2.5">
@@ -145,8 +215,8 @@ export default function MarketExplorer({ rows }: { rows: Row[] }) {
             <div className="flex flex-wrap items-center gap-2">
               <span className="font-display text-sm sm:text-base font-semibold text-bone">
                 {isUnlocked
-                  ? `Full Universe Active: ${filtered.length} of ${rows.length} Assets Loaded`
-                  : `Member Only Preview: 8 of ${rows.length}+ Scored Assets`}
+                  ? `Full Universe Active: ${filtered.length} of ${activeRows.length} Assets Loaded`
+                  : `Member Only Preview: ${PREVIEW_LIMIT} of ${activeRows.length}+ Scored Assets`}
               </span>
               <WhopBadge variant={isUnlocked ? "plus" : "wsj"} />
               <span className="rounded bg-gold/15 border border-gold/40 px-2 py-0.5 text-[10px] font-mono font-bold text-gold-bright">
@@ -160,7 +230,7 @@ export default function MarketExplorer({ rows }: { rows: Row[] }) {
             <p className="text-[11px] text-muted leading-tight mt-0.5">
               {isUnlocked
                 ? "Full institutional feed active. Real-time intraday Day Trading and multi-week Swing models unlocked."
-                : "You are currently viewing an institutional preview. Subscribe with Whop to unlock the complete 2,000+ universe and full live data."}
+                : "You are currently viewing an institutional preview. Unlock Lifetime Access via Whop for the complete 2,038+ universe."}
             </p>
           </div>
         </div>
@@ -176,7 +246,7 @@ export default function MarketExplorer({ rows }: { rows: Row[] }) {
                 : "border border-gold/40 bg-gold/10 text-gold-bright hover:bg-gold/20"
             }`}
           >
-            <span>⚡ View All ({rows.length})</span>
+            <span>⚡ View All ({activeRows.length})</span>
             {!isUnlocked && <WhopBadge variant="pro" className="ml-1" />}
           </button>
 
@@ -242,7 +312,7 @@ export default function MarketExplorer({ rows }: { rows: Row[] }) {
             <input
               value={query}
               onChange={(e) => handleQueryChange(e.target.value)}
-              placeholder={`Search ${rows.length}+ symbols, companies or themes...`}
+              placeholder={`Search ${activeRows.length}+ symbols, companies or themes...`}
               className="w-full rounded-full border border-line bg-ink-900 px-4 py-1.5 text-xs sm:text-sm text-bone placeholder:text-muted/70 focus:border-gold/50 focus:outline-none lg:w-72"
             />
             {query && (
@@ -332,7 +402,7 @@ export default function MarketExplorer({ rows }: { rows: Row[] }) {
 
                 {/* Price & Change */}
                 <td className="px-4 py-3.5 text-right font-mono text-sm text-bone">
-                  <LivePrice symbol={row.symbol} base={row.price} />
+                  <LivePrice symbol={row.symbol} base={row.price} kind={row.kind} />
                 </td>
                 <td className="px-4 py-3.5 text-right font-mono text-sm">
                   <LiveChange symbol={row.symbol} change={row.change24h} />

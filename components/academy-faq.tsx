@@ -16,20 +16,20 @@ interface FAQItem {
 
 const FAQ_ITEMS: FAQItem[] = [
   {
-    question: "What is the primary difference between Free (Reader) and Premium (PRO) access?",
-    answer: "Free Reader access provides foundational theoretical training and transparency into our scoring philosophy. Premium PRO membership ($29/month) unlocks full daily institutional execution: definitive invalidation price levels, all 60 video masterclasses, 70 research decks, real-time Telegram/Discord terminal dispatch, and full access to our 44 Analyst Desks.",
+    question: "What is the primary difference between Free (Reader) and Lifetime Access (PRO)?",
+    answer: "Free Reader access provides foundational training and transparency into our scoring philosophy. Lifetime Access ($2,497 one-time) permanently unlocks all 2,038+ daily trend scores, exact invalidation price levels, all 4 Academy courses (60 video masterclasses), 70 research decks, real-time terminal dispatch, and all future desk updates with zero recurring monthly fees.",
     freeVsPremium: {
       free: "Foundation Course ('Reading a Trend'), 2 monthly research pieces, delayed public board scores, no terminal dispatch.",
-      premium: "All 4 Complete Curriculums, 60 HD Masterclasses, 70 Research Decks, Sub-second Telegram & Discord Terminal Dispatch, Position Sizing Engine, and 44 Quantitative Desks.",
+      premium: "All 4 Complete Curriculums, 60 HD Masterclasses, 70 Research Decks, Sub-second Telegram & Discord Terminal Dispatch, Position Sizing Engine, and all future desk updates.",
     },
   },
   {
     question: "Are the 60 Video Masterclasses in the Video Studio accessible for free?",
-    answer: "Lesson 01 across each curriculum module is available as a complimentary preview of our production quality. Unrestricted access to all 60 interactive masterclasses—complete with technical chart overlays, chapter bookmarks, synchronized takeaways, and comprehension quizzes—is exclusive to PRO members.",
+    answer: "Lesson 01 across each curriculum module is available as a complimentary preview of our production quality. Unrestricted access to all 60 interactive masterclasses—complete with technical chart overlays, chapter bookmarks, synchronized takeaways, and comprehension quizzes—is included permanently with Lifetime Access.",
   },
   {
-    question: "How does the 14-Day Trial work, and can I cancel at any time?",
-    answer: "Every Premium subscription includes a comprehensive 14-day trial with unrestricted access to all features. You may cancel at any moment with a single click in your subscriber dashboard or through the Whop customer portal without penalty or hidden commitments.",
+    question: "Are there any recurring monthly fees with Lifetime Access?",
+    answer: "No. Lifetime Access is a single $2,497 one-time payment through Whop that unlocks permanent access across your cloud profile, including all future research updates and Academy additions.",
   },
   {
     question: "Do I need to keep a browser window open during market hours?",
@@ -67,14 +67,14 @@ export default function AcademyFAQ() {
             Frequently Asked Questions
           </h2>
           <p className="mt-2 text-sm text-muted max-w-xl">
-            Understand the distinction between complimentary Reader access and full PRO institutional membership ($29/month) across the NextWall Street Academy.
+            Understand the distinction between complimentary Reader access and full PRO Lifetime Access ($2,497 one-time) across the NextWallStreet Academy.
           </p>
         </div>
 
-        {/* Free vs Premium Quick Pill Indicator */}
+        {/* Free vs Lifetime Quick Pill Indicator */}
         <div className="flex items-center gap-2 rounded-xl border border-gold/40 bg-gold/10 px-4 py-2.5 text-xs text-gold-bright shrink-0">
           <Zap className="h-4 w-4 text-gold shrink-0" />
-          <span>14-Day Risk-Free Trial · Cancel Anytime</span>
+          <span>$2,497 One-Time · Zero Monthly Fees</span>
         </div>
       </div>
 
@@ -84,7 +84,7 @@ export default function AcademyFAQ() {
           <div className="text-muted">Feature &amp; Curriculum Access</div>
           <div className="text-center text-muted">Free Reader Access</div>
           <div className="text-center text-gold-bright flex items-center justify-center gap-1">
-            <span>PRO Member ($29/mo)</span>
+            <span>Lifetime Member ($2,497)</span>
             <WhopBadge size="xs" />
           </div>
         </div>

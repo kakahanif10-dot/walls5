@@ -126,7 +126,7 @@ export default async function CoursePage({ params }: { params: Promise<{ slug: s
             <p className="mt-3 font-display text-lg text-bone">{course.instructor}</p>
             <p className="text-xs text-muted">{course.instructorRole}</p>
             <p className="mt-3 text-sm leading-relaxed text-muted">
-              Publishes on the NextWall Street research desk and teaches the same framework used in the
+              Publishes on the NextWallStreet research desk and teaches the same framework used in the
               daily trend scores.
             </p>
           </div>

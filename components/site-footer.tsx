@@ -5,11 +5,11 @@ const COLUMNS = [
   {
     title: "Coverage",
     links: [
-      { href: "/markets", label: "US equities" },
-      { href: "/crypto", label: "Digital assets" },
-      { href: "/meme-coins", label: "Meme coins" },
-      { href: "/ticker/BTC", label: "Bitcoin trend score" },
-      { href: "/ticker/NVDA", label: "NVIDIA trend score" },
+      { href: "/markets", label: "US Equities" },
+      { href: "/crypto", label: "Digital Assets" },
+      { href: "/crypto?tab=speculative", label: "Speculative Risk Models" },
+      { href: "/ticker/BTC", label: "Bitcoin Trend Score" },
+      { href: "/ticker/NVDA", label: "NVIDIA Trend Score" },
     ],
   },
   {
@@ -25,16 +25,16 @@ const COLUMNS = [
     title: "Academy",
     links: [
       { href: "/academy", label: "All courses" },
-      { href: "/academy/reading-trends", label: "Reading a Trend" },
-      { href: "/academy/crypto-without-hype", label: "Crypto Without Hype" },
-      { href: "/academy/portfolio-construction", label: "Portfolio Construction" },
+      { href: "/academy/reading-trends", label: "Reading a Trend: From Structure to Signal" },
+      { href: "/academy/crypto-without-hype", label: "Crypto Without the Hype" },
+      { href: "/academy/portfolio-construction", label: "Portfolio Construction & Sizing" },
+      { href: "/academy/meme-coin-risk", label: "Speculative Risk & Liquidity Traps" },
     ],
   },
   {
     title: "Company",
     links: [
-      { href: "/pricing", label: "Plans & pricing" },
-      { href: "/watchlist", label: "Your watchlist" },
+      { href: "/pricing", label: "Lifetime access ($2,497)" },
       { href: "/disclaimer", label: "Disclaimer & methodology" },
     ],
   },
@@ -54,7 +54,7 @@ export default function SiteFooter() {
               speculative markets — plus the education to use it responsibly.
             </p>
             <p className="mt-5 text-xs leading-relaxed text-muted/70">
-              {ASSETS.length.toLocaleString()} tracked assets · 44 research desks · 4 courses
+              {ASSETS.length.toLocaleString()} tracked assets · 3 core research desks · 4 courses
             </p>
           </div>
 
@@ -81,7 +81,7 @@ export default function SiteFooter() {
 
         <div className="mt-12 border-t border-line/70 pt-8">
           <p className="max-w-4xl text-xs leading-relaxed text-muted/80">
-            <strong className="text-bone/80">Not investment advice.</strong> NextWall Street
+            <strong className="text-bone/80">Not investment advice.</strong> NextWallStreet
             publishes market analysis and educational material only. Nothing here is a
             recommendation, solicitation or offer to buy or sell any security, token or derivative.
             Quotes are sourced from public market endpoints; equity prices are delayed and may be
@@ -91,7 +91,7 @@ export default function SiteFooter() {
             appropriate.
           </p>
           <div className="mt-6 flex flex-col gap-3 text-xs text-muted/70 sm:flex-row sm:items-center sm:justify-between">
-            <p>© {new Date().getFullYear()} NextWall Street. All rights reserved.</p>
+            <p>© {new Date().getFullYear()} NextWallStreet. All rights reserved.</p>
             <div className="flex gap-5">
               <Link href="/disclaimer" className="hover:text-bone">
                 Methodology

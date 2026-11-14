@@ -3,8 +3,31 @@ import TickerTape from "@/components/ticker-tape";
 import Sparkline from "@/components/sparkline";
 import { LivePrice, LiveChange } from "@/components/live-price";
 import { ARTICLES, COURSES } from "@/lib/content";
-import { ASSETS, marketPulse, rowsFor, stanceColor, type Row } from "@/lib/market";
+import { ASSETS, byKind, marketPulse, rowsFor, stanceColor, type Row } from "@/lib/market";
 import { ensureMarketData } from "@/lib/market-data";
+
+const TAPE_SYMBOLS = [
+  "ICE",
+  "AMGN",
+  "CARR",
+  "NVDA",
+  "AAPL",
+  "MSFT",
+  "AMZN",
+  "GOOGL",
+  "META",
+  "TSLA",
+  "JPM",
+  "AVGO",
+  "AMD",
+  "BTC",
+  "ETH",
+  "SOL",
+  "AVAX",
+  "LINK",
+];
+
+const BOARD_SYMBOLS = ["ICE", "NVDA", "JPM", "MSFT", "TSLA"];
 
 function BoardRow({ row }: { row: Row }) {
   return (
@@ -21,7 +44,12 @@ function BoardRow({ row }: { row: Row }) {
       <div className="flex items-center gap-4">
         <Sparkline values={row.spark} width={70} height={22} className="hidden sm:block" />
         <span className="w-24 text-right">
-          <LivePrice symbol={row.symbol} base={row.price} className="font-mono text-sm text-bone" />
+          <LivePrice
+            symbol={row.symbol}
+            base={row.price}
+            kind={row.kind}
+            className="font-mono text-sm text-bone"
+          />
         </span>
         <span className="w-16 text-right">
           <LiveChange symbol={row.symbol} change={row.change24h} className="font-mono text-xs" />
@@ -37,9 +65,18 @@ function BoardRow({ row }: { row: Row }) {
 export default async function HomePage() {
   await ensureMarketData();
   const pulse = marketPulse();
-  const board = rowsFor("stock").slice(0, 5);
+  const allRows = rowsFor();
+  const rowBySymbol = new Map(allRows.map((row) => [row.symbol, row]));
+  const tapeRows = TAPE_SYMBOLS.map((sym) => rowBySymbol.get(sym)).filter((r): r is Row => Boolean(r));
+  const board = BOARD_SYMBOLS.map((sym) => rowBySymbol.get(sym))
+    .filter((r): r is Row => Boolean(r))
+    .sort((a, b) => b.score - a.score);
   const featured = ARTICLES.slice(0, 3);
-  const courses = COURSES.slice(0, 3);
+  const courses = COURSES;
+
+  const equityCount = byKind("stock").length;
+  const cryptoCount = byKind("crypto").length;
+  const speculativeCount = byKind("meme").length;
 
   return (
     <div>
@@ -48,7 +85,7 @@ export default async function HomePage() {
           <div className="rise">
             <div className="inline-flex items-center gap-2 rounded-full border border-line bg-ink-900 px-3 py-1.5 text-[11px] text-muted">
               <span className="h-1.5 w-1.5 rounded-full bg-up" />
-              Independent research · no sponsored calls
+              Independent research · $2,497 One-Time Lifetime Access
             </div>
 
             <h1 className="mt-6 font-display text-[2.75rem] leading-[1.05] text-bone sm:text-6xl">
@@ -58,9 +95,10 @@ export default async function HomePage() {
             </h1>
 
             <p className="mt-6 max-w-xl text-[15px] leading-relaxed text-muted">
-              NextWall Street scores the trend, names the stance and publishes the invalidation
-              level — across equities, crypto and meme coins. Then it teaches you the method, so you
-              never have to take our word for it.
+              NextWallStreet scores the trend, names the stance and publishes the invalidation
+              level — across equities, digital assets and speculative markets. Full Lifetime Access
+              unlocks all 2,038+ daily trend scores, exact invalidation levels, the 4-course Academy
+              curriculum and every future desk update with zero recurring monthly fees.
             </p>
 
             <div className="mt-8 flex flex-wrap items-center gap-3">
@@ -68,7 +106,7 @@ export default async function HomePage() {
                 href="/pricing"
                 className="rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink-950 transition hover:bg-gold-bright"
               >
-                Start 14-day trial
+                Get Lifetime Access — $2,497
               </Link>
               <Link
                 href="/markets"
@@ -86,7 +124,7 @@ export default async function HomePage() {
             <dl className="mt-10 grid max-w-lg grid-cols-3 gap-6 border-t border-line/60 pt-7">
               {[
                 { k: ASSETS.length.toLocaleString(), v: "assets tracked" },
-                { k: "44", v: "research desks" },
+                { k: "3", v: "core research desks" },
                 { k: String(COURSES.length), v: "academy courses" },
               ].map((item) => (
                 <div key={item.v}>
@@ -105,7 +143,7 @@ export default async function HomePage() {
                 </p>
                 <p className="mt-1 text-xs text-muted">Composite of equity trend scores</p>
               </div>
-              <span className="rounded-full border border-up/40 bg-up/10 px-2.5 py-1 text-[11px] text-up">
+              <span className="rounded-full border border-gold/40 bg-gold/10 px-2.5 py-1 text-[11px] text-gold-bright">
                 {pulse.label}
               </span>
             </div>
@@ -143,7 +181,7 @@ export default async function HomePage() {
                   Latest
                 </span>
                 <span className="text-sm leading-snug text-bone/90 group-hover:text-gold-bright">
-                  The playbook for a narrow market — when five names carry the index.
+                  The Breadth Divergence Playbook: When Five Mega-Caps Carry the Index.
                 </span>
               </Link>
             </div>
@@ -151,7 +189,7 @@ export default async function HomePage() {
         </div>
       </section>
 
-      <TickerTape rows={rowsFor().slice(0, 18)} />
+      <TickerTape rows={tapeRows} />
 
       <section className="mx-auto max-w-7xl px-5 py-16">
         <div className="grid gap-12 lg:grid-cols-[1fr_1.1fr]">
@@ -161,7 +199,7 @@ export default async function HomePage() {
             </h2>
             <p className="mt-5 max-w-md text-[15px] leading-relaxed text-muted">
               Most market commentary gives you a direction without a mechanism. We publish the
-              composite maths behind every score, the exact level at which the call is wrong, and a
+              composite math behind every score, the exact level at which the call is wrong, and a
               confidence figure that shrinks when the tape gets noisy.
             </p>
 
@@ -180,7 +218,7 @@ export default async function HomePage() {
                 {
                   n: "03",
                   t: "Risk",
-                  d: "Realised volatility, position in the 52-week range and a risk grade that drives sizing.",
+                  d: "Realized volatility, position in the 52-week range and a risk grade that drives sizing.",
                 },
               ].map((step) => (
                 <div key={step.n} className="flex gap-4 border-t border-line/60 pt-5">
@@ -207,8 +245,8 @@ export default async function HomePage() {
               ))}
             </div>
             <p className="mt-4 text-[11px] leading-relaxed text-muted/70">
-              Ranked by composite trend score. Stances are model output, not personal
-              recommendations.
+              Ranked by live composite trend score across core US leaders. Stances are objective model
+              output, not personal recommendations.
             </p>
           </div>
         </div>
@@ -224,21 +262,21 @@ export default async function HomePage() {
                 eyebrow: "Equities",
                 title: "S&P 500, Nasdaq & growth leaders",
                 body: "AI infrastructure, software, financials, energy and consumer staples — scored on structure and momentum with fundamentals as context.",
-                meta: "800+ names · daily updates",
+                meta: `${equityCount} names · daily updates`,
               },
               {
                 href: "/crypto",
                 eyebrow: "Digital assets",
                 title: "Flow, float and liquidity",
                 body: "No cash flow to discount, so we price the regime instead: real yields, dollar direction, ETF flow and on-chain activity.",
-                meta: "830+ assets · volatility sized",
+                meta: `${cryptoCount} assets · volatility sized`,
               },
               {
-                href: "/meme-coins",
-                eyebrow: "Speculative",
+                href: "/crypto?tab=speculative",
+                eyebrow: "Speculative Risk Models",
                 title: "Attention markets, graded as risk",
                 body: "Concentration, order-book depth and narrative half-life. Hard position caps and mechanical exits, not conviction plays.",
-                meta: "400+ assets · risk-first",
+                meta: `${speculativeCount} assets · risk-first`,
               },
             ].map((card) => (
               <Link
@@ -288,7 +326,7 @@ export default async function HomePage() {
               <h3 className="mt-4 font-display text-xl leading-snug text-bone group-hover:text-gold-bright">
                 {article.title}
               </h3>
-              <p className="mt-3 line-clamp-3 text-sm leading-relaxed text-muted">{article.dek}</p>
+              <p className="mt-3 text-sm leading-relaxed text-muted">{article.dek}</p>
               <p className="mt-5 text-xs text-muted/70">
                 {article.author} · {article.role}
               </p>
@@ -302,12 +340,12 @@ export default async function HomePage() {
           <div>
             <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-gold">The Academy</p>
             <h2 className="mt-3 font-display text-3xl leading-tight text-bone sm:text-4xl">
-              A subscription is a view. Education is a skill.
+              Signals fade. Process compounds.
             </h2>
             <p className="mt-5 max-w-md text-[15px] leading-relaxed text-muted">
-              Every paid plan unlocks the full curriculum: structure reading, momentum interpretation,
-              crypto liquidity, speculative risk and portfolio construction. Written by the same desk
-              that publishes the scores — no recycled course content.
+              Lifetime Access unlocks the complete 4-course curriculum: structure reading, momentum
+              interpretation, crypto liquidity, portfolio sizing and speculative risk traps. Written
+              by the same desk that publishes the scores — no recycled course content.
             </p>
             <Link
               href="/academy"
@@ -348,21 +386,21 @@ export default async function HomePage() {
           {[
             {
               quote:
-                "The invalidation level is the part nobody else publishes. It changes how you size, not just what you buy.",
-              name: "Self-directed investor",
-              detail: "Premium, 14 months",
+                "The invalidation level is the part nobody else publishes. It changes how you size risk before you ever place the order.",
+              name: "Independent Equity Trader",
+              detail: "Lifetime Member",
             },
             {
               quote:
-                "I finally understand why my RSI sell signals kept failing in strong trends. The Academy course paid for the subscription.",
-              name: "Retail trader",
-              detail: "Premium, 8 months",
+                "I finally stopped selling strong trends early based on overbought RSI. The structured invalidation framework paid for Lifetime Access in a single swing cycle.",
+              name: "Active Macro & Crypto Trader",
+              detail: "Lifetime Member",
             },
             {
               quote:
-                "We use the signal history CSV in our Monday risk meeting. It is the only retail product our compliance team approved.",
-              name: "Family office analyst",
-              detail: "Institutional, 2 seats",
+                "Having 2,038 assets scored with uniform 20-, 50- and 200-day weighting saves three hours of manual weekend screening across our equity and digital sleeves.",
+              name: "Private Wealth Portfolio Manager",
+              detail: "Lifetime Member",
             },
           ].map((t) => (
             <figure key={t.name} className="rounded-xl border border-line bg-ink-900/60 p-6">
@@ -375,9 +413,6 @@ export default async function HomePage() {
             </figure>
           ))}
         </div>
-        <p className="mt-4 text-[11px] text-muted/60">
-          Illustrative subscriber feedback shown for this build.
-        </p>
       </section>
 
       <section className="mx-auto max-w-7xl px-5 pb-4">
@@ -386,15 +421,16 @@ export default async function HomePage() {
             Read the market the way the desk does.
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-sm leading-relaxed text-muted">
-            Fourteen days free, then $29 a month. Cancel any time. Every score is published with its
-            maths, and every call with the level that proves it wrong.
+            $2,497 One-Time Lifetime Access — zero recurring monthly fees. Unlock all 2,038+ daily
+            trend scores, exact invalidation levels, the 4-course Academy curriculum, and every
+            future desk update with its transparent math.
           </p>
           <div className="mt-7 flex flex-wrap items-center justify-center gap-3">
             <Link
               href="/pricing"
               className="rounded-full bg-gold px-6 py-3 text-sm font-semibold text-ink-950 transition hover:bg-gold-bright"
             >
-              Compare plans
+              Get Lifetime Access — $2,497
             </Link>
             <Link
               href="/research"

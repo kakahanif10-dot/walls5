@@ -6,7 +6,7 @@ import firebaseConfig from "@/firebase-applet-config.json";
 import { Globe, MapPin, Layers, Building2 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Global Trading Exchanges Map — NextWall Street",
+  title: "Global Trading Exchanges Map — NextWallStreet",
   description:
     "Interactive Google Maps Platform terminal visualizing 11 premier world stock exchanges and quantitative desk headquarters across Americas, EMEA, and APAC.",
 };

@@ -5,7 +5,7 @@ import WhopBadge from "@/components/whop-badge";
 import { Globe, Sparkles, Bell, TrendingUp, MapPin } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Global Markets & Financial Exchanges Map — NextWall Street",
+  title: "Global Markets & Financial Exchanges Map — NextWallStreet",
   description:
     "Track 11 global financial exchanges via Google Maps Platform, 9 international regions, multi-tab ticker exploration, crowd sentiment radar, and custom price alerts.",
 };

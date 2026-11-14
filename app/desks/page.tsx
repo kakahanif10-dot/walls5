@@ -5,7 +5,7 @@ import WhopBadge from "@/components/whop-badge";
 import FastAlertBanner from "@/components/fast-alert-banner";
 
 export const metadata: Metadata = {
-  title: "44 Quantitative Analyst Desks — NextWall Street",
+  title: "44 Quantitative Analyst Desks — NextWallStreet",
   description:
     "Explore 44 specialized institutional analyst desks covering AI compute, semiconductors, macro yields, crypto flows, pump.fun memes, and mathematical invalidation architecture.",
 };

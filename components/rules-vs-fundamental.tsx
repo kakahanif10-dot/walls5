@@ -16,7 +16,7 @@ export default function RulesVsFundamental() {
             Rules-Based Momentum &amp; Trend Scoring vs Static Fundamental Ratios.
           </h2>
           <p className="mt-4 text-sm sm:text-[15px] leading-relaxed text-muted">
-            Platforms like Simply Wall St rely on backward-looking static ratios—such as trailing P/E, P/B, or hypothetical DCF snowflake models—that lag real market turning points by 3 to 6 months. NextWall Street is engineered for active portfolio managers and traders: providing transparent mathematical weights, confirmed trend persistence, and definitive invalidation levels where our thesis is objectively wrong.
+            Platforms like Simply Wall St rely on backward-looking static ratios—such as trailing P/E, P/B, or hypothetical DCF snowflake models—that lag real market turning points by 3 to 6 months. NextWallStreet is engineered for active portfolio managers and traders: providing transparent mathematical weights, confirmed trend persistence, and definitive invalidation levels where our thesis is objectively wrong.
           </p>
         </div>
 
@@ -57,12 +57,12 @@ export default function RulesVsFundamental() {
             </ul>
           </div>
 
-          {/* NextWall Street Quantitative Momentum Engine */}
+          {/* NextWallStreet Quantitative Momentum Engine */}
           <div className="rounded-xl border border-gold/40 bg-gradient-to-br from-ink-900 to-ink-950 p-6 space-y-4 shadow-lg">
             <div className="flex items-center justify-between border-b border-line/60 pb-3">
               <span className="text-xs font-semibold uppercase tracking-wider text-gold-bright flex items-center gap-1.5">
                 <Cpu className="h-4 w-4 text-gold" />
-                NextWall Street Quantitative Engine
+                NextWallStreet Quantitative Engine
               </span>
               <WhopBadge size="xs" />
             </div>

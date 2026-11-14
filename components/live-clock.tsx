@@ -24,7 +24,7 @@ function sessionFor(date: Date): { label: string; tone: string } {
 }
 
 export default function LiveClock({ compact = false }: { compact?: boolean }) {
-  const [now, setNow] = useState<Date | null>(null);
+  const [now, setNow] = useState<Date>(() => new Date());
 
   useEffect(() => {
     setNow(new Date());
@@ -32,17 +32,26 @@ export default function LiveClock({ compact = false }: { compact?: boolean }) {
     return () => clearInterval(id);
   }, []);
 
-  const session = now ? sessionFor(now) : null;
+  const session = sessionFor(now);
 
   return (
-    <div className="flex items-center gap-2 text-xs" title={now ? now.toUTCString() : undefined}>
+    <div
+      className="flex items-center gap-2 text-xs"
+      title={now.toUTCString()}
+      suppressHydrationWarning
+    >
       <span className="live-dot h-1.5 w-1.5 shrink-0 rounded-full bg-up" aria-hidden="true" />
-      <span className="font-mono tabular-nums text-bone/90">
-        {now ? formatUtc(now) : "--:--:--"}
+      <span className="font-mono tabular-nums text-bone/90" suppressHydrationWarning>
+        {formatUtc(now)}
         <span className="ml-1 text-muted">UTC</span>
       </span>
-      {!compact && session && (
-        <span className={`rounded-full border px-2 py-0.5 text-[10px] ${session.tone}`}>{session.label}</span>
+      {!compact && (
+        <span
+          className={`rounded-full border px-2 py-0.5 text-[10px] ${session.tone}`}
+          suppressHydrationWarning
+        >
+          {session.label}
+        </span>
       )}
     </div>
   );

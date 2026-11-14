@@ -4,7 +4,7 @@ import ResearchExplorer from "@/components/research-explorer";
 import WhopBadge from "@/components/whop-badge";
 
 export const metadata: Metadata = {
-  title: "70 Research Decks — NextWall Street Desk",
+  title: "70 Research Decks — NextWallStreet Desk",
   description:
     "70 quantitative institutional research decks across Wall Street & Day Trading, Crypto Liquidity, and Meme Coin Risk.",
 };

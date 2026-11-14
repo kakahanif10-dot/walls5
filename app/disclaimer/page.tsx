@@ -4,7 +4,7 @@ import Link from "next/link";
 export const metadata: Metadata = {
   title: "Methodology, terms and risk disclosure",
   description:
-    "How NextWall Street computes trend scores, what the stance bands mean, and the full risk disclosure for our research and education products.",
+    "How NextWallStreet computes trend scores, what the stance bands mean, and the full risk disclosure for our research and education products.",
 };
 
 const WEIGHTS = [
@@ -113,7 +113,7 @@ export default function DisclaimerPage() {
         <h2 className="mt-12 font-display text-2xl text-bone">5. Risk disclosure</h2>
         <div className="mt-3 space-y-3 text-sm leading-relaxed text-muted">
           <p>
-            NextWall Street publishes market analysis and educational material only. Nothing on this
+            NextWallStreet publishes market analysis and educational material only. Nothing on this
             site constitutes investment advice, a personal recommendation, a solicitation, or an offer
             to buy or sell any security, token, derivative or other financial instrument. We do not
             manage client money, we do not execute orders, and we hold no positions in the assets we

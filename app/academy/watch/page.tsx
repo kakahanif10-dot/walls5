@@ -6,7 +6,7 @@ import WatchCurriculumGrid from "@/components/watch-curriculum-grid";
 import { VIDEO_LESSONS_60 } from "@/lib/academy-videos";
 
 export const metadata: Metadata = {
-  title: "60 Watchable Video Masterclasses — NextWall Street Academy",
+  title: "60 Watchable Video Masterclasses — NextWallStreet Academy",
   description:
     "Watch 60 real playable video masterclasses across Wall Street & Day Trading, Crypto & Microstructure, and Meme Coins & pump.fun.",
 };

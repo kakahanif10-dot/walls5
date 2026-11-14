@@ -51,7 +51,7 @@ export const SAMPLE_VIDEO_LESSONS = VIDEO_LESSONS_20;
 
 export default function WatchableVideoPlayer({
   initialLessonId,
-  courseTitle = "NextWall Street 20-Lesson Trading Academy",
+  courseTitle = "NextWallStreet 20-Lesson Trading Academy",
 }: {
   initialLessonId?: string;
   courseTitle?: string;
@@ -238,7 +238,7 @@ export default function WatchableVideoPlayer({
     };
   }, [activeChapter, voiceNarration, isPlaying, isMuted, volume, speed, lesson.takeaways]);
 
-  // Drawing Engine: Proprietary NextWall Street 60FPS Video Screen
+  // Drawing Engine: Proprietary NextWallStreet 60FPS Video Screen
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -856,7 +856,7 @@ export default function WatchableVideoPlayer({
             <div>
               <div className="flex items-center justify-between border-b border-line/60 pb-3">
                 <span className="font-mono text-xs uppercase tracking-widest text-gold font-bold">
-                  NextWall Street Academy · Masterclass Slide Deck
+                  NextWallStreet Academy · Masterclass Slide Deck
                 </span>
                 <span className="font-mono text-xs text-muted">
                   Slide {Math.min(5, Math.floor((currentTime / duration) * 5) + 1)} / 5

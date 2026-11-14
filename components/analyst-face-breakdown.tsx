@@ -79,7 +79,7 @@ No opinions, only mathematical invalidation. Audit the model here: https://nextw
               <WhopBadge size="xs" />
             </div>
             <p className="text-xs text-muted">
-              Head of Quantitative Trend Research · NextWall Street
+              Head of Quantitative Trend Research · NextWallStreet
             </p>
           </div>
         </div>
@@ -164,7 +164,7 @@ No opinions, only mathematical invalidation. Audit the model here: https://nextw
 
       <div className="border-t border-line/60 pt-3 text-[11px] text-muted flex items-center justify-between">
         <span>Wall Street Standard: Rules-based momentum and deterministic invalidation stops.</span>
-        <span className="text-gold font-mono">NextWall Street Quantitative Desk</span>
+        <span className="text-gold font-mono">NextWallStreet Quantitative Desk</span>
       </div>
     </div>
   );

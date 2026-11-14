@@ -14,23 +14,23 @@ export const revalidate = 120;
 export const metadata: Metadata = {
   metadataBase: new URL("https://nextwallstreet.com"),
   title: {
-    default: "NextWall Street — market trend analysis, research and education",
-    template: "%s — NextWall Street",
+    default: "NextWallStreet — market trend analysis, research and education",
+    template: "%s — NextWallStreet",
   },
   description:
-    "Trend scores, research and education for stocks, crypto and meme coins. A transparent, rules-based read on what is working — not a tip sheet.",
+    "Trend scores, research and education for equities, digital assets, and speculative risk models. A transparent, rules-based read on what is working — not a tip sheet.",
   keywords: [
     "market trend analysis",
     "stock research",
-    "crypto analysis",
-    "meme coin risk",
+    "digital assets analysis",
+    "speculative risk models",
     "investment education",
-    "subscription research",
+    "quantitative research",
   ],
   openGraph: {
-    title: "NextWall Street",
+    title: "NextWallStreet",
     description:
-      "Rules-based trend analysis across equities, crypto and meme coins, with the education to use it.",
+      "Rules-based trend analysis across equities, digital assets, and speculative risk models, with the education to use it.",
     type: "website",
     url: "https://nextwallstreet.com",
   },

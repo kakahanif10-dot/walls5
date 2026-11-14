@@ -39,13 +39,21 @@ export type FeedQuote = {
 
 const REAL_POINTS: Record<string, Point[]> = {};
 const REAL_QUOTES: Record<string, FeedQuote> = {};
+const DETERMINISTIC_HISTORY_CACHE = new Map<string, Point[]>();
+const METRICS_CACHE = new Map<string, Metrics>();
 
 export function setMarketData(
   points: Record<string, Point[]>,
   quotes: Record<string, FeedQuote>,
 ): void {
-  for (const [symbol, history] of Object.entries(points)) REAL_POINTS[symbol] = history;
-  for (const [symbol, quote] of Object.entries(quotes)) REAL_QUOTES[symbol] = quote;
+  for (const [symbol, history] of Object.entries(points)) {
+    REAL_POINTS[symbol] = history;
+    METRICS_CACHE.delete(symbol);
+  }
+  for (const [symbol, quote] of Object.entries(quotes)) {
+    REAL_QUOTES[symbol] = quote;
+    METRICS_CACHE.delete(symbol);
+  }
 }
 
 export function quoteFor(symbol: string): FeedQuote | undefined {
@@ -93,6 +101,14 @@ export function series(asset: Asset, days = 260): Point[] {
   const history = REAL_POINTS[asset.symbol];
   if (history && history.length >= 30) {
     return history.slice(-days);
+  }
+  if (days <= 260) {
+    let cached = DETERMINISTIC_HISTORY_CACHE.get(asset.symbol);
+    if (!cached) {
+      cached = generateDeterministicHistory(asset, 260);
+      DETERMINISTIC_HISTORY_CACHE.set(asset.symbol, cached);
+    }
+    return days === 260 ? cached : cached.slice(-days);
   }
   return generateDeterministicHistory(asset, days);
 }
@@ -147,6 +163,9 @@ const NO_DATA: Metrics = {
 };
 
 export function metricsFor(asset: Asset): Metrics {
+  const cached = METRICS_CACHE.get(asset.symbol);
+  if (cached) return cached;
+
   const pts = series(asset);
   const values = pts.map((p) => p.close);
   if (values.length < 30) return NO_DATA;
@@ -188,7 +207,7 @@ export function metricsFor(asset: Asset): Metrics {
   const posInRange = (last - low52) / Math.max(high52 - low52, 1e-9);
   const confidence = Math.round(clamp(52 + Math.abs(score - 50) * 0.8 + posInRange * 12, 50, 94));
 
-  return {
+  const result: Metrics = {
     last,
     change24h: ret(1),
     change7d: ret(7),
@@ -208,12 +227,17 @@ export function metricsFor(asset: Asset): Metrics {
     riskGrade,
     percentile: Math.round(posInRange * 100),
   };
+  METRICS_CACHE.set(asset.symbol, result);
+  return result;
 }
 
-export function fmtPrice(value: number): string {
+export function fmtPrice(value: number, kind?: Kind): string {
   if (!Number.isFinite(value) || value <= 0) return "—";
+  if (kind === "stock" && value >= 1) {
+    return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  }
   if (value >= 1000) return `$${value.toLocaleString("en-US", { maximumFractionDigits: 0 })}`;
-  if (value >= 10) return `$${value.toLocaleString("en-US", { maximumFractionDigits: 2 })}`;
+  if (value >= 10) return `$${value.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
   if (value >= 0.01) return `$${value.toFixed(4)}`;
   return `$${value.toFixed(7)}`;
 }
@@ -447,9 +471,9 @@ export function narrativeFor(asset: Asset, m: Metrics): string[] {
     m.sma200,
   )} and remains the line that defines the structural trend for this name.`;
 
-  const second = `Realised volatility is running near ${(m.vol * 100).toFixed(
+  const second = `Realized volatility is running near ${(m.vol * 100).toFixed(
     0,
-  )}% annualised with a 14-day RSI of ${m.rsi.toFixed(0)}. Price is ${m.percentile}% of the way up its 52-week range (${fmtPrice(
+  )}% annualized with a 14-day RSI of ${m.rsi.toFixed(0)}. Price is ${m.percentile}% of the way up its 52-week range (${fmtPrice(
     m.low52,
   )} to ${fmtPrice(m.high52)}), so the position-sizing question matters more than the direction question right now.`;
 

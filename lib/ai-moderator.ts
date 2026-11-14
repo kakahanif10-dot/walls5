@@ -468,7 +468,7 @@ export function handleAIModeratorQuery(input: string): { reply: string; predicti
   if (lower.includes("clock") || lower.includes("time") || lower.includes("hour") || lower.includes("session")) {
     const { wibTime, utcTime, estTime, sessionStatus } = formatTimeZones();
     return {
-      reply: `🕒 **NextWall Street Institutional Trading Clocks:**\n` +
+      reply: `🕒 **NextWallStreet Institutional Trading Clocks:**\n` +
         `• 🇺🇸 **EST (Wall Street New York):** \`${estTime} EST\`\n` +
         `• 🌐 **UTC (Market Benchmark):** \`${utcTime} UTC\`\n` +
         `• 🇸🇬 **SGT (Asia Pacific Session):** \`${wibTime} SGT\`\n` +
@@ -502,7 +502,7 @@ export function handleAIModeratorQuery(input: string): { reply: string; predicti
   // General welcome response
   const generalPred = generateMinutePrediction();
   return {
-    reply: `👋 **NextWall Street Quant Desk Online & Monitoring 2,038 Assets.**\n\n` +
+    reply: `👋 **NextWallStreet Quant Desk Online & Monitoring 2,038 Assets.**\n\n` +
       `• **Real-Time Minute Predictions:** Continuous mathematical alpha predictions generated every 60 seconds.\n` +
       `• **Hourly Macro Synthesis:** Liquidity and sector flows compiled every 60 minutes.\n` +
       `• **Audit Any Symbol:** Type \`/predict [ticker]\` (e.g. \`/predict NVDA\`, \`/predict BTC\`, \`/predict SOL\`, \`/predict FARTCOIN\`).\n` +

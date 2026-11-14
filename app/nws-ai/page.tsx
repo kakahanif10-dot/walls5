@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import ChatViewContainer from "@/components/chat-view-container";
 
 export const metadata: Metadata = {
-  title: "NWS AI Quantitative Terminal & Trading Floor Community — NextWall Street",
+  title: "NWS AI Quantitative Terminal & Trading Floor Community — NextWallStreet",
   description:
     "Institutional live trading desk featuring NWS AI multi-turn reasoning (NWS Titan 4.0, NWS Olympus 4.0, NWS Mercury, NWS Velocity), real-time search grounding, 24kHz voice interaction, and 1,840+ trader community.",
 };

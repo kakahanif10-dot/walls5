@@ -27,16 +27,25 @@ import {
   ExternalLink,
   Activity,
   Sparkles,
+  ShieldCheck,
+  Calculator,
+  Monitor,
+  Table2,
+  Building2,
+  FileSearch,
+  LineChart,
+  ShieldAlert,
+  BookOpen,
+  Radar,
+  Layers,
+  Scale,
 } from "lucide-react";
 
 const SIMPLE_LINKS = [
   { href: "/markets", label: "Markets" },
-  { href: "/crypto", label: "Crypto" },
-  { href: "/meme-coins", label: "Meme coins" },
+  { href: "/crypto", label: "Digital Assets" },
   { href: "/research", label: "Research" },
   { href: "/academy", label: "Academy" },
-  { href: "/community", label: "Community" },
-  { href: "/pricing", label: "Pricing" },
 ];
 
 export interface MainDirectoryItem {
@@ -125,20 +134,109 @@ export const ALL_MAIN_ITEMS: MainDirectoryItem[] = [
   },
   {
     href: "/crypto",
-    label: "Crypto Desk",
-    desc: "Spot ETF flows, perpetual funding & on-chain float",
+    label: "Digital Assets Desk",
+    desc: "Core BTC/ETH flows, perpetual funding & on-chain float",
     icon: Coins,
   },
   {
-    href: "/meme-coins",
-    label: "Meme Desk",
-    desc: "High-volatility speculative assets with strict 2% caps",
+    href: "/crypto?tab=speculative",
+    label: "Speculative Risk Desk",
+    desc: "High-beta digital tokens & liquidity depth risk caps",
     icon: Flame,
   },
   {
+    href: "/execution-terminal",
+    label: "Trade Execution & Risk",
+    desc: "Invalidation position sizer, 40/35/25 score simulator & audit log",
+    icon: ShieldCheck,
+  },
+  {
+    href: "/precision-calculator",
+    label: "Precision Quant Calculator",
+    desc: "Live free-API ATR sizing, Kelly Criterion, DCA ladder & FX",
+    icon: Calculator,
+    live: true,
+  },
+  {
+    href: "/tools/bloomberg-desk",
+    label: "Bloomberg Terminal Desk",
+    desc: "Live equities, US Treasury yields, ECB FX & SEC EDGAR wire",
+    icon: Monitor,
+    live: true,
+  },
+  {
+    href: "/tools/excel-dcf",
+    label: "Excel DCF & Comps Model",
+    desc: "5Y DCF workbook, CAPM WACC, 5x5 sensitivity & CSV export",
+    icon: Table2,
+  },
+  {
+    href: "/tools/capital-iq",
+    label: "Capital IQ & FactSet Comps",
+    desc: "SEC XBRL GAAP financials & peer EV/EBITDA, EV/Rev, P/E comps",
+    icon: Building2,
+    live: true,
+  },
+  {
+    href: "/tools/alphasense",
+    label: "AlphaSense Filings & Search",
+    desc: "Live SEC EDGAR 10-K, 10-Q, 8-K & Form 4 institutional search",
+    icon: FileSearch,
+    live: true,
+  },
+  {
+    href: "/tools/tradingview-screener",
+    label: "TradingView Multi-Asset",
+    desc: "Live OHLCV candlesticks, RSI-14, MACD, SMA-20/50 & screener",
+    icon: LineChart,
+    live: true,
+  },
+  {
+    href: "/tools/glassnode-onchain",
+    label: "Glassnode & CryptoQuant",
+    desc: "Live Bitcoin mempool, sat/vB fees, hashrate & perp funding",
+    icon: Activity,
+    live: true,
+  },
+  {
+    href: "/tools/chainalysis-aml",
+    label: "Chainalysis & TRM Forensics",
+    desc: "Live BTC/ETH wallet inspection, UTXO trace & AML risk scoring",
+    icon: ShieldAlert,
+    live: true,
+  },
+  {
+    href: "/tools/messari-research",
+    label: "Messari & Blockworks Intel",
+    desc: "Token supply FDV float schedules & Snapshot DAO governance",
+    icon: BookOpen,
+    live: true,
+  },
+  {
+    href: "/tools/nansen-arkham",
+    label: "Nansen & Arkham Smart Money",
+    desc: "Live ETH block whale transfers, block trades & stablecoin flows",
+    icon: Radar,
+    live: true,
+  },
+  {
+    href: "/tools/defillama-terminal",
+    label: "DeFiLlama & Token Terminal",
+    desc: "Live TVL rankings, protocol 24h/30d fees & P/F ratio comps",
+    icon: Layers,
+    live: true,
+  },
+  {
+    href: "/tools/coinmetrics-kaiko",
+    label: "Coin Metrics & Kaiko Feeds",
+    desc: "Normalized Binance, Coinbase & Kraken L2 books & slippage",
+    icon: Scale,
+    live: true,
+  },
+  {
     href: "/desks",
-    label: "All 44 Desks",
-    desc: "Complete 44-desk quantitative research directory",
+    label: "Quantitative Desks",
+    desc: "Complete institutional quantitative research directory",
     icon: Cpu,
   },
 ];
@@ -150,7 +248,10 @@ export default function SiteHeader() {
   const [searchOpen, setSearchOpen] = useState(false);
   const headerRef = useRef<HTMLElement>(null);
 
-  const isActive = (href: string) => pathname === href || pathname.startsWith(`${href}/`);
+  const isActive = (href: string) =>
+    pathname === href ||
+    pathname.startsWith(`${href}/`) ||
+    (href === "/crypto" && pathname === "/meme-coins");
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -176,10 +277,10 @@ export default function SiteHeader() {
     <>
       <header ref={headerRef} className="sticky top-0 z-50 border-b border-line/70 bg-ink-950/90 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-5">
-          {/* Simple Editorial Brand */}
+          {/* Editorial Brand */}
           <Link
             href="/"
-            className="group flex shrink-0 items-baseline gap-2"
+            className="group flex shrink-0 items-baseline"
             onClick={() => {
               setMobileOpen(false);
               setDirectoryOpen(false);
@@ -188,19 +289,16 @@ export default function SiteHeader() {
             <span className="font-display text-[1.35rem] tracking-tight text-bone">
               Next<span className="text-gold-bright">Wall</span>Street
             </span>
-            <span className="hidden text-[10px] font-medium uppercase tracking-[0.2em] text-muted 2xl:inline">
-              Research
-            </span>
           </Link>
 
-          {/* Primary Navigation */}
-          <nav className="hidden items-center gap-0.5 xl:gap-1 lg:flex">
+          {/* Primary Single-Row Navigation */}
+          <nav className="hidden items-center gap-1 lg:flex">
             {SIMPLE_LINKS.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 onClick={() => setDirectoryOpen(false)}
-                className={`rounded-full px-2.5 xl:px-3 py-1.5 text-[13px] xl:text-sm whitespace-nowrap transition-colors ${
+                className={`rounded-full px-3 py-1.5 text-[13px] xl:text-sm whitespace-nowrap transition-colors ${
                   isActive(link.href)
                     ? "bg-ink-800 text-bone"
                     : "text-muted hover:bg-ink-850 hover:text-bone"
@@ -209,44 +307,6 @@ export default function SiteHeader() {
                 {link.label}
               </Link>
             ))}
-          </nav>
-
-          {/* Right Cluster */}
-          <div className="hidden shrink-0 items-center gap-2.5 xl:gap-3 lg:flex">
-            <div className="hidden items-center gap-2.5 xl:flex">
-              <span className="h-4 w-px bg-line" />
-              <LiveClock compact />
-              <span className="h-4 w-px bg-line" />
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setDirectoryOpen(false);
-                setSearchOpen(true);
-              }}
-              aria-label="Search assets, research, and analyst desks"
-              title="Search (⌘K)"
-              className="flex h-8 w-8 items-center justify-center rounded-full text-gold transition-colors hover:bg-ink-850 hover:text-gold-bright"
-            >
-              <Search className="h-4 w-4" aria-hidden="true" />
-            </button>
-
-            <Link
-              href="/watchlist"
-              onClick={() => setDirectoryOpen(false)}
-              className="text-[13px] xl:text-sm text-muted whitespace-nowrap transition-colors hover:text-bone"
-            >
-              Watchlist
-            </Link>
-
-            <Link
-              href="/pricing"
-              onClick={() => setDirectoryOpen(false)}
-              className="rounded-full border border-gold/50 bg-gold/10 px-3.5 py-1.5 text-[13px] xl:text-sm font-medium whitespace-nowrap text-gold-bright transition-colors hover:bg-gold/20"
-            >
-              Subscribe
-            </Link>
 
             {/* Trade Tools Popover Button & Floating Dropdown */}
             <div className="relative">
@@ -257,19 +317,19 @@ export default function SiteHeader() {
                 aria-controls="trade-tools-directory-menu"
                 aria-label={directoryOpen ? "Close Trade Tools directory" : "Open Trade Tools directory"}
                 title="Trade Tools · Directory & Desks"
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[13px] xl:text-sm font-medium whitespace-nowrap transition-all shadow-sm ${
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] xl:text-sm whitespace-nowrap transition-colors ${
                   directoryOpen
-                    ? "border-gold bg-gold/20 text-gold-bright ring-1 ring-gold/40"
-                    : "border-line bg-ink-900 text-bone hover:border-gold/50 hover:text-gold-bright"
+                    ? "bg-gold/15 text-gold-bright ring-1 ring-gold/40"
+                    : "text-muted hover:bg-ink-850 hover:text-bone"
                 }`}
               >
                 {directoryOpen ? (
-                  <X className="h-4 w-4 text-gold-bright" aria-hidden="true" />
+                  <X className="h-3.5 w-3.5 text-gold-bright" aria-hidden="true" />
                 ) : (
-                  <Menu className="h-4 w-4 text-gold-bright" aria-hidden="true" />
+                  <Menu className="h-3.5 w-3.5 text-gold-bright" aria-hidden="true" />
                 )}
                 <span>Trade Tools</span>
-                <span className="rounded-full bg-gold/20 px-1.5 py-0.2 font-mono text-[10px] text-gold-bright">
+                <span className="rounded-full bg-gold/15 px-1.5 py-0.2 font-mono text-[10px] text-gold-bright">
                   {ALL_MAIN_ITEMS.length}
                 </span>
               </button>
@@ -280,17 +340,17 @@ export default function SiteHeader() {
                   id="trade-tools-directory-menu"
                   role="menu"
                   aria-label="Trade Tools Directory"
-                  className="absolute right-0 top-full mt-2.5 z-50 w-[390px] sm:w-[420px] rounded-2xl border border-gold/35 bg-[#080a10]/98 p-3 shadow-[0_24px_60px_rgba(0,0,0,0.85)] backdrop-blur-2xl ring-1 ring-gold/20 animate-in fade-in zoom-in-95 duration-150"
+                  className="absolute left-0 top-full mt-2.5 z-50 w-[390px] sm:w-[420px] rounded-2xl border border-gold/35 bg-[#080a10]/98 p-3 shadow-[0_24px_60px_rgba(0,0,0,0.85)] backdrop-blur-2xl ring-1 ring-gold/20 animate-in fade-in zoom-in-95 duration-150"
                 >
                   {/* Dropdown Header */}
                   <div className="flex items-center justify-between border-b border-line/60 pb-2.5 px-2">
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-mono text-[11px] font-bold uppercase tracking-wider text-gold-bright">
-                          Trade Tools Directory
+                          Desk &amp; Terminal Directory
                         </span>
                         <span className="rounded-full bg-gold/15 border border-gold/40 px-1.5 py-0.2 font-mono text-[10px] text-gold-bright font-semibold">
-                          {ALL_MAIN_ITEMS.length} Desks
+                          {ALL_MAIN_ITEMS.length} Modules
                         </span>
                       </div>
                       <p className="text-[11px] text-muted mt-0.5">
@@ -389,15 +449,56 @@ export default function SiteHeader() {
                       onClick={() => setDirectoryOpen(false)}
                       className="font-medium text-gold-bright hover:underline"
                     >
-                      Subscribe ↗
+                      Get Lifetime Access ↗
                     </Link>
                   </div>
                 </div>
               )}
             </div>
+
+            <Link
+              href="/watchlist"
+              onClick={() => setDirectoryOpen(false)}
+              className={`rounded-full px-3 py-1.5 text-[13px] xl:text-sm whitespace-nowrap transition-colors ${
+                isActive("/watchlist")
+                  ? "bg-ink-800 text-bone"
+                  : "text-muted hover:bg-ink-850 hover:text-bone"
+              }`}
+            >
+              Watchlist
+            </Link>
+          </nav>
+
+          {/* Right Cluster */}
+          <div className="hidden shrink-0 items-center gap-2.5 xl:gap-3 lg:flex">
+            <div className="hidden items-center gap-2.5 xl:flex">
+              <LiveClock compact />
+              <span className="h-4 w-px bg-line" />
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                setDirectoryOpen(false);
+                setSearchOpen(true);
+              }}
+              aria-label="Search assets, research, and analyst desks"
+              title="Search (⌘K)"
+              className="flex h-8 w-8 items-center justify-center rounded-full text-gold transition-colors hover:bg-ink-850 hover:text-gold-bright"
+            >
+              <Search className="h-4 w-4" aria-hidden="true" />
+            </button>
+
+            <Link
+              href="/pricing"
+              onClick={() => setDirectoryOpen(false)}
+              className="rounded-full bg-gold px-4 py-1.5 text-[13px] xl:text-sm font-semibold whitespace-nowrap text-ink-950 transition-colors hover:bg-gold-bright"
+            >
+              Get Lifetime Access
+            </Link>
           </div>
 
-          {/* Mobile Actions: Search + 3-line Menu */}
+          {/* Mobile Actions: Search + Menu */}
           <div className="flex items-center gap-2 lg:hidden">
             <button
               type="button"
@@ -412,7 +513,7 @@ export default function SiteHeader() {
             </button>
             <button
               type="button"
-              aria-label="Toggle navigation and Trade Tools directory"
+              aria-label="Toggle navigation menu"
               aria-expanded={mobileOpen}
               onClick={() => setMobileOpen((v) => !v)}
               className="flex h-9 items-center gap-1.5 rounded-md border border-line bg-ink-900 px-2.5 text-xs font-medium text-bone hover:border-gold/40"
@@ -422,7 +523,7 @@ export default function SiteHeader() {
               ) : (
                 <Menu className="h-4 w-4 text-gold-bright" aria-hidden="true" />
               )}
-              <span>Trade Tools</span>
+              <span>Menu</span>
             </button>
           </div>
         </div>
@@ -495,9 +596,9 @@ export default function SiteHeader() {
               <Link
                 href="/pricing"
                 onClick={() => setMobileOpen(false)}
-                className="rounded-full border border-gold/50 bg-gold/10 px-4 py-2 text-xs font-medium text-gold-bright"
+                className="rounded-full bg-gold px-4 py-2 text-xs font-semibold text-ink-950"
               >
-                Subscribe
+                Get Lifetime Access
               </Link>
             </div>
           </nav>

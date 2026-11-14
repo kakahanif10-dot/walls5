@@ -72,7 +72,7 @@ export default function PremiumGate({
           </button>
         </div>
         <p className="mt-4 text-[11px] text-muted/60">
-          Authorize your active Whop license key to unlock institutional coverage across all NextWall Street desks.
+          Authorize your active Whop license key to unlock institutional coverage across all NextWallStreet desks.
         </p>
       </div>
     </div>

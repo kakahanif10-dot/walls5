@@ -4,7 +4,7 @@ import PositionSizingCalculator from "@/components/position-sizing-calculator";
 import WhopBadge from "@/components/whop-badge";
 
 export const metadata: Metadata = {
-  title: "Position Sizing & Invalidation Calculator — NextWall Street",
+  title: "Position Sizing & Invalidation Calculator — NextWallStreet",
   description:
     "Institutional risk-based position sizing calculator. Computes suggested shares, notional dollar allocation, and risk-reward targets against the model's invalidation level and 60-day realized volatility.",
 };

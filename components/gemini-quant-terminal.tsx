@@ -111,7 +111,7 @@ export default function GeminiQuantTerminal() {
     {
       id: "init-1",
       role: "assistant",
-      text: "NextWall Street NWS AI Suite active. Selected: **NWS Mercury 3.8** (*Flow Desk & Market Intelligence*).\n\nAsk any quantitative model verification, multi-leg options structuring (NWS Olympus 4.0), or cross-asset tape query.",
+      text: "NextWallStreet NWS AI Suite active. Selected: **NWS Mercury 3.8** (*Flow Desk & Market Intelligence*).\n\nAsk any quantitative model verification, multi-leg options structuring (NWS Olympus 4.0), or cross-asset tape query.",
       timestamp: "Live Feed",
       modelUsed: "NWS Mercury 3.8",
     },
@@ -401,7 +401,7 @@ export default function GeminiQuantTerminal() {
           <div>
             <div className="flex items-center gap-2">
               <h3 className="font-display text-lg text-bone font-medium">
-                NextWall Street NWS AI Suite
+                NextWallStreet NWS AI Suite
               </h3>
               <WhopBadge size="xs" />
             </div>

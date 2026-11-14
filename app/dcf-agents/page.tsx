@@ -5,7 +5,7 @@ import WhopBadge from "@/components/whop-badge";
 import { Terminal, Bot, BarChart2, Globe, Cpu } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "AI Allocator Agents, DCF & Options Greeks — NextWall Street",
+  title: "AI Allocator Agents, DCF & Options Greeks — NextWallStreet",
   description:
     "Institutional quantitative valuation suite featuring 37 AI allocator agents, Gordon Growth DCF modeling, Black-Scholes options pricing and Greeks, 100+ macro data connectors, paper trading execution, and visual strategy node automation.",
 };

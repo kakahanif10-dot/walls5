@@ -5,7 +5,7 @@ import WhopBadge from "@/components/whop-badge";
 import { Terminal, ShieldAlert, Activity, PieChart, Layers } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Quantitative Risk, VaR & Portfolio CLI — NextWall Street",
+  title: "Quantitative Risk, VaR & Portfolio CLI — NextWallStreet",
   description:
     "High-speed quantitative CLI workstation with Parametric, Historical, and Monte Carlo Value at Risk (VaR), US Treasury constant-maturity yield curves, Markowitz Efficient Frontier portfolio optimizer, and FINRA dark pool volume tracking.",
 };

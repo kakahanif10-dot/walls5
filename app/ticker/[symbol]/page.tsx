@@ -30,13 +30,13 @@ import { ensureMarketData } from "@/lib/market-data";
 const KIND_PATH: Record<Kind, string> = {
   stock: "/markets",
   crypto: "/crypto",
-  meme: "/meme-coins",
+  meme: "/crypto?tab=speculative",
 };
 
 const KIND_LABEL: Record<Kind, string> = {
   stock: "Equities",
-  crypto: "Digital assets",
-  meme: "Meme coins",
+  crypto: "Digital Assets",
+  meme: "Speculative & High-Beta Risk",
 };
 
 export const dynamicParams = true;
