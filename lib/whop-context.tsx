@@ -6,21 +6,31 @@ import {
   useState,
   useEffect,
   useCallback,
+  useRef,
   type ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
-import { doc, setDoc } from "firebase/firestore";
-import { db } from "@/lib/firebase";
-import { getLifetimeCheckoutUrl } from "@/lib/whop-checkout-links";
+import { buildLifetimeCheckoutUrl } from "@/lib/whop-checkout-links";
+import { parseWhopReturnParams } from "@/lib/whop-verification";
 import { X } from "lucide-react";
+
+interface WhopUnlockOptions {
+  licenseKey?: string;
+  email?: string;
+  membershipId?: string;
+  receiptId?: string;
+  paymentId?: string;
+  silent?: boolean;
+}
 
 interface WhopContextValue {
   isUnlocked: boolean;
   hasCheckedStorage: boolean;
   badge: string;
-  unlockWithWhop: (options?: { licenseKey?: string; email?: string }) => Promise<boolean>;
+  unlockWithWhop: (options?: WhopUnlockOptions) => Promise<boolean>;
   lockWhop: () => void;
-  openWhopModal: (deskName?: string) => void;
+  openWhopModal: (deskName?: string, targetHref?: string) => void;
   closeWhopModal: () => void;
   isModalOpen: boolean;
 }
@@ -36,19 +46,32 @@ const WhopContext = createContext<WhopContextValue>({
   isModalOpen: false,
 });
 
+const PENDING_HREF_KEY = "nws_whop_pending_href";
+const PENDING_CHECKOUT_KEY = "nws_whop_checkout_pending";
+
 export function WhopProvider({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const { user, profile, updateUserPlan } = useAuth();
   const [isUnlocked, setIsUnlocked] = useState(false);
   const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [deskName, setDeskName] = useState<string>("Lifetime Premium");
+  const [pendingHref, setPendingHref] = useState<string | null>(null);
   const [licenseInput, setLicenseInput] = useState("");
   const [emailInput, setEmailInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [showKeyForm, setShowKeyForm] = useState(false);
+  const [awaitingCheckout, setAwaitingCheckout] = useState(false);
   const [feedback, setFeedback] = useState<{ type: "success" | "error"; message: string } | null>(null);
+  const autoCheckedEmailRef = useRef<string | null>(null);
+  const handledUrlReturnRef = useRef(false);
 
-  const lifetimeCheckoutUrl = getLifetimeCheckoutUrl();
+  const origin = typeof window !== "undefined" ? window.location.origin : "";
+  const effectiveEmail = (emailInput || user?.email || "").trim();
+  const lifetimeCheckoutUrl = buildLifetimeCheckoutUrl({
+    email: effectiveEmail || undefined,
+    redirectUrl: origin ? `${origin}${pendingHref || "/"}` : undefined,
+  });
 
   useEffect(() => {
     try {
@@ -59,6 +82,11 @@ export function WhopProvider({ children }: { children: ReactNode }) {
         setIsUnlocked(true);
         localStorage.setItem("nws_whop_unlocked", "true");
       }
+      const savedPendingHref = sessionStorage.getItem(PENDING_HREF_KEY);
+      if (savedPendingHref) setPendingHref(savedPendingHref);
+      if (sessionStorage.getItem(PENDING_CHECKOUT_KEY) === "true") {
+        setAwaitingCheckout(true);
+      }
     } catch {
       // ignore storage errors
     } finally {
@@ -66,104 +94,243 @@ export function WhopProvider({ children }: { children: ReactNode }) {
     }
   }, [profile]);
 
+  const applyVerifiedUnlock = useCallback(
+    async (data: { licenseKey?: string; membershipId?: string; email?: string }, silent?: boolean) => {
+      setIsUnlocked(true);
+      setAwaitingCheckout(false);
+      try {
+        localStorage.setItem("nws_whop_unlocked", "true");
+        if (data.licenseKey) localStorage.setItem("nws_whop_license", data.licenseKey);
+        if (data.membershipId) localStorage.setItem("nws_whop_membership_id", data.membershipId);
+        if (data.email) localStorage.setItem("nws_whop_email", data.email);
+        sessionStorage.removeItem(PENDING_CHECKOUT_KEY);
+      } catch {
+        // ignore storage errors
+      }
+
+      await updateUserPlan("premium");
+
+      let targetToOpen: string | null = null;
+      try {
+        targetToOpen = pendingHref || sessionStorage.getItem(PENDING_HREF_KEY);
+        sessionStorage.removeItem(PENDING_HREF_KEY);
+      } catch {
+        targetToOpen = pendingHref;
+      }
+
+      if (!silent) {
+        setFeedback({
+          type: "success",
+          message:
+            "Lifetime Premium verified. All 2,038+ assets, research desks, Academy courses, and 32 Trade Tools are now unlocked.",
+        });
+        setTimeout(() => {
+          setIsModalOpen(false);
+          setFeedback(null);
+          if (targetToOpen && targetToOpen !== window.location.pathname + window.location.search) {
+            router.push(targetToOpen);
+          }
+        }, 900);
+      } else {
+        setIsModalOpen(false);
+        setFeedback(null);
+        if (targetToOpen && targetToOpen !== window.location.pathname + window.location.search) {
+          router.push(targetToOpen);
+        }
+      }
+    },
+    [pendingHref, router, updateUserPlan],
+  );
+
   const unlockWithWhop = useCallback(
-    async (options?: { licenseKey?: string; email?: string }) => {
+    async (options?: WhopUnlockOptions) => {
       const cleanKey = (options?.licenseKey ?? licenseInput).trim();
       const cleanEmail = (options?.email ?? emailInput).trim();
-      if (!cleanKey && !cleanEmail) {
-        setShowKeyForm(true);
-        setFeedback({
-          type: "error",
-          message: "Enter your Whop license key or purchase email after completing checkout.",
-        });
+      const cleanMembershipId = (options?.membershipId ?? "").trim();
+      const cleanReceiptId = (options?.receiptId ?? "").trim();
+      const cleanPaymentId = (options?.paymentId ?? "").trim();
+      const silent = Boolean(options?.silent);
+
+      if (!cleanKey && !cleanEmail && !cleanMembershipId && !cleanReceiptId && !cleanPaymentId) {
+        if (!silent) {
+          setShowKeyForm(true);
+          setFeedback({
+            type: "error",
+            message: "Enter your Whop license key or purchase email after completing checkout.",
+          });
+        }
         return false;
       }
 
-      setLoading(true);
-      setFeedback(null);
+      if (!silent) {
+        setLoading(true);
+        setFeedback(null);
+      }
+
       try {
         const res = await fetch("/api/whop/validate", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            licenseKey: cleanKey,
-            email: cleanEmail,
+            licenseKey: cleanKey || undefined,
+            email: cleanEmail || undefined,
+            membershipId: cleanMembershipId || undefined,
+            receiptId: cleanReceiptId || undefined,
+            paymentId: cleanPaymentId || undefined,
             action: "activate",
           }),
         });
 
         const data = await res.json();
         if (res.ok && data.success && data.unlocked) {
-          setIsUnlocked(true);
-          try {
-            localStorage.setItem("nws_whop_unlocked", "true");
-            if (cleanKey) {
-              localStorage.setItem("nws_whop_license", cleanKey);
-            }
-          } catch {}
-
-          if (user) {
-            try {
-              const userRef = doc(db, "users", user.uid);
-              await setDoc(userRef, { whopUnlocked: true, plan: "premium" }, { merge: true });
-            } catch (err) {
-              console.warn("Firestore whop sync:", err);
-            }
-          }
-          await updateUserPlan("premium");
-
-          setFeedback({
-            type: "success",
-            message:
-              "Lifetime Premium verified. All 2,038+ assets, research desks, Academy courses, and 32 Trade Tools are now unlocked.",
-          });
-          setTimeout(() => {
-            setIsModalOpen(false);
-            setFeedback(null);
-          }, 1600);
+          await applyVerifiedUnlock(
+            {
+              licenseKey: data.licenseKey || cleanKey,
+              membershipId: data.membershipId || cleanMembershipId,
+              email: data.email || cleanEmail,
+            },
+            silent,
+          );
           return true;
         } else {
-          setFeedback({
-            type: "error",
-            message:
-              data.error ||
-              "Unable to verify active Whop Lifetime purchase. Confirm your license key or checkout email.",
-          });
+          if (!silent) {
+            setFeedback({
+              type: "error",
+              message:
+                data.error ||
+                "Unable to verify active Whop Lifetime purchase. Confirm your license key or checkout email.",
+            });
+          }
           return false;
         }
       } catch (err: unknown) {
-        const message = err instanceof Error ? err.message : "Failed to connect to Whop verification.";
-        setFeedback({ type: "error", message });
+        if (!silent) {
+          const message = err instanceof Error ? err.message : "Failed to connect to Whop verification.";
+          setFeedback({ type: "error", message });
+        }
         return false;
       } finally {
-        setLoading(false);
+        if (!silent) setLoading(false);
       }
     },
-    [licenseInput, emailInput, user, updateUserPlan],
+    [licenseInput, emailInput, applyVerifiedUnlock],
   );
+
+  // 1. Auto-verify immediately when Whop redirects back with membership_id, receipt_id, payment_id, or license_key
+  useEffect(() => {
+    if (!hasCheckedStorage || isUnlocked || handledUrlReturnRef.current) return;
+    if (typeof window === "undefined") return;
+
+    const parsed = parseWhopReturnParams(window.location.search);
+    if (!parsed.hasWhopReturn) return;
+
+    handledUrlReturnRef.current = true;
+    void (async () => {
+      const ok = await unlockWithWhop({
+        membershipId: parsed.membershipId,
+        licenseKey: parsed.licenseKey,
+        receiptId: parsed.receiptId,
+        paymentId: parsed.paymentId,
+        email: parsed.email,
+        silent: false,
+      });
+      if (ok) {
+        const url = new URL(window.location.href);
+        for (const param of [
+          "membership_id",
+          "whop_membership_id",
+          "receipt_id",
+          "payment_id",
+          "license_key",
+          "whop_key",
+          "key",
+          "email",
+          "status",
+          "checkout_status",
+        ]) {
+          url.searchParams.delete(param);
+        }
+        window.history.replaceState({}, "", url.pathname + url.search + url.hash);
+      }
+    })();
+  }, [hasCheckedStorage, isUnlocked, unlockWithWhop]);
+
+  // 2. Silently auto-verify signed-in user's email against Whop API / webhook store
+  useEffect(() => {
+    if (!hasCheckedStorage || isUnlocked) return;
+    const userEmail = user?.email?.trim().toLowerCase();
+    if (!userEmail || autoCheckedEmailRef.current === userEmail) return;
+
+    autoCheckedEmailRef.current = userEmail;
+    void unlockWithWhop({ email: userEmail, silent: true });
+  }, [hasCheckedStorage, isUnlocked, user?.email, unlockWithWhop]);
+
+  // 3. When user opens Whop checkout in a new tab and returns, auto-check payment status on focus & poll
+  useEffect(() => {
+    if (!awaitingCheckout || isUnlocked) return;
+    const candidateEmail =
+      (emailInput || user?.email || (typeof localStorage !== "undefined" ? localStorage.getItem("nws_whop_email") : "") || "").trim();
+    if (!candidateEmail) return;
+
+    const checkNow = () => {
+      void unlockWithWhop({ email: candidateEmail, silent: true });
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") checkNow();
+    };
+
+    window.addEventListener("focus", checkNow);
+    document.addEventListener("visibilitychange", handleVisibility);
+    const interval = window.setInterval(checkNow, 5000);
+
+    return () => {
+      window.removeEventListener("focus", checkNow);
+      document.removeEventListener("visibilitychange", handleVisibility);
+      window.clearInterval(interval);
+    };
+  }, [awaitingCheckout, isUnlocked, emailInput, user?.email, unlockWithWhop]);
+
+  const handleCheckoutStarted = useCallback(() => {
+    setAwaitingCheckout(true);
+    try {
+      sessionStorage.setItem(PENDING_CHECKOUT_KEY, "true");
+      if (effectiveEmail) {
+        localStorage.setItem("nws_whop_email", effectiveEmail);
+      }
+    } catch {
+      // ignore storage errors
+    }
+  }, [effectiveEmail]);
 
   const lockWhop = useCallback(() => {
     setIsUnlocked(false);
+    setAwaitingCheckout(false);
     try {
       localStorage.removeItem("nws_whop_unlocked");
       localStorage.removeItem("nws_whop_license");
+      localStorage.removeItem("nws_whop_membership_id");
+      sessionStorage.removeItem(PENDING_CHECKOUT_KEY);
+      sessionStorage.removeItem(PENDING_HREF_KEY);
     } catch {}
-    if (user) {
-      try {
-        const userRef = doc(db, "users", user.uid);
-        setDoc(userRef, { whopUnlocked: false, plan: "reader" }, { merge: true });
-      } catch {}
-    }
     updateUserPlan("reader");
     setFeedback({
       type: "success",
       message: "Lifetime session locked.",
     });
     setTimeout(() => setFeedback(null), 2000);
-  }, [user, updateUserPlan]);
+  }, [updateUserPlan]);
 
-  const openWhopModal = useCallback((desk?: string) => {
+  const openWhopModal = useCallback((desk?: string, targetHref?: string) => {
     setDeskName(desk || "Lifetime Premium");
+    if (targetHref) {
+      setPendingHref(targetHref);
+      try {
+        sessionStorage.setItem(PENDING_HREF_KEY, targetHref);
+      } catch {
+        // ignore storage errors
+      }
+    }
     setFeedback(null);
     setIsModalOpen(true);
   }, []);
@@ -272,18 +439,33 @@ export function WhopProvider({ children }: { children: ReactNode }) {
                       href={lifetimeCheckoutUrl}
                       target="_blank"
                       rel="noopener noreferrer"
+                      onClick={handleCheckoutStarted}
                       className="flex w-full items-center justify-center rounded-full bg-gold px-6 py-3.5 text-xs font-bold tracking-wide text-ink-950 transition hover:bg-gold-bright shadow-lg"
                     >
-                      Continue to Lifetime Premium checkout
+                      Continue to Lifetime Premium checkout — $1,487 USD
                     </a>
                   ) : (
                     <button
                       type="button"
-                      onClick={() => setShowKeyForm(true)}
+                      onClick={() => {
+                        setShowKeyForm(true);
+                        setFeedback({
+                          type: "error",
+                          message:
+                            "Whop checkout link (NEXT_PUBLIC_WHOP_CHECKOUT_LIFETIME_URL) is not configured yet. Configure it or verify an existing Whop license key below.",
+                        });
+                      }}
                       className="flex w-full items-center justify-center rounded-full bg-gold px-6 py-3.5 text-xs font-bold tracking-wide text-ink-950 transition hover:bg-gold-bright shadow-lg"
                     >
-                      Continue to Lifetime Premium checkout
+                      Continue to Lifetime Premium checkout — $1,487 USD
                     </button>
+                  )}
+
+                  {awaitingCheckout && (
+                    <div className="rounded-xl bg-gold/10 px-3.5 py-2.5 text-[11px] text-gold-bright text-center">
+                      Waiting for Whop payment confirmation — access unlocks immediately once your
+                      checkout completes.
+                    </div>
                   )}
 
                   <p className="text-[11px] leading-relaxed text-muted/85 text-center">

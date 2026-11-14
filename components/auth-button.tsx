@@ -6,6 +6,7 @@ import Link from "next/link";
 import { LogIn, LogOut, User as UserIcon, Shield, Bookmark, Award, Calculator, Mail, KeyRound, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
 import { useWhop } from "@/lib/whop-context";
+import { LockedLink } from "@/components/locked-action";
 
 export default function AuthButton() {
   const { user, profile, loading, signInWithGoogle, signInWithSupabaseEmail, signUpWithSupabaseEmail, signOutUser } = useAuth();
@@ -133,30 +134,33 @@ export default function AuthButton() {
               </div>
 
               <div className="my-2 space-y-1">
-                <Link
+                <LockedLink
                   href="/watchlist"
+                  deskLabel="Watchlist"
                   onClick={() => setDropdownOpen(false)}
                   className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-bone hover:bg-ink-800 transition-colors"
                 >
                   <Bookmark className="h-3.5 w-3.5 text-gold" />
                   <span>Synced Watchlist</span>
-                </Link>
-                <Link
-                  href="/chat"
+                </LockedLink>
+                <LockedLink
+                  href="/community"
+                  deskLabel="Community"
                   onClick={() => setDropdownOpen(false)}
                   className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-bone hover:bg-ink-800 transition-colors"
                 >
                   <Shield className="h-3.5 w-3.5 text-emerald-400" />
                   <span>Live Trading Floor &amp; Alerts</span>
-                </Link>
-                <Link
+                </LockedLink>
+                <LockedLink
                   href="/calculator"
+                  deskLabel="Position Sizing Calculator"
                   onClick={() => setDropdownOpen(false)}
                   className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-xs text-bone hover:bg-ink-800 transition-colors"
                 >
                   <Calculator className="h-3.5 w-3.5 text-gold-bright" />
                   <span>Position Sizing Calculator</span>
-                </Link>
+                </LockedLink>
                 <Link
                   href="/pricing"
                   onClick={() => setDropdownOpen(false)}

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { ComponentPropsWithoutRef, MouseEvent, ReactNode } from "react";
+import { useEffect, useRef, type ComponentPropsWithoutRef, type MouseEvent, type ReactNode } from "react";
 import { useWhop } from "@/lib/whop-context";
 import { getLifetimeCheckoutUrl } from "@/lib/whop-checkout-links";
 
@@ -12,6 +12,21 @@ export function isPublicRoute(pathname: string | null): boolean {
   if (!pathname) return true;
   if (PUBLIC_PATHS.has(pathname)) return true;
   return false;
+}
+
+function labelForLockedRoute(pathname: string | null): string {
+  if (!pathname) return "Lifetime Premium";
+  if (pathname === "/markets") return "Markets";
+  if (pathname === "/crypto" || pathname === "/meme-coins") return "Digital Assets";
+  if (pathname.startsWith("/research")) return "Research";
+  if (pathname.startsWith("/academy")) return "Academy";
+  if (pathname === "/community" || pathname === "/chat") return "Community";
+  if (pathname === "/watchlist") return "Watchlist";
+  if (pathname.startsWith("/ticker/")) return `${pathname.replace("/ticker/", "")} Dossier`;
+  if (pathname.startsWith("/tools/")) {
+    return `Trade Tool · ${pathname.replace("/tools/", "").replace(/-/g, " ").toUpperCase()}`;
+  }
+  return pathname.replace(/^\//, "").replace(/-/g, " ").toUpperCase() || "Lifetime Premium";
 }
 
 interface LockedLinkProps extends Omit<ComponentPropsWithoutRef<typeof Link>, "href"> {
@@ -36,7 +51,7 @@ export function LockedLink({
       e.preventDefault();
       e.stopPropagation();
       onClick?.(e);
-      openWhopModal(deskLabel || href);
+      openWhopModal(deskLabel || href, href);
       return;
     }
     onClick?.(e);
@@ -60,6 +75,20 @@ export function LifetimeRouteGuard({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const { isUnlocked, hasCheckedStorage, openWhopModal } = useWhop();
   const checkoutUrl = getLifetimeCheckoutUrl();
+  const autoOpenedPathRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (!hasCheckedStorage || isUnlocked || isPublicRoute(pathname)) {
+      if (isPublicRoute(pathname)) {
+        autoOpenedPathRef.current = null;
+      }
+      return;
+    }
+    if (pathname && autoOpenedPathRef.current !== pathname) {
+      autoOpenedPathRef.current = pathname;
+      openWhopModal(labelForLockedRoute(pathname), pathname);
+    }
+  }, [hasCheckedStorage, isUnlocked, pathname, openWhopModal]);
 
   if (isPublicRoute(pathname)) {
     return <>{children}</>;
@@ -120,21 +149,21 @@ export function LifetimeRouteGuard({ children }: { children: ReactNode }) {
               rel="noopener noreferrer"
               className="flex w-full items-center justify-center rounded-full bg-gold px-6 py-3.5 text-xs font-bold tracking-wide text-ink-950 transition hover:bg-gold-bright shadow-lg"
             >
-              Continue to Lifetime Premium checkout
+              Continue to Lifetime Premium checkout — $1,487 USD
             </a>
           ) : (
             <button
               type="button"
-              onClick={() => openWhopModal("Lifetime Premium")}
+              onClick={() => openWhopModal(labelForLockedRoute(pathname), pathname ?? undefined)}
               className="flex w-full items-center justify-center rounded-full bg-gold px-6 py-3.5 text-xs font-bold tracking-wide text-ink-950 transition hover:bg-gold-bright shadow-lg"
             >
-              Continue to Lifetime Premium checkout
+              Continue to Lifetime Premium checkout — $1,487 USD
             </button>
           )}
 
           <button
             type="button"
-            onClick={() => openWhopModal("Verify Whop Purchase")}
+            onClick={() => openWhopModal("Verify Whop Purchase", pathname ?? undefined)}
             className="flex w-full items-center justify-center rounded-full bg-gold/12 px-5 py-3 text-xs font-semibold text-gold-bright transition hover:bg-gold/20"
           >
             Verify Existing Whop License Key

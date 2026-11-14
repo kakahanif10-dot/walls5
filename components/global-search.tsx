@@ -145,7 +145,7 @@ export default function GlobalSearchModal({
   const navigateTo = (href: string, label?: string) => {
     onClose();
     if (!isUnlocked && !isPublicRoute(href.split("?")[0])) {
-      openWhopModal(label || href);
+      openWhopModal(label || href, href);
       return;
     }
     router.push(href);
@@ -330,7 +330,7 @@ export default function GlobalSearchModal({
                     if (!isUnlocked) {
                       e.preventDefault();
                       onClose();
-                      openWhopModal("All Scored Markets");
+                      openWhopModal("All Scored Markets", "/markets");
                     } else {
                       onClose();
                     }
@@ -352,7 +352,7 @@ export default function GlobalSearchModal({
                           if (!isUnlocked) {
                             e.preventDefault();
                             onClose();
-                            openWhopModal(`${asset.symbol} · ${asset.name}`);
+                            openWhopModal(`${asset.symbol} · ${asset.name}`, asset.href);
                           } else {
                             onClose();
                           }
@@ -409,7 +409,7 @@ export default function GlobalSearchModal({
                     if (!isUnlocked) {
                       e.preventDefault();
                       onClose();
-                      openWhopModal("All 70 Research Decks");
+                      openWhopModal("All 70 Research Decks", "/research");
                     } else {
                       onClose();
                     }
@@ -431,7 +431,7 @@ export default function GlobalSearchModal({
                           if (!isUnlocked) {
                             e.preventDefault();
                             onClose();
-                            openWhopModal(article.title);
+                            openWhopModal(article.title, article.href);
                           } else {
                             onClose();
                           }
@@ -484,7 +484,7 @@ export default function GlobalSearchModal({
                     if (!isUnlocked) {
                       e.preventDefault();
                       onClose();
-                      openWhopModal("Quantitative Analyst Desks");
+                      openWhopModal("Quantitative Analyst Desks", "/desks");
                     } else {
                       onClose();
                     }
@@ -506,7 +506,7 @@ export default function GlobalSearchModal({
                           if (!isUnlocked) {
                             e.preventDefault();
                             onClose();
-                            openWhopModal(desk.name);
+                            openWhopModal(desk.name, desk.href);
                           } else {
                             onClose();
                           }

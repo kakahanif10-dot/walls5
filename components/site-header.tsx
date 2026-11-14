@@ -285,13 +285,13 @@ export default function SiteHeader() {
     pathname.startsWith(`${href}/`) ||
     (href === "/crypto" && pathname === "/meme-coins");
 
-  const handleLockedNav = (e: MouseEvent<HTMLAnchorElement>, label: string) => {
+  const handleLockedNav = (e: MouseEvent<HTMLAnchorElement>, label: string, href?: string) => {
     if (!isUnlocked) {
       e.preventDefault();
       e.stopPropagation();
       setDirectoryOpen(false);
       setMobileOpen(false);
-      openWhopModal(label);
+      openWhopModal(label, href);
       return true;
     }
     setDirectoryOpen(false);
@@ -344,7 +344,7 @@ export default function SiteHeader() {
                 key={link.href}
                 href={link.href}
                 prefetch={isUnlocked ? undefined : false}
-                onClick={(e) => handleLockedNav(e, link.label)}
+                onClick={(e) => handleLockedNav(e, link.label, link.href)}
                 className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] xl:text-sm whitespace-nowrap transition-colors ${
                   isActive(link.href)
                     ? "bg-ink-800 text-bone"
@@ -434,6 +434,7 @@ export default function SiteHeader() {
                             handleLockedNav(
                               e,
                               `Trade Tool #${String(idx + 1).padStart(2, "0")} · ${item.label}`,
+                              item.href,
                             )
                           }
                           className={`group flex items-center justify-between gap-3 rounded-xl px-2.5 py-2 text-xs transition-all ${
@@ -484,7 +485,7 @@ export default function SiteHeader() {
                         prefetch={isUnlocked ? undefined : false}
                         target={isUnlocked ? "_blank" : undefined}
                         rel={isUnlocked ? "noopener noreferrer" : undefined}
-                        onClick={(e) => handleLockedNav(e, "Live Market Pipeline")}
+                        onClick={(e) => handleLockedNav(e, "Live Market Pipeline", "/pipeline")}
                         className="hover:text-gold-bright flex items-center gap-1 transition-colors"
                       >
                         <Activity className="h-3 w-3 text-gold" />
@@ -495,7 +496,7 @@ export default function SiteHeader() {
                         prefetch={isUnlocked ? undefined : false}
                         target={isUnlocked ? "_blank" : undefined}
                         rel={isUnlocked ? "noopener noreferrer" : undefined}
-                        onClick={(e) => handleLockedNav(e, "Watchlist")}
+                        onClick={(e) => handleLockedNav(e, "Watchlist", "/watchlist")}
                         className="hover:text-gold-bright flex items-center gap-1 transition-colors"
                       >
                         <Bookmark className="h-3 w-3 text-gold" />
@@ -517,7 +518,7 @@ export default function SiteHeader() {
             <Link
               href="/watchlist"
               prefetch={isUnlocked ? undefined : false}
-              onClick={(e) => handleLockedNav(e, "Watchlist")}
+              onClick={(e) => handleLockedNav(e, "Watchlist", "/watchlist")}
               className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] xl:text-sm whitespace-nowrap transition-colors ${
                 isActive("/watchlist")
                   ? "bg-ink-800 text-bone"
@@ -601,7 +602,7 @@ export default function SiteHeader() {
                   key={link.href}
                   href={link.href}
                   prefetch={isUnlocked ? undefined : false}
-                  onClick={(e) => handleLockedNav(e, link.label)}
+                  onClick={(e) => handleLockedNav(e, link.label, link.href)}
                   className={`flex items-center justify-between rounded-md px-3 py-2 text-sm ${
                     isActive(link.href) ? "bg-ink-800 text-bone" : "text-muted hover:text-bone"
                   }`}
@@ -647,6 +648,7 @@ export default function SiteHeader() {
                       handleLockedNav(
                         e,
                         `Trade Tool #${String(idx + 1).padStart(2, "0")} · ${item.label}`,
+                        item.href,
                       )
                     }
                     className={`flex items-center justify-between rounded-lg px-3 py-2 text-xs font-medium ${

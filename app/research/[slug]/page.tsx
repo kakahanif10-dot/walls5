@@ -51,7 +51,6 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
 
   await ensureMarketData();
 
-  const [first, ...remainder] = article.body;
   const more = ARTICLES.filter((a) => a.slug !== article.slug).slice(0, 2);
 
   return (
@@ -95,11 +94,10 @@ export default async function ArticlePage({ params }: { params: Promise<{ slug: 
             </div>
 
             <div className="prose-editorial mt-8 max-w-3xl">
-              <div>{renderBlocks([first])}</div>
               {article.premium ? (
-                <PremiumGate issue={article.title}>{renderBlocks(remainder)}</PremiumGate>
+                <PremiumGate issue={article.title}>{renderBlocks(article.body)}</PremiumGate>
               ) : (
-                <div>{renderBlocks(remainder)}</div>
+                <div>{renderBlocks(article.body)}</div>
               )}
             </div>
 

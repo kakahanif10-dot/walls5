@@ -75,7 +75,7 @@ export default function FrontpageTriplePoster({
     return (
       <button
         type="button"
-        onClick={() => openWhopModal(toolLabel)}
+        onClick={() => openWhopModal(toolLabel, href)}
         className="inline-flex items-center gap-2 rounded-full bg-ink-950/80 px-4 py-2 text-xs font-semibold text-gold-bright transition hover:bg-ink-850"
       >
         <span>View All · $1,487 USD</span>

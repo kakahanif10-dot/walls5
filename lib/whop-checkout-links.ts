@@ -39,3 +39,23 @@ export function getLifetimeCheckoutUrl(): string | null {
     sanitizeHttpsUrl(process.env.NEXT_PUBLIC_WHOP_CHECKOUT_PREMIUM_MONTHLY_URL)
   );
 }
+
+export function buildLifetimeCheckoutUrl(options?: {
+  email?: string;
+  redirectUrl?: string;
+}): string | null {
+  const base = getLifetimeCheckoutUrl();
+  if (!base) return null;
+  try {
+    const url = new URL(base);
+    if (options?.email && options.email.trim() && !url.searchParams.has("email")) {
+      url.searchParams.set("email", options.email.trim());
+    }
+    if (options?.redirectUrl && !url.searchParams.has("redirect_url")) {
+      url.searchParams.set("redirect_url", options.redirectUrl);
+    }
+    return url.toString();
+  } catch {
+    return base;
+  }
+}
