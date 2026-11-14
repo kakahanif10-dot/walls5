@@ -34,7 +34,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    // For instant simulated Whop payment or checkout activation
+    // Direct Whop checkout / membership activation
     if (action === "activate" || action === "checkout") {
       return NextResponse.json({
         success: true,

@@ -14,8 +14,6 @@ import {
   Database,
 } from "lucide-react";
 import {
-  OPENBB_YIELD_CURVE,
-  OPENBB_MACRO_INDICATORS,
   OPENBB_DARKPOOL_ITEMS,
   calculateOpenBBVaR,
   generateMonteCarloPaths,
@@ -54,8 +52,9 @@ export default function OpenBBTerminal() {
   const liveQuotes = useQuotes();
 
   // Live Treasury Yield Curve & Macro State
-  const [yieldCurve, setYieldCurve] = useState<OpenBBYieldPoint[]>(OPENBB_YIELD_CURVE);
-  const [macroIndicators, setMacroIndicators] = useState<OpenBBMacroIndicator[]>(OPENBB_MACRO_INDICATORS);
+  const [yieldCurve, setYieldCurve] = useState<OpenBBYieldPoint[]>([]);
+  const [macroIndicators, setMacroIndicators] = useState<OpenBBMacroIndicator[]>([]);
+  const [macroLoading, setMacroLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
@@ -75,7 +74,9 @@ export default function OpenBBTerminal() {
           setMacroIndicators(data.macroIndicators);
         }
       } catch {
-        // retain existing Treasury rates
+        // retain existing live Treasury rates
+      } finally {
+        if (!cancelled) setMacroLoading(false);
       }
     };
     loadMacro();
@@ -133,7 +134,7 @@ export default function OpenBBTerminal() {
       return;
     }
 
-    const result = executeOpenBBCommand(target, liveQuotes);
+    const result = executeOpenBBCommand(target, liveQuotes, yieldCurve, macroIndicators);
     setTerminalLogs((prev) => [...prev, result]);
     setCommandHistory((prev) => [...prev, target]);
     setHistoryIndex(-1);
@@ -659,8 +660,15 @@ export default function OpenBBTerminal() {
               </div>
               <div className="flex items-center gap-3 font-mono text-xs">
                 {(() => {
-                  const y10 = yieldCurve.find((p) => p.tenor === "10Y")?.rate ?? 4.3;
-                  const y2 = yieldCurve.find((p) => p.tenor === "2Y")?.rate ?? 4.1;
+                  const y10 = yieldCurve.find((p) => p.tenor === "10Y")?.rate;
+                  const y2 = yieldCurve.find((p) => p.tenor === "2Y")?.rate;
+                  if (y10 === undefined || y2 === undefined) {
+                    return (
+                      <div className="rounded-lg border border-white/10 bg-[#050609] px-3 py-1.5 text-stone-400">
+                        {macroLoading ? "Syncing live 10Y - 2Y spread..." : "Live 10Y - 2Y spread unavailable"}
+                      </div>
+                    );
+                  }
                   const spreadBps = Math.round((y10 - y2) * 100);
                   return (
                     <div className="rounded-lg border border-emerald-500/35 bg-emerald-950/20 px-3 py-1.5 text-emerald-400">
@@ -677,6 +685,11 @@ export default function OpenBBTerminal() {
             </div>
 
             <div className="mt-6 h-64 w-full">
+              {yieldCurve.length === 0 ? (
+                <div className="flex h-full items-center justify-center rounded-xl border border-white/[0.06] bg-[#050609] text-xs font-mono text-stone-400">
+                  {macroLoading ? "Syncing live US Treasury yield curve..." : "Live US Treasury yield feed unavailable"}
+                </div>
+              ) : (
               <svg className="h-full w-full overflow-visible" viewBox="0 0 800 240">
                 {[5.5, 5.0, 4.5, 4.0, 3.5].map((level, i) => (
                   <g key={level}>
@@ -728,6 +741,7 @@ export default function OpenBBTerminal() {
                   );
                 })}
               </svg>
+              )}
             </div>
           </div>
 
@@ -748,28 +762,36 @@ export default function OpenBBTerminal() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/[0.05]">
-                  {macroIndicators.map((m, idx) => (
-                    <tr key={idx} className="hover:bg-white/[0.02]">
-                      <td className="p-3 text-[#f2efe8] font-bold">{m.metric}</td>
-                      <td className="p-3 text-[#f0c979] font-bold">{m.current}</td>
-                      <td className="p-3 text-stone-400">{m.previous}</td>
-                      <td className="p-3 text-stone-300">{m.change}</td>
-                      <td className="p-3">
-                        <span
-                          className={`rounded px-2 py-0.5 text-[10px] font-bold ${
-                            m.impact === "Bullish"
-                              ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/35"
-                              : m.impact === "Bearish"
-                              ? "bg-rose-500/15 text-rose-400 border border-rose-500/35"
-                              : "bg-white/[0.06] text-stone-300"
-                          }`}
-                        >
-                          {m.impact}
-                        </span>
+                  {macroIndicators.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="p-6 text-center text-stone-400">
+                        {macroLoading ? "Syncing live macroeconomic indicators..." : "Live macroeconomic feed unavailable"}
                       </td>
-                      <td className="p-3 text-stone-500">{m.updated}</td>
                     </tr>
-                  ))}
+                  ) : (
+                    macroIndicators.map((m, idx) => (
+                      <tr key={idx} className="hover:bg-white/[0.02]">
+                        <td className="p-3 text-[#f2efe8] font-bold">{m.metric}</td>
+                        <td className="p-3 text-[#f0c979] font-bold">{m.current}</td>
+                        <td className="p-3 text-stone-400">{m.previous}</td>
+                        <td className="p-3 text-stone-300">{m.change}</td>
+                        <td className="p-3">
+                          <span
+                            className={`rounded px-2 py-0.5 text-[10px] font-bold ${
+                              m.impact === "Bullish"
+                                ? "bg-emerald-500/15 text-emerald-400 border border-emerald-500/35"
+                                : m.impact === "Bearish"
+                                ? "bg-rose-500/15 text-rose-400 border border-rose-500/35"
+                                : "bg-white/[0.06] text-stone-300"
+                            }`}
+                          >
+                            {m.impact}
+                          </span>
+                        </td>
+                        <td className="p-3 text-stone-500">{m.updated}</td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
@@ -926,12 +948,12 @@ print(opt.weights)`}
               </thead>
               <tbody className="divide-y divide-white/[0.05]">
                 {OPENBB_DARKPOOL_ITEMS.map((item) => {
-                  const liveP = liveQuotes[item.symbol]?.price ?? item.price;
+                  const liveP = liveQuotes[item.symbol]?.price ?? null;
                   return (
                   <tr key={item.symbol} className="hover:bg-white/[0.02]">
                     <td className="p-3 font-bold text-[#f2efe8]">{item.symbol}</td>
                     <td className="p-3 text-stone-400">{item.name}</td>
-                    <td className="p-3 font-bold text-stone-200">${liveP.toFixed(2)}</td>
+                    <td className="p-3 font-bold text-stone-200">{liveP !== null ? `$${liveP.toFixed(2)}` : "Syncing..."}</td>
                     <td className="p-3 font-bold text-sky-300">{item.darkpoolVolumePct}%</td>
                     <td className="p-3 text-stone-300">{item.shortVolumePct}%</td>
                     <td className="p-3">

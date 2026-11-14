@@ -246,7 +246,7 @@ export async function runFullMarketPipeline(force = false): Promise<{
 
       const provider =
         aggregatedQuotes[asset.symbol]?.provider ||
-        (asset.kind === "stock" ? "NYSE/Nasdaq Live" : "Exchange Composite Live");
+        (asset.kind === "stock" ? "NYSE/Nasdaq Live" : "Binance Live");
 
       providerCounts[provider] = (providerCounts[provider] ?? 0) + 1;
 
@@ -294,7 +294,12 @@ export async function runFullMarketPipeline(force = false): Promise<{
       (providerCounts["KuCoin Live"] ?? 0) +
       (providerCounts["Gate Live"] ?? 0) +
       (providerCounts["CoinGecko Live"] ?? 0) +
-      (providerCounts["MEXC Live"] ?? 0);
+      (providerCounts["MEXC Live"] ?? 0) +
+      (providerCounts["Bitget Live"] ?? 0) +
+      (providerCounts["HTX Live"] ?? 0) +
+      (providerCounts["CoinPaprika Live"] ?? 0) +
+      (providerCounts["DexScreener Live"] ?? 0) +
+      (providerCounts["GeckoTerminal Live"] ?? 0);
 
     const providerTelemetry: ProviderStatus[] = [
       {
@@ -322,8 +327,8 @@ export async function runFullMarketPipeline(force = false): Promise<{
         lastSync: nowIso,
       },
       {
-        name: "Bybit / KuCoin / Gate / CoinGecko Multi-Venue",
-        endpoint: "api.coingecko.com / api.bybit.com / api.gateio.ws",
+        name: "Bybit / KuCoin / Gate / Bitget / CoinGecko / DEX Multi-Venue",
+        endpoint: "api.coingecko.com / api.bybit.com / api.dexscreener.com",
         status: multiVenueCount > 0 ? "connected" : "standby",
         latencyMs: Math.min(620, executionDurationMs),
         assetsFetched: multiVenueCount,

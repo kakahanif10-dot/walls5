@@ -43,13 +43,21 @@ interface BloombergData {
 export function BloombergDeskView() {
   const [data, setData] = useState<BloombergData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [command, setCommand] = useState("NVDA");
 
   const load = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const res = await fetch("/api/institutional-feed?tool=bloomberg-desk", { cache: "no-store" });
-      if (res.ok) setData(await res.json());
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `Live feed error (${res.status})`);
+      }
+      setData(await res.json());
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Live Bloomberg feed unavailable");
     } finally {
       setLoading(false);
     }
@@ -78,6 +86,18 @@ export function BloombergDeskView() {
         const s = useSharedStyles(isLight);
         return (
           <div className="space-y-5">
+            {fetchError && !loading && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+                <span>Live terminal data temporarily unavailable ({fetchError}).</span>
+                <button
+                  type="button"
+                  onClick={() => void load()}
+                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
             {/* Terminal Command Line */}
             <form
               onSubmit={(e) => {
@@ -147,10 +167,10 @@ export function BloombergDeskView() {
                           </td>
                         </tr>
                       ))}
-                      {loading && !data && (
+                      {!data?.equities?.length && (
                         <tr>
                           <td colSpan={4} className={`py-6 text-center ${s.muted}`}>
-                            Syncing equity feed...
+                            {loading ? "Syncing equity feed..." : "Live equity feed unavailable."}
                           </td>
                         </tr>
                       )}
@@ -176,14 +196,20 @@ export function BloombergDeskView() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2.5">
-                  {(data?.yieldCurve ?? []).map((y) => (
-                    <div key={y.tenor} className={`rounded-lg border p-3 ${s.subCard}`}>
-                      <div className={`text-[11px] ${s.muted}`}>{y.tenor}</div>
-                      <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
-                        {y.yieldPct.toFixed(2)}%
+                  {(data?.yieldCurve ?? []).length > 0 ? (
+                    (data?.yieldCurve ?? []).map((y) => (
+                      <div key={y.tenor} className={`rounded-lg border p-3 ${s.subCard}`}>
+                        <div className={`text-[11px] ${s.muted}`}>{y.tenor}</div>
+                        <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
+                          {y.yieldPct.toFixed(2)}%
+                        </div>
                       </div>
+                    ))
+                  ) : (
+                    <div className={`col-span-2 rounded-lg border p-4 text-center text-xs ${s.subCard} ${s.muted}`}>
+                      {loading ? "Syncing US Treasury yields..." : "Live Treasury curve unavailable."}
                     </div>
-                  ))}
+                  )}
                 </div>
 
                 <div className={`border-t pt-3 ${s.border}`}>
@@ -192,12 +218,18 @@ export function BloombergDeskView() {
                     <span className={`font-mono text-[11px] ${s.muted}`}>Frankfurter</span>
                   </div>
                   <div className="grid grid-cols-2 gap-x-4 gap-y-1.5 font-mono text-xs tabular-nums">
-                    {(data?.fx ?? []).map((f) => (
-                      <div key={f.pair} className="flex items-center justify-between">
-                        <span className={s.muted}>{f.pair}</span>
-                        <span className="font-medium">{f.rate.toFixed(4)}</span>
+                    {(data?.fx ?? []).length > 0 ? (
+                      (data?.fx ?? []).map((f) => (
+                        <div key={f.pair} className="flex items-center justify-between">
+                          <span className={s.muted}>{f.pair}</span>
+                          <span className="font-medium">{f.rate.toFixed(4)}</span>
+                        </div>
+                      ))
+                    ) : (
+                      <div className={`col-span-2 text-xs ${s.muted}`}>
+                        {loading ? "Syncing ECB FX rates..." : "Live FX feed unavailable."}
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
               </div>
@@ -207,42 +239,54 @@ export function BloombergDeskView() {
                 <div>
                   <h3 className="text-sm font-semibold mb-2.5">24/7 Crypto Benchmark</h3>
                   <div className="space-y-2">
-                    {(data?.crypto ?? []).map((c) => (
-                      <div
-                        key={c.symbol}
-                        className={`flex items-center justify-between rounded-lg border px-3 py-2 font-mono text-xs tabular-nums ${s.subCard}`}
-                      >
-                        <span className="font-semibold">{c.symbol}/USD</span>
-                        <div className="text-right">
-                          <div>${c.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
-                          <div className={c.changePct >= 0 ? "text-emerald-500" : "text-rose-500"}>
-                            {c.changePct >= 0 ? "+" : ""}
-                            {c.changePct.toFixed(2)}%
+                    {(data?.crypto ?? []).length > 0 ? (
+                      (data?.crypto ?? []).map((c) => (
+                        <div
+                          key={c.symbol}
+                          className={`flex items-center justify-between rounded-lg border px-3 py-2 font-mono text-xs tabular-nums ${s.subCard}`}
+                        >
+                          <span className="font-semibold">{c.symbol}/USD</span>
+                          <div className="text-right">
+                            <div>${c.price.toLocaleString(undefined, { maximumFractionDigits: 2 })}</div>
+                            <div className={c.changePct >= 0 ? "text-emerald-500" : "text-rose-500"}>
+                              {c.changePct >= 0 ? "+" : ""}
+                              {c.changePct.toFixed(2)}%
+                            </div>
                           </div>
                         </div>
+                      ))
+                    ) : (
+                      <div className={`rounded-lg border p-3 text-center text-xs ${s.subCard} ${s.muted}`}>
+                        {loading ? "Syncing crypto benchmark..." : "Live crypto feed unavailable."}
                       </div>
-                    ))}
+                    )}
                   </div>
                 </div>
 
                 <div className={`border-t pt-3 ${s.border}`}>
                   <h4 className="text-xs font-semibold mb-2">SEC EDGAR Regulatory Wire</h4>
                   <div className="space-y-2">
-                    {(data?.headlines ?? []).slice(0, 4).map((h, i) => (
-                      <a
-                        key={i}
-                        href={h.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className={`block rounded-lg border p-2.5 text-xs transition-colors ${s.subCard} hover:border-emerald-500/50`}
-                      >
-                        <div className={`flex items-center justify-between text-[10px] font-mono ${s.muted}`}>
-                          <span>{h.source}</span>
-                          <span>{h.time}</span>
-                        </div>
-                        <p className="mt-1 line-clamp-2 leading-snug">{h.headline}</p>
-                      </a>
-                    ))}
+                    {(data?.headlines ?? []).length > 0 ? (
+                      (data?.headlines ?? []).slice(0, 4).map((h, i) => (
+                        <a
+                          key={i}
+                          href={h.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className={`block rounded-lg border p-2.5 text-xs transition-colors ${s.subCard} hover:border-emerald-500/50`}
+                        >
+                          <div className={`flex items-center justify-between text-[10px] font-mono ${s.muted}`}>
+                            <span>{h.source}</span>
+                            <span>{h.time}</span>
+                          </div>
+                          <p className="mt-1 line-clamp-2 leading-snug">{h.headline}</p>
+                        </a>
+                      ))
+                    ) : (
+                      <div className={`rounded-lg border p-3 text-center text-xs ${s.subCard} ${s.muted}`}>
+                        {loading ? "Syncing SEC EDGAR filings..." : "SEC EDGAR wire unavailable."}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -275,41 +319,48 @@ export function ExcelDcfView() {
   const [symbol, setSymbol] = useState("NVDA");
   const [seed, setSeed] = useState<ExcelDcfSeed | null>(null);
   const [loading, setLoading] = useState(true);
+  const [seedError, setSeedError] = useState<string | null>(null);
 
-  // Editable Spreadsheet Cells
-  const [baseRevenueM, setBaseRevenueM] = useState(130497);
+  // Editable Spreadsheet Cells (seeded exclusively from live SEC EDGAR + Yahoo + Treasury APIs)
+  const [baseRevenueM, setBaseRevenueM] = useState<number | null>(null);
   const [revenueGrowthPct, setRevenueGrowthPct] = useState(24);
-  const [ebitdaMarginPct, setEbitdaMarginPct] = useState(62);
+  const [ebitdaMarginPct, setEbitdaMarginPct] = useState<number | null>(null);
   const [taxRatePct, setTaxRatePct] = useState(16);
   const [daPctOfRev, setDaPctOfRev] = useState(2.5);
   const [capexPctOfRev, setCapexPctOfRev] = useState(3.5);
   const [nwcPctOfRev, setNwcPctOfRev] = useState(2.0);
-  const [riskFreeRatePct, setRiskFreeRatePct] = useState(4.35);
+  const [riskFreeRatePct, setRiskFreeRatePct] = useState<number | null>(null);
   const [equityRiskPremiumPct, setEquityRiskPremiumPct] = useState(5.0);
   const [beta, setBeta] = useState(1.45);
   const [costOfDebtPct, setCostOfDebtPct] = useState(5.2);
   const [debtWeightPct, setDebtWeightPct] = useState(3.0);
   const [terminalGrowthPct, setTerminalGrowthPct] = useState(3.5);
-  const [netDebtM, setNetDebtM] = useState(-34747);
-  const [sharesOutM, setSharesOutM] = useState(24490);
-  const [currentPriceUsd, setCurrentPriceUsd] = useState(138.4);
+  const [netDebtM, setNetDebtM] = useState<number | null>(null);
+  const [sharesOutM, setSharesOutM] = useState<number | null>(null);
+  const [currentPriceUsd, setCurrentPriceUsd] = useState<number | null>(null);
 
   const load = useCallback(async (sym: string) => {
     setLoading(true);
+    setSeedError(null);
     try {
       const res = await fetch(`/api/institutional-feed?tool=excel-dcf&symbol=${encodeURIComponent(sym)}`, {
         cache: "no-store",
       });
-      if (res.ok) {
-        const d = (await res.json()) as ExcelDcfSeed;
-        setSeed(d);
-        setBaseRevenueM(d.revenueM);
-        setEbitdaMarginPct(d.ebitdaMarginPct);
-        setRiskFreeRatePct(d.riskFreeRatePct);
-        setNetDebtM(d.netDebtM);
-        setSharesOutM(d.sharesOutM);
-        setCurrentPriceUsd(d.currentPriceUsd);
+      if (!res.ok) {
+        const errBody = await res.json().catch(() => null);
+        throw new Error(errBody?.error || `Live DCF feed error (${res.status})`);
       }
+      const d = (await res.json()) as ExcelDcfSeed;
+      setSeed(d);
+      setBaseRevenueM(d.revenueM);
+      setEbitdaMarginPct(d.ebitdaMarginPct);
+      setRiskFreeRatePct(d.riskFreeRatePct);
+      setNetDebtM(d.netDebtM);
+      setSharesOutM(d.sharesOutM);
+      setCurrentPriceUsd(d.currentPriceUsd);
+    } catch (err) {
+      setSeed(null);
+      setSeedError(err instanceof Error ? err.message : "Live fundamentals unavailable");
     } finally {
       setLoading(false);
     }
@@ -319,36 +370,30 @@ export function ExcelDcfView() {
     void load(symbol);
   }, [load, symbol]);
 
-  const wacc = useMemo(
-    () =>
-      computeWacc({
-        riskFreeRatePct,
-        equityRiskPremiumPct,
-        beta,
-        costOfDebtPct,
-        taxRatePct,
-        debtWeightPct,
-      }),
-    [riskFreeRatePct, equityRiskPremiumPct, beta, costOfDebtPct, taxRatePct, debtWeightPct],
-  );
+  const wacc = useMemo(() => {
+    if (riskFreeRatePct === null) return null;
+    return computeWacc({
+      riskFreeRatePct,
+      equityRiskPremiumPct,
+      beta,
+      costOfDebtPct,
+      taxRatePct,
+      debtWeightPct,
+    });
+  }, [riskFreeRatePct, equityRiskPremiumPct, beta, costOfDebtPct, taxRatePct, debtWeightPct]);
 
-  const dcf = useMemo(
-    () =>
-      computeDcfModel({
-        baseRevenueM,
-        revenueGrowthPct,
-        ebitdaMarginPct,
-        taxRatePct,
-        daPctOfRev,
-        capexPctOfRev,
-        nwcPctOfRev,
-        waccPct: wacc.waccPct,
-        terminalGrowthPct,
-        netDebtM,
-        sharesOutM,
-        currentPriceUsd,
-      }),
-    [
+  const dcf = useMemo(() => {
+    if (
+      wacc === null ||
+      baseRevenueM === null ||
+      ebitdaMarginPct === null ||
+      netDebtM === null ||
+      sharesOutM === null ||
+      currentPriceUsd === null
+    ) {
+      return null;
+    }
+    return computeDcfModel({
       baseRevenueM,
       revenueGrowthPct,
       ebitdaMarginPct,
@@ -356,15 +401,29 @@ export function ExcelDcfView() {
       daPctOfRev,
       capexPctOfRev,
       nwcPctOfRev,
-      wacc.waccPct,
+      waccPct: wacc.waccPct,
       terminalGrowthPct,
       netDebtM,
       sharesOutM,
       currentPriceUsd,
-    ],
-  );
+    });
+  }, [
+    baseRevenueM,
+    revenueGrowthPct,
+    ebitdaMarginPct,
+    taxRatePct,
+    daPctOfRev,
+    capexPctOfRev,
+    nwcPctOfRev,
+    wacc,
+    terminalGrowthPct,
+    netDebtM,
+    sharesOutM,
+    currentPriceUsd,
+  ]);
 
   const handleExportCsv = () => {
+    if (!dcf || !wacc || netDebtM === null) return;
     const rows = [
       ["NextWallStreet Excel DCF Model", symbol, seed?.companyName ?? symbol],
       ["Metric", "Year 1", "Year 2", "Year 3", "Year 4", "Year 5"],
@@ -401,7 +460,8 @@ export function ExcelDcfView() {
         <button
           type="button"
           onClick={handleExportCsv}
-          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-500 transition-colors whitespace-nowrap shrink-0"
+          disabled={!dcf}
+          className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-600 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-40 transition-colors whitespace-nowrap shrink-0"
         >
           <Download className="h-3.5 w-3.5" aria-hidden="true" />
           <span>Export Excel CSV</span>
@@ -433,9 +493,24 @@ export function ExcelDcfView() {
                 ))}
               </div>
               <div className={`text-xs font-mono tabular-nums ${s.muted}`}>
-                {seed?.companyName ?? symbol} · Spot ${currentPriceUsd.toFixed(2)} · 10Y Rf {riskFreeRatePct.toFixed(2)}%
+                {seed?.companyName ?? symbol} · Spot{" "}
+                {currentPriceUsd !== null ? `$${currentPriceUsd.toFixed(2)}` : "—"} · 10Y Rf{" "}
+                {riskFreeRatePct !== null ? `${riskFreeRatePct.toFixed(2)}%` : "—"}
               </div>
             </div>
+
+            {seedError && !loading && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+                <span>Live SEC EDGAR / market fundamentals temporarily unavailable ({seedError}).</span>
+                <button
+                  type="button"
+                  onClick={() => void load(symbol)}
+                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
 
             <div className="grid gap-5 lg:grid-cols-12">
               {/* Left Column: Excel Assumption Cells */}
@@ -444,15 +519,15 @@ export function ExcelDcfView() {
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   {(
                     [
-                      { label: "Base Rev ($M)", val: baseRevenueM, set: setBaseRevenueM, step: 100 },
+                      { label: "Base Rev ($M)", val: baseRevenueM, set: (v: number) => setBaseRevenueM(v), step: 100 },
                       { label: "Rev Growth (%)", val: revenueGrowthPct, set: setRevenueGrowthPct, step: 0.5 },
-                      { label: "EBITDA Margin (%)", val: ebitdaMarginPct, set: setEbitdaMarginPct, step: 0.5 },
+                      { label: "EBITDA Margin (%)", val: ebitdaMarginPct, set: (v: number) => setEbitdaMarginPct(v), step: 0.5 },
                       { label: "Tax Rate (%)", val: taxRatePct, set: setTaxRatePct, step: 0.5 },
                       { label: "D&A (% Rev)", val: daPctOfRev, set: setDaPctOfRev, step: 0.2 },
                       { label: "CapEx (% Rev)", val: capexPctOfRev, set: setCapexPctOfRev, step: 0.2 },
                       { label: "NWC (% ΔRev)", val: nwcPctOfRev, set: setNwcPctOfRev, step: 0.2 },
                       { label: "Term. Growth (%)", val: terminalGrowthPct, set: setTerminalGrowthPct, step: 0.25 },
-                      { label: "10Y Risk-Free (%)", val: riskFreeRatePct, set: setRiskFreeRatePct, step: 0.1 },
+                      { label: "10Y Risk-Free (%)", val: riskFreeRatePct, set: (v: number) => setRiskFreeRatePct(v), step: 0.1 },
                       { label: "Equity Risk Prem (%)", val: equityRiskPremiumPct, set: setEquityRiskPremiumPct, step: 0.25 },
                       { label: "CAPM Beta", val: beta, set: setBeta, step: 0.05 },
                       { label: "Debt Weight (%)", val: debtWeightPct, set: setDebtWeightPct, step: 1 },
@@ -463,7 +538,8 @@ export function ExcelDcfView() {
                       <input
                         type="number"
                         step={cell.step}
-                        value={cell.val}
+                        value={cell.val ?? ""}
+                        placeholder={loading ? "…" : "—"}
                         onChange={(e) => cell.set(Number(e.target.value) || 0)}
                         className={`w-full rounded-lg border px-2.5 py-1.5 font-mono text-xs tabular-nums outline-none ${s.input}`}
                       />
@@ -474,15 +550,15 @@ export function ExcelDcfView() {
                 <div className={`border-t pt-3 space-y-1.5 font-mono text-xs tabular-nums ${s.border}`}>
                   <div className="flex justify-between">
                     <span className={s.muted}>Cost of Equity (CAPM)</span>
-                    <span>{wacc.costOfEquityPct.toFixed(2)}%</span>
+                    <span>{wacc ? `${wacc.costOfEquityPct.toFixed(2)}%` : "—"}</span>
                   </div>
                   <div className="flex justify-between">
                     <span className={s.muted}>After-Tax Cost of Debt</span>
-                    <span>{wacc.afterTaxCostOfDebtPct.toFixed(2)}%</span>
+                    <span>{wacc ? `${wacc.afterTaxCostOfDebtPct.toFixed(2)}%` : "—"}</span>
                   </div>
                   <div className="flex justify-between font-semibold text-emerald-500">
                     <span>Computed WACC</span>
-                    <span>{wacc.waccPct.toFixed(2)}%</span>
+                    <span>{wacc ? `${wacc.waccPct.toFixed(2)}%` : "—"}</span>
                   </div>
                 </div>
               </div>
@@ -494,17 +570,17 @@ export function ExcelDcfView() {
                   <div className={`rounded-xl border p-3.5 ${s.card}`}>
                     <div className={`text-[11px] ${s.muted}`}>Implied Share Price</div>
                     <div className="mt-1 font-mono text-xl font-semibold text-emerald-500 tabular-nums">
-                      ${dcf.impliedSharePriceUsd.toFixed(2)}
+                      {dcf ? `$${dcf.impliedSharePriceUsd.toFixed(2)}` : "—"}
                     </div>
                   </div>
                   <div className={`rounded-xl border p-3.5 ${s.card}`}>
                     <div className={`text-[11px] ${s.muted}`}>Implied Upside</div>
                     <div
                       className={`mt-1 font-mono text-xl font-semibold tabular-nums ${
-                        (dcf.upsidePct ?? 0) >= 0 ? "text-emerald-500" : "text-rose-500"
+                        (dcf?.upsidePct ?? 0) >= 0 ? "text-emerald-500" : "text-rose-500"
                       }`}
                     >
-                      {dcf.upsidePct !== null
+                      {dcf && dcf.upsidePct !== null
                         ? `${dcf.upsidePct >= 0 ? "+" : ""}${dcf.upsidePct.toFixed(1)}%`
                         : "—"}
                     </div>
@@ -512,13 +588,13 @@ export function ExcelDcfView() {
                   <div className={`rounded-xl border p-3.5 ${s.card}`}>
                     <div className={`text-[11px] ${s.muted}`}>Enterprise Value</div>
                     <div className="mt-1 font-mono text-xl font-semibold tabular-nums">
-                      {formatCompactCurrency(dcf.enterpriseValueM * 1e6)}
+                      {dcf ? formatCompactCurrency(dcf.enterpriseValueM * 1e6) : "—"}
                     </div>
                   </div>
                   <div className={`rounded-xl border p-3.5 ${s.card}`}>
                     <div className={`text-[11px] ${s.muted}`}>PV of TV / EV</div>
                     <div className="mt-1 font-mono text-xl font-semibold tabular-nums">
-                      {dcf.tvShareOfEvPct.toFixed(1)}%
+                      {dcf ? `${dcf.tvShareOfEvPct.toFixed(1)}%` : "—"}
                     </div>
                   </div>
                 </div>
@@ -526,6 +602,11 @@ export function ExcelDcfView() {
                 {/* 5-Year Unlevered Free Cash Flow Sheet */}
                 <div className={`rounded-xl border p-4 space-y-3 ${s.card}`}>
                   <h3 className="text-sm font-semibold">5-Year Unlevered Free Cash Flow Schedule ($M)</h3>
+                  {!dcf ? (
+                    <div className={`rounded-lg border p-6 text-center text-xs font-mono ${s.border} ${s.muted}`}>
+                      {loading ? "Syncing live SEC EDGAR financial schedule..." : "Live DCF cash-flow schedule unavailable."}
+                    </div>
+                  ) : (
                   <div className={`overflow-x-auto rounded-lg border ${s.border}`}>
                     <table className="w-full text-xs font-mono tabular-nums border-collapse">
                       <thead>
@@ -582,6 +663,7 @@ export function ExcelDcfView() {
                       </tbody>
                     </table>
                   </div>
+                  )}
                 </div>
 
                 {/* 5x5 Sensitivity Table */}
@@ -590,6 +672,11 @@ export function ExcelDcfView() {
                     <h3 className="text-sm font-semibold">WACC vs. Terminal Growth Sensitivity ($)</h3>
                     <span className={`font-mono text-[11px] ${s.muted}`}>Implied Equity Price / Share</span>
                   </div>
+                  {!dcf || currentPriceUsd === null ? (
+                    <div className={`rounded-lg border p-6 text-center text-xs font-mono ${s.border} ${s.muted}`}>
+                      {loading ? "Computing sensitivity matrix from live WACC..." : "Live sensitivity grid unavailable."}
+                    </div>
+                  ) : (
                   <div className={`overflow-x-auto rounded-lg border ${s.border}`}>
                     <table className="w-full text-xs font-mono tabular-nums border-collapse">
                       <thead>
@@ -629,6 +716,7 @@ export function ExcelDcfView() {
                       </tbody>
                     </table>
                   </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -663,15 +751,23 @@ interface PeerRow {
 export function CapitalIqCompsView() {
   const [data, setData] = useState<{ sources: string[]; asOf: string; peers: PeerRow[] } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [sortBy, setSortBy] = useState<"mcapM" | "evToRev" | "evToEbitda" | "peRatio" | "ebitdaMarginPct">("mcapM");
   const [sortDesc, setSortDesc] = useState(true);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const res = await fetch("/api/institutional-feed?tool=capital-iq", { cache: "no-store" });
-      if (res.ok) setData(await res.json());
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `Live comps error (${res.status})`);
+      }
+      setData(await res.json());
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Live Capital IQ peer comps unavailable");
     } finally {
       setLoading(false);
     }
@@ -726,6 +822,18 @@ export function CapitalIqCompsView() {
         const s = useSharedStyles(isLight);
         return (
           <div className="space-y-4">
+            {fetchError && !loading && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+                <span>Live peer valuation feed temporarily unavailable ({fetchError}).</span>
+                <button
+                  type="button"
+                  onClick={() => void load()}
+                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="relative w-full sm:w-80">
                 <Search className={`h-4 w-4 absolute left-3 top-2.5 ${s.muted}`} aria-hidden="true" />
@@ -856,14 +964,22 @@ export function AlphaSenseSearchView() {
     filings: FilingItem[];
   } | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const load = useCallback(async (sym: string) => {
     setLoading(true);
+    setFetchError(null);
     try {
       const res = await fetch(`/api/institutional-feed?tool=alphasense&symbol=${encodeURIComponent(sym)}`, {
         cache: "no-store",
       });
-      if (res.ok) setData(await res.json());
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `SEC EDGAR feed error (${res.status})`);
+      }
+      setData(await res.json());
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Live SEC filings feed unavailable");
     } finally {
       setLoading(false);
     }
@@ -899,6 +1015,18 @@ export function AlphaSenseSearchView() {
         const s = useSharedStyles(isLight);
         return (
           <div className="space-y-4">
+            {fetchError && !loading && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+                <span>Live SEC EDGAR filings feed temporarily unavailable ({fetchError}).</span>
+                <button
+                  type="button"
+                  onClick={() => void load(symbol)}
+                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-1.5">
                 {Object.keys(SEC_CIK_MAP).map((t) => (
@@ -1033,14 +1161,22 @@ export function TradingViewScreenerView() {
   const [symbol, setSymbol] = useState("NVDA");
   const [data, setData] = useState<TvData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const load = useCallback(async (sym: string) => {
     setLoading(true);
+    setFetchError(null);
     try {
       const res = await fetch(`/api/institutional-feed?tool=tradingview-screener&symbol=${encodeURIComponent(sym)}`, {
         cache: "no-store",
       });
-      if (res.ok) setData(await res.json());
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `Live OHLCV feed error (${res.status})`);
+      }
+      setData(await res.json());
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Live TradingView OHLCV feed unavailable");
     } finally {
       setLoading(false);
     }
@@ -1091,6 +1227,18 @@ export function TradingViewScreenerView() {
 
         return (
           <div className="space-y-5">
+            {fetchError && !loading && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+                <span>Live OHLCV candlestick feed temporarily unavailable ({fetchError}).</span>
+                <button
+                  type="button"
+                  onClick={() => void load(symbol)}
+                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
             {/* Asset Strip & Live Indicators */}
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
               <div className="flex flex-wrap items-center gap-1.5">

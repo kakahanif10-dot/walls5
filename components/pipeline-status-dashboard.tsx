@@ -188,7 +188,7 @@ export default function PipelineStatusDashboard() {
         <div className="rounded-xl border border-line bg-ink-900/60 p-4">
           <span className="text-[10px] uppercase tracking-wider text-muted">Total Universe</span>
           <p className="mt-1 font-mono text-2xl font-bold text-bone">
-            {metrics?.totalAssets?.toLocaleString() || "2,038"}
+            {metrics ? metrics.totalAssets.toLocaleString() : "—"}
           </p>
           <p className="text-[10px] text-muted/70">800 stocks · 831 crypto · 407 memes</p>
         </div>
@@ -204,7 +204,7 @@ export default function PipelineStatusDashboard() {
         <div className="rounded-xl border border-line bg-ink-900/60 p-4">
           <span className="text-[10px] uppercase tracking-wider text-muted">Equities Median</span>
           <p className="mt-1 font-mono text-2xl font-bold text-gold-bright">
-            {metrics?.medianScoreStock || "52"}
+            {metrics ? metrics.medianScoreStock : "—"}
             <span className="text-xs text-muted font-normal"> / 100</span>
           </p>
           <p className="text-[10px] text-muted/70">S&amp;P 500 / Nasdaq</p>
@@ -213,7 +213,7 @@ export default function PipelineStatusDashboard() {
         <div className="rounded-xl border border-line bg-ink-900/60 p-4">
           <span className="text-[10px] uppercase tracking-wider text-muted">Crypto Median</span>
           <p className="mt-1 font-mono text-2xl font-bold text-bone">
-            {metrics?.medianScoreCrypto || "54"}
+            {metrics ? metrics.medianScoreCrypto : "—"}
             <span className="text-xs text-muted font-normal"> / 100</span>
           </p>
           <p className="text-[10px] text-muted/70">Coinbase / Binance spot</p>
@@ -222,7 +222,7 @@ export default function PipelineStatusDashboard() {
         <div className="rounded-xl border border-line bg-ink-900/60 p-4">
           <span className="text-[10px] uppercase tracking-wider text-muted">Meme Risk Median</span>
           <p className="mt-1 font-mono text-2xl font-bold text-[#e7a86b]">
-            {metrics?.medianScoreMeme || "47"}
+            {metrics ? metrics.medianScoreMeme : "—"}
             <span className="text-xs text-muted font-normal"> / 100</span>
           </p>
           <p className="text-[10px] text-muted/70">pump.fun / viral meta</p>

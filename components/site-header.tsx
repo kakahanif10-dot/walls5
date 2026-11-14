@@ -42,11 +42,12 @@ import {
   Gauge,
 } from "lucide-react";
 
-const SIMPLE_LINKS = [
+const SIMPLE_LINKS: Array<{ href: string; label: string; live?: boolean }> = [
   { href: "/markets", label: "Markets" },
   { href: "/crypto", label: "Digital Assets" },
   { href: "/research", label: "Research" },
   { href: "/academy", label: "Academy" },
+  { href: "/community", label: "Community", live: true },
 ];
 
 export interface MainDirectoryItem {
@@ -306,13 +307,19 @@ export default function SiteHeader() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setDirectoryOpen(false)}
-                className={`rounded-full px-3 py-1.5 text-[13px] xl:text-sm whitespace-nowrap transition-colors ${
+                className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[13px] xl:text-sm whitespace-nowrap transition-colors ${
                   isActive(link.href)
                     ? "bg-ink-800 text-bone"
                     : "text-muted hover:bg-ink-850 hover:text-bone"
                 }`}
               >
-                {link.label}
+                {link.live && (
+                  <span
+                    className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"
+                    aria-hidden="true"
+                  />
+                )}
+                <span>{link.label}</span>
               </Link>
             ))}
 
@@ -551,11 +558,24 @@ export default function SiteHeader() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileOpen(false)}
-                  className={`rounded-md px-3 py-2 text-sm ${
+                  className={`flex items-center justify-between rounded-md px-3 py-2 text-sm ${
                     isActive(link.href) ? "bg-ink-800 text-bone" : "text-muted hover:text-bone"
                   }`}
                 >
-                  {link.label}
+                  <span className="inline-flex items-center gap-2">
+                    {"live" in link && link.live && (
+                      <span
+                        className="h-1.5 w-1.5 rounded-full bg-emerald-400 animate-pulse"
+                        aria-hidden="true"
+                      />
+                    )}
+                    <span>{link.label}</span>
+                  </span>
+                  {"live" in link && link.live && (
+                    <span className="rounded border border-emerald-400/30 bg-emerald-500/10 px-1.5 py-0.5 font-mono text-[9px] text-emerald-300">
+                      LIVE CHAT
+                    </span>
+                  )}
                 </Link>
               ))}
             </div>

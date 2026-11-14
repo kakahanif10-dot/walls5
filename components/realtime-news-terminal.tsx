@@ -20,7 +20,6 @@ import {
   RotateCcw,
 } from "lucide-react";
 import {
-  INITIAL_REALTIME_ARTICLES,
   NEWS_CATEGORIES,
   QUERY_PRESETS,
   computeCategoryCounts,
@@ -31,7 +30,9 @@ import { useWatchlist } from "@/lib/use-watchlist";
 import WhopBadge from "@/components/whop-badge";
 
 export default function RealtimeNewsTerminal() {
-  const [articles, setArticles] = useState<NewsArticle[]>(INITIAL_REALTIME_ARTICLES);
+  const [articles, setArticles] = useState<NewsArticle[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [feedError, setFeedError] = useState<string | null>(null);
   const [queryString, setQueryString] = useState<string>("");
   const [selectedCategory, setSelectedCategory] = useState<string>("ALL");
   const [selectedSource, setSelectedSource] = useState<string>("ALL");
@@ -39,7 +40,7 @@ export default function RealtimeNewsTerminal() {
   const [watchlistOnly, setWatchlistOnly] = useState<boolean>(false);
   const [isStreaming, setIsStreaming] = useState<boolean>(true);
   const [latencyMs, setLatencyMs] = useState<number>(14);
-  const [activeArticle, setActiveArticle] = useState<NewsArticle | null>(INITIAL_REALTIME_ARTICLES[0]);
+  const [activeArticle, setActiveArticle] = useState<NewsArticle | null>(null);
   const [showApiConsole, setShowApiConsole] = useState<boolean>(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
@@ -53,11 +54,15 @@ export default function RealtimeNewsTerminal() {
       const t0 = typeof performance !== "undefined" ? performance.now() : Date.now();
       try {
         const res = await fetch("/api/newsfilter?limit=30", { cache: "no-store" });
-        if (!res.ok || cancelled) return;
+        if (!res.ok) {
+          throw new Error(`HTTP ${res.status}`);
+        }
+        if (cancelled) return;
         const data = (await res.json()) as { articles?: NewsArticle[] };
         const elapsed = Math.max(1, Math.round((typeof performance !== "undefined" ? performance.now() : Date.now()) - t0));
         if (cancelled) return;
         setLatencyMs(elapsed);
+        setFeedError(null);
 
         if (Array.isArray(data.articles) && data.articles.length > 0) {
           setArticles((prev) => {
@@ -66,8 +71,12 @@ export default function RealtimeNewsTerminal() {
             return [...data.articles!, ...existingFiltered].slice(0, 60);
           });
         }
-      } catch {
-        // retain current live + initial articles without fabricating headlines
+      } catch (err) {
+        if (!cancelled) {
+          setFeedError(err instanceof Error ? err.message : "Live news wire unavailable");
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
       }
     };
 
@@ -382,15 +391,29 @@ export default function RealtimeNewsTerminal() {
           {filteredArticles.length === 0 ? (
             <div className="rounded-xl border border-white/[0.08] bg-[#080a0f] p-8 text-center text-stone-400">
               <AlertTriangle className="mx-auto h-8 w-8 text-[#d8ab5a] mb-2" />
-              <p className="text-sm font-semibold text-[#f2efe8]">No dispatches match current query criteria.</p>
-              <p className="text-xs mt-1">Try resetting the query or selecting another category or sentiment filter.</p>
-              <button
-                type="button"
-                onClick={resetAllFilters}
-                className="mt-4 rounded-xl bg-gradient-to-r from-[#d8ab5a] to-[#f0c979] px-4 py-2 text-xs font-mono font-semibold text-[#050609]"
-              >
-                Reset All Filters
-              </button>
+              {isLoading && articles.length === 0 ? (
+                <>
+                  <p className="text-sm font-semibold text-[#f2efe8]">Connecting to live institutional news wire...</p>
+                  <p className="text-xs mt-1">Streaming real-time SEC EDGAR, CNBC, MarketWatch &amp; Yahoo Finance dispatches.</p>
+                </>
+              ) : feedError && articles.length === 0 ? (
+                <>
+                  <p className="text-sm font-semibold text-[#f2efe8]">Live news wire temporarily unavailable ({feedError}).</p>
+                  <p className="text-xs mt-1">No static or fabricated headlines displayed.</p>
+                </>
+              ) : (
+                <>
+                  <p className="text-sm font-semibold text-[#f2efe8]">No dispatches match current query criteria.</p>
+                  <p className="text-xs mt-1">Try resetting the query or selecting another category or sentiment filter.</p>
+                  <button
+                    type="button"
+                    onClick={resetAllFilters}
+                    className="mt-4 rounded-xl bg-gradient-to-r from-[#d8ab5a] to-[#f0c979] px-4 py-2 text-xs font-mono font-semibold text-[#050609]"
+                  >
+                    Reset All Filters
+                  </button>
+                </>
+              )}
             </div>
           ) : (
             filteredArticles.map((art) => {

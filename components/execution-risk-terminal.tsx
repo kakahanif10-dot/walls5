@@ -76,10 +76,10 @@ export default function ExecutionRiskTerminal() {
   // Panel 1: Position Sizer State
   const [portfolioCapital, setPortfolioCapital] = useState<number>(50000);
   const [maxRiskPct, setMaxRiskPct] = useState<number>(1.0);
-  const [entryPriceInput, setEntryPriceInput] = useState<string>("138.40");
+  const [entryPriceInput, setEntryPriceInput] = useState<string>("");
   const [hasCustomEntry, setHasCustomEntry] = useState<boolean>(false);
   const [customStopEnabled, setCustomStopEnabled] = useState<boolean>(false);
-  const [stopPriceInput, setStopPriceInput] = useState<string>("126.50");
+  const [stopPriceInput, setStopPriceInput] = useState<string>("");
 
   // Panel 2: What-If Scenario State
   const [whatIfDeltaPct, setWhatIfDeltaPct] = useState<number>(0);
@@ -90,26 +90,30 @@ export default function ExecutionRiskTerminal() {
   const [copiedPlan, setCopiedPlan] = useState<boolean>(false);
   const [exportedCsv, setExportedCsv] = useState<boolean>(false);
 
+  const hasLiveSelectedQuote = Boolean(liveQuotes[selectedSymbol]?.price && liveQuotes[selectedSymbol].price > 0);
+
   const asset: TerminalAsset = useMemo(() => {
     const base = TERMINAL_ASSETS.find((item) => item.symbol === selectedSymbol) ?? TERMINAL_ASSETS[0];
     return withLiveTerminalMetrics(base, liveQuotes[base.symbol]?.price);
   }, [selectedSymbol, liveQuotes]);
 
   useEffect(() => {
+    if (!hasLiveSelectedQuote) return;
     if (!hasCustomEntry) {
       setEntryPriceInput(asset.price.toFixed(asset.priceDecimals));
     }
     if (!customStopEnabled) {
       setStopPriceInput(asset.invalidationPrice.toFixed(asset.priceDecimals));
     }
-  }, [asset.price, asset.invalidationPrice, asset.priceDecimals, hasCustomEntry, customStopEnabled]);
+  }, [hasLiveSelectedQuote, asset.price, asset.invalidationPrice, asset.priceDecimals, hasCustomEntry, customStopEnabled]);
 
   const handleSelectAsset = (next: TerminalAsset) => {
-    const liveAsset = withLiveTerminalMetrics(next, liveQuotes[next.symbol]?.price);
+    const livePx = liveQuotes[next.symbol]?.price;
+    const liveAsset = withLiveTerminalMetrics(next, livePx);
     setSelectedSymbol(liveAsset.symbol);
     setHasCustomEntry(false);
-    setEntryPriceInput(liveAsset.price.toFixed(liveAsset.priceDecimals));
-    setStopPriceInput(liveAsset.invalidationPrice.toFixed(liveAsset.priceDecimals));
+    setEntryPriceInput(livePx && livePx > 0 ? liveAsset.price.toFixed(liveAsset.priceDecimals) : "");
+    setStopPriceInput(livePx && livePx > 0 ? liveAsset.invalidationPrice.toFixed(liveAsset.priceDecimals) : "");
     setCustomStopEnabled(false);
     setWhatIfDeltaPct(0);
     setCopiedPlan(false);
@@ -311,7 +315,9 @@ export default function ExecutionRiskTerminal() {
           className="mt-4 grid gap-3 md:grid-cols-3"
         >
           {TERMINAL_ASSETS.map((baseItem) => {
-            const item = withLiveTerminalMetrics(baseItem, liveQuotes[baseItem.symbol]?.price);
+            const livePx = liveQuotes[baseItem.symbol]?.price;
+            const itemHasLive = Boolean(livePx && livePx > 0);
+            const item = withLiveTerminalMetrics(baseItem, livePx);
             const active = item.symbol === asset.symbol;
             return (
               <button
@@ -349,7 +355,7 @@ export default function ExecutionRiskTerminal() {
                   <div>
                     <div className={`text-[11px] ${mutedText}`}>Price</div>
                     <div className="font-mono font-semibold tabular-nums">
-                      {formatAssetPrice(item.price, item.priceDecimals)}
+                      {itemHasLive ? formatAssetPrice(item.price, item.priceDecimals) : "Syncing..."}
                     </div>
                   </div>
                   <div>
@@ -361,7 +367,7 @@ export default function ExecutionRiskTerminal() {
                   <div>
                     <div className={`text-[11px] ${mutedText}`}>Invalidation</div>
                     <div className="font-mono font-semibold text-[#EF4444] tabular-nums">
-                      {formatAssetPrice(item.invalidationPrice, item.priceDecimals)}
+                      {itemHasLive ? formatAssetPrice(item.invalidationPrice, item.priceDecimals) : "—"}
                     </div>
                   </div>
                 </div>
@@ -387,14 +393,14 @@ export default function ExecutionRiskTerminal() {
             <span aria-hidden="true" className={mutedText}>|</span>
             <span>{asset.framework}</span>
             <span aria-hidden="true" className={mutedText}>|</span>
-            <span>Price: {formatAssetPrice(asset.price, asset.priceDecimals)}</span>
+            <span>Price: {hasLiveSelectedQuote ? formatAssetPrice(asset.price, asset.priceDecimals) : "Syncing..."}</span>
             <span aria-hidden="true" className={mutedText}>|</span>
             <span>Trend Score: {asset.trendScore}/100</span>
             <span aria-hidden="true" className={mutedText}>|</span>
             <span>
               Invalidation:{" "}
               <span className="text-[#EF4444]">
-                {formatAssetPrice(asset.invalidationPrice, asset.priceDecimals)}
+                {hasLiveSelectedQuote ? formatAssetPrice(asset.invalidationPrice, asset.priceDecimals) : "—"}
               </span>
             </span>
           </div>
@@ -600,7 +606,7 @@ export default function ExecutionRiskTerminal() {
                     min={0}
                     step={asset.priceDecimals > 2 ? 0.0000001 : 0.01}
                     readOnly={!customStopEnabled}
-                    value={customStopEnabled ? stopPriceInput : asset.invalidationPrice.toFixed(asset.priceDecimals)}
+                    value={customStopEnabled ? stopPriceInput : (hasLiveSelectedQuote ? asset.invalidationPrice.toFixed(asset.priceDecimals) : "")}
                     onChange={(e) => setStopPriceInput(e.target.value)}
                     className={`mt-1.5 w-full rounded-lg border px-3 py-2 font-mono text-sm font-semibold tabular-nums outline-none transition-colors ${
                       customStopEnabled

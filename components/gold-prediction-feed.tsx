@@ -1,8 +1,8 @@
 "use client";
 
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import Link from "next/link";
-import { GOLD_NEWS_ITEMS, type GoldNewsItem, type NewsAction } from "@/lib/gold-news-100";
+import { type GoldNewsItem, type NewsAction } from "@/lib/gold-news-100";
 import { ASSET_BY_SYMBOL, metricsFor } from "@/lib/market";
 import { useQuotes } from "@/components/live-prices";
 import WhopBadge from "@/components/whop-badge";
@@ -23,20 +23,24 @@ import {
 } from "lucide-react";
 
 export default function GoldPredictionFeed() {
-  const [items, setItems] = useState<GoldNewsItem[]>(GOLD_NEWS_ITEMS);
+  const [items, setItems] = useState<GoldNewsItem[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [feedError, setFeedError] = useState<string | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [selectedAction, setSelectedAction] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(60);
   const [isAudioEnabled, setIsAudioEnabled] = useState(false);
   const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
-  const [activeItem, setActiveItem] = useState<GoldNewsItem | null>(GOLD_NEWS_ITEMS[0]);
+  const [activeItem, setActiveItem] = useState<GoldNewsItem | null>(null);
   const liveQuotes = useQuotes();
+  const liveQuotesRef = useRef(liveQuotes);
+  liveQuotesRef.current = liveQuotes;
 
   const syncLiveWire = useCallback(async () => {
     try {
       const res = await fetch("/api/newsfilter?limit=24", { cache: "no-store" });
-      if (!res.ok) return;
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = (await res.json()) as {
         articles?: Array<{
           id: string;
@@ -49,52 +53,57 @@ export default function GoldPredictionFeed() {
           sentiment: "BULLISH" | "BEARISH" | "NEUTRAL";
         }>;
       };
+      setFeedError(null);
       if (!Array.isArray(data.articles) || data.articles.length === 0) return;
 
-      const mapped: GoldNewsItem[] = data.articles.map((art, idx) => {
-        const sym = (art.symbols?.[0] && ASSET_BY_SYMBOL[art.symbols[0]] ? art.symbols[0] : "NVDA");
-        const asset = ASSET_BY_SYMBOL[sym];
-        const m = asset ? metricsFor(asset) : null;
-        const basePrice = m?.last ?? 100;
-        const action: NewsAction =
-          art.sentiment === "BULLISH" ? "BUY" : art.sentiment === "BEARISH" ? "TRIM" : "HOLD";
-        const cat =
-          art.category === "Crypto"
-            ? "Crypto & Layer-1"
-            : art.category === "Geopolitics"
-              ? "Geopolitics & Defense"
-              : art.category === "Macro"
-                ? "Macro & Central Banks"
-                : art.category === "M&A"
-                  ? "Executive Boardroom & M&A"
-                  : "Tech & AI Scandals";
-        const minsAgo = Math.max(1, Math.round((Date.now() - Date.parse(art.publishedAt)) / 60000));
-        return {
-          id: `live-cat-${art.id}-${idx}`,
-          symbol: sym,
-          headline: art.title,
-          summary: art.description,
-          category: cat,
-          source: art.source?.name ?? "Global Financial Wire",
-          action,
-          confidence: action === "HOLD" ? 76 : 86,
-          impactPct: Number(((m?.change24h ?? 0) * 100).toFixed(2)),
-          currentPrice: basePrice,
-          targetPrice: Number((basePrice * (action === "TRIM" ? 0.94 : 1.075)).toFixed(2)),
-          invalidationStop: Number((basePrice * (action === "TRIM" ? 1.045 : 0.96)).toFixed(2)),
-          deskRationale: `Live market wire catalyst mapped directly to ${sym} real-time trend structure and invalidation support levels.`,
-          catalystWindow: minsAgo <= 60 ? "Immediate (Live Wire)" : "Intraday Catalyst",
-          timestampOffsetMinutes: minsAgo,
-        };
-      });
+      const mapped = data.articles
+        .map((art, idx): GoldNewsItem | null => {
+          const sym = (art.symbols?.[0] && ASSET_BY_SYMBOL[art.symbols[0]] ? art.symbols[0] : "NVDA");
+          const asset = ASSET_BY_SYMBOL[sym];
+          const m = asset ? metricsFor(asset) : null;
+          const basePrice = liveQuotesRef.current[sym]?.price ?? m?.last ?? 0;
+          if (basePrice <= 0) return null;
+          const action: NewsAction =
+            art.sentiment === "BULLISH" ? "BUY" : art.sentiment === "BEARISH" ? "TRIM" : "HOLD";
+          const cat =
+            art.category === "Crypto"
+              ? "Crypto & Layer-1"
+              : art.category === "Geopolitics"
+                ? "Geopolitics & Defense"
+                : art.category === "Macro"
+                  ? "Macro & Central Banks"
+                  : art.category === "M&A"
+                    ? "Executive Boardroom & M&A"
+                    : "Tech & AI Scandals";
+          const minsAgo = Math.max(1, Math.round((Date.now() - Date.parse(art.publishedAt)) / 60000));
+          return {
+            id: `live-cat-${art.id}-${idx}`,
+            symbol: sym,
+            headline: art.title,
+            summary: art.description,
+            category: cat,
+            source: art.source?.name ?? "Global Financial Wire",
+            action,
+            confidence: action === "HOLD" ? 76 : 86,
+            impactPct: Number(((m?.change24h ?? 0) * 100).toFixed(2)),
+            currentPrice: basePrice,
+            targetPrice: Number((basePrice * (action === "TRIM" ? 0.94 : 1.075)).toFixed(2)),
+            invalidationStop: Number((basePrice * (action === "TRIM" ? 1.045 : 0.96)).toFixed(2)),
+            deskRationale: `Live market wire catalyst mapped directly to ${sym} real-time trend structure and invalidation support levels.`,
+            catalystWindow: minsAgo <= 60 ? "Immediate (Live Wire)" : "Intraday Catalyst",
+            timestampOffsetMinutes: minsAgo,
+          };
+        })
+        .filter((x): x is GoldNewsItem => x !== null);
 
-      setItems(() => {
-        const seen = new Set(mapped.map((m) => m.headline.toLowerCase()));
-        return [...mapped, ...GOLD_NEWS_ITEMS.filter((g) => !seen.has(g.headline.toLowerCase()))];
-      });
+      setItems(mapped);
+      setActiveItem((prev) => prev ?? mapped[0] ?? null);
       setLastUpdated(new Date());
-    } catch {
+    } catch (err) {
+      setFeedError(err instanceof Error ? err.message : "Live news catalyst wire unavailable");
       setLastUpdated(new Date());
+    } finally {
+      setIsLoading(false);
     }
   }, []);
 
@@ -365,17 +374,33 @@ export default function GoldPredictionFeed() {
 
       {filteredItems.length === 0 && (
         <div className="rounded-xl border border-line bg-ink-900/50 p-12 text-center">
-          <p className="text-sm text-muted">No news dossiers match your active filters or search terms.</p>
-          <button
-            onClick={() => {
-              setSelectedCategory("All");
-              setSelectedAction("All");
-              setSearchQuery("");
-            }}
-            className="mt-3 text-xs font-semibold text-gold-bright underline"
-          >
-            Reset Filters
-          </button>
+          {isLoading && items.length === 0 ? (
+            <p className="text-sm text-muted">Syncing live breaking news dossiers...</p>
+          ) : feedError && items.length === 0 ? (
+            <>
+              <p className="text-sm text-rose-300">Live news action feed temporarily unavailable ({feedError}).</p>
+              <button
+                onClick={() => void syncLiveWire()}
+                className="mt-3 text-xs font-semibold text-gold-bright underline"
+              >
+                Retry Live Sync
+              </button>
+            </>
+          ) : (
+            <>
+              <p className="text-sm text-muted">No news dossiers match your active filters or search terms.</p>
+              <button
+                onClick={() => {
+                  setSelectedCategory("All");
+                  setSelectedAction("All");
+                  setSearchQuery("");
+                }}
+                className="mt-3 text-xs font-semibold text-gold-bright underline"
+              >
+                Reset Filters
+              </button>
+            </>
+          )}
         </div>
       )}
     </div>

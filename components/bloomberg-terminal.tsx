@@ -3,7 +3,6 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { ASSETS, ASSET_BY_SYMBOL, metricsFor, type Asset } from "@/lib/market";
 import { useQuote } from "@/components/live-prices";
-import { GOLD_NEWS_ITEMS } from "@/lib/gold-news-100";
 import { Volume2, VolumeX, Keyboard } from "lucide-react";
 
 interface CandlePoint {
@@ -230,16 +229,7 @@ export default function BloombergTerminal() {
   }, []);
 
   const displayedNews = useMemo(() => {
-    if (wireHeadlines.length > 0) return wireHeadlines;
-    return GOLD_NEWS_ITEMS.slice(0, 12).map((n) => ({
-      id: n.id,
-      symbol: n.symbol,
-      headline: n.headline,
-      category: n.category,
-      source: n.source.split(" ")[0],
-      timeLabel: `${n.timestampOffsetMinutes}m ago`,
-      action: n.action,
-    }));
+    return wireHeadlines;
   }, [wireHeadlines]);
 
   // Real OHLCV curve with live last close
@@ -458,44 +448,50 @@ export default function BloombergTerminal() {
                   </div>
 
                   <div className="space-y-2 h-[340px] overflow-y-auto pr-1 text-xs font-mono">
-                    {displayedNews.map((news) => (
-                      <div
-                        key={news.id}
-                        onClick={() => {
-                          setSelectedNewsId(news.id);
-                          executeCommand(`${news.symbol} US Equity GIP <GO>`);
-                        }}
-                        className={`cursor-pointer rounded-lg p-2 border transition ${
-                          selectedNewsId === news.id
-                            ? "bg-[#d8ab5a]/10 border-[#d8ab5a]/50 text-[#f2efe8]"
-                            : "bg-[#050609] border-white/[0.06] hover:border-[#d8ab5a]/35"
-                        }`}
-                      >
-                        <div className="flex items-center justify-between text-[10px] text-stone-400">
-                          <span className="text-sky-300 font-bold">${news.symbol}</span>
-                          <span className="text-stone-500 font-mono">
-                            {news.timeLabel} · {news.source}
-                          </span>
-                        </div>
-                        <p className="mt-1 text-[#f2efe8] font-semibold text-[11px] leading-tight line-clamp-2">
-                          {news.headline}
-                        </p>
-                        <div className="mt-1.5 flex items-center justify-between text-[10px]">
-                          <span className="text-stone-400 text-[10px]">{news.category}</span>
-                          <span
-                            className={`rounded px-1.5 py-0.5 font-bold ${
-                              news.action === "BUY"
-                                ? "bg-emerald-500/15 text-emerald-400"
-                                : news.action === "TRIM" || news.action === "AVOID"
-                                ? "bg-rose-500/15 text-rose-400"
-                                : "bg-[#d8ab5a]/15 text-[#f0c979]"
-                            }`}
-                          >
-                            {news.action}
-                          </span>
-                        </div>
+                    {displayedNews.length === 0 ? (
+                      <div className="flex h-full items-center justify-center rounded-lg border border-white/[0.06] bg-[#050609] p-4 text-center text-xs text-stone-400">
+                        Syncing live institutional news wire...
                       </div>
-                    ))}
+                    ) : (
+                      displayedNews.map((news) => (
+                        <div
+                          key={news.id}
+                          onClick={() => {
+                            setSelectedNewsId(news.id);
+                            executeCommand(`${news.symbol} US Equity GIP <GO>`);
+                          }}
+                          className={`cursor-pointer rounded-lg p-2 border transition ${
+                            selectedNewsId === news.id
+                              ? "bg-[#d8ab5a]/10 border-[#d8ab5a]/50 text-[#f2efe8]"
+                              : "bg-[#050609] border-white/[0.06] hover:border-[#d8ab5a]/35"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between text-[10px] text-stone-400">
+                            <span className="text-sky-300 font-bold">${news.symbol}</span>
+                            <span className="text-stone-500 font-mono">
+                              {news.timeLabel} · {news.source}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-[#f2efe8] font-semibold text-[11px] leading-tight line-clamp-2">
+                            {news.headline}
+                          </p>
+                          <div className="mt-1.5 flex items-center justify-between text-[10px]">
+                            <span className="text-stone-400 text-[10px]">{news.category}</span>
+                            <span
+                              className={`rounded px-1.5 py-0.5 font-bold ${
+                                news.action === "BUY"
+                                  ? "bg-emerald-500/15 text-emerald-400"
+                                  : news.action === "TRIM" || news.action === "AVOID"
+                                  ? "bg-rose-500/15 text-rose-400"
+                                  : "bg-[#d8ab5a]/15 text-[#f0c979]"
+                              }`}
+                            >
+                              {news.action}
+                            </span>
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
 
                   <div className="border-t border-white/[0.07] pt-1.5 mt-2 flex items-center justify-between text-[10px] text-stone-400">
@@ -521,7 +517,7 @@ export default function BloombergTerminal() {
                               : "text-[#f2efe8]"
                           }`}
                         >
-                          ${livePrice.toFixed(livePrice < 1 ? 4 : 2)}
+                          {livePrice > 0 ? `$${livePrice.toFixed(livePrice < 1 ? 4 : 2)}` : "Syncing..."}
                         </span>
                         <span
                           className={`text-[11px] font-bold ${
@@ -762,8 +758,15 @@ export default function BloombergTerminal() {
                     </div>
 
                     <div className="border-t border-white/[0.07] pt-1 mt-1 flex items-center justify-between text-[9px] text-stone-400">
-                      <span>SPREAD: $0.04</span>
-                      <span className="text-[#f0c979]">TOTAL DEPTH: 48,200 SHARES</span>
+                      <span>
+                        SPREAD:{" "}
+                        {asks[0] && bids[0]
+                          ? `$${(asks[0].price - bids[0].price).toFixed(livePrice < 1 ? 4 : 2)}`
+                          : "—"}
+                      </span>
+                      <span className="text-[#f0c979]">
+                        TOTAL DEPTH: {((bids[bids.length - 1]?.total ?? 0) + (asks[asks.length - 1]?.total ?? 0)).toLocaleString()} SHARES
+                      </span>
                     </div>
                   </div>
 
@@ -786,7 +789,7 @@ export default function BloombergTerminal() {
                     </div>
 
                     <div className="border-t border-white/[0.07] pt-1 text-[9px] text-stone-400 text-center">
-                      PRINT RATE: 42 ORDERS/SEC
+                      TAPE FEED: {tape.length} LIVE PRINTS
                     </div>
                   </div>
                 </div>

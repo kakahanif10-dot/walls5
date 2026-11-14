@@ -26,7 +26,7 @@ interface CryptoFearGreedResponse {
   asOf: string;
   timeUntilUpdateSec: number | null;
   history: FearGreedPoint[];
-  stats: SentimentStats;
+  stats: SentimentStats | null;
   marketContext: {
     btcPrice: number | null;
     btcChange24h: number | null;
@@ -297,7 +297,9 @@ export function CryptoFearGreedView() {
                     <p className={`text-[11px] mt-0.5 ${muted}`}>
                       {data?.liveFeed
                         ? "Live Alternative.me Index (0 = Max Fear, 100 = Max Greed)"
-                        : "Quant Sentiment Baseline"}
+                        : loading
+                          ? "Syncing live Alternative.me Index..."
+                          : "Live Alternative.me F&G Offline"}
                     </p>
                   </div>
                   <span
@@ -306,16 +308,22 @@ export function CryptoFearGreedView() {
                     }`}
                     data-testid="sentiment-zone-badge"
                   >
-                    {stats ? currentMeta.zone : "Loading..."}
+                    {stats ? currentMeta.zone : loading ? "Loading..." : "Offline"}
                   </span>
                 </div>
 
                 <div className="py-1">
-                  <SentimentGaugeSvg
-                    value={stats ? currentScore : 50}
-                    accentHex={currentMeta.accentHex}
-                    isLight={isLight}
-                  />
+                  {stats ? (
+                    <SentimentGaugeSvg
+                      value={currentScore}
+                      accentHex={currentMeta.accentHex}
+                      isLight={isLight}
+                    />
+                  ) : (
+                    <div className={`flex h-40 items-center justify-center rounded-lg border text-xs font-mono ${subCard} ${muted}`}>
+                      {loading ? "Syncing Alternative.me F&G gauge..." : "Live Fear & Greed reading unavailable"}
+                    </div>
+                  )}
                 </div>
 
                 {/* Multi-Horizon Point Deltas */}
@@ -546,8 +554,21 @@ export function CryptoFearGreedView() {
                     </svg>
                   </div>
                 ) : (
-                  <div className={`h-52 flex items-center justify-center text-xs ${muted}`}>
-                    Loading historical sentiment series...
+                  <div className={`h-52 flex flex-col items-center justify-center gap-2 text-xs ${muted}`}>
+                    <span>
+                      {loading
+                        ? "Loading historical sentiment series..."
+                        : "Live Alternative.me sentiment history temporarily unavailable."}
+                    </span>
+                    {!loading && (
+                      <button
+                        type="button"
+                        onClick={load}
+                        className="rounded-lg border border-emerald-500/40 px-2.5 py-1 font-mono text-[11px] text-emerald-400 hover:bg-emerald-500/10"
+                      >
+                        Retry Live Feed
+                      </button>
+                    )}
                   </div>
                 )}
 

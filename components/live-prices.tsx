@@ -1,6 +1,7 @@
 "use client";
 
 import { createContext, useContext, useEffect, useMemo, useRef, useState } from "react";
+import { setMarketData, type FeedQuote, type RealTelemetry } from "@/lib/market";
 
 export type LiveSeedEntry = { price: number; change: number; vol: number };
 export type LiveSeed = Record<string, LiveSeedEntry>;
@@ -25,7 +26,8 @@ type FeedResponse = {
   source?: string;
   asOf?: string | null;
   delayed?: boolean;
-  quotes?: Record<string, { price: number; change: number; previousClose: number }>;
+  quotes?: Record<string, FeedQuote>;
+  telemetry?: Record<string, RealTelemetry>;
 };
 
 const QuoteContext = createContext<Record<string, Quote> | null>(null);
@@ -56,18 +58,34 @@ export default function LivePricesProvider({
 }) {
   const initial = useMemo(() => {
     const out: Record<string, Quote> = {};
+    const seedQuotes: Record<string, FeedQuote> = {};
+    const seedIso = new Date().toISOString();
     for (const [symbol, entry] of Object.entries(seed)) {
       const denominator = 1 + entry.change;
+      const open = entry.price / (denominator > 0 ? denominator : 1);
       out[symbol] = {
         price: entry.price,
-        open: entry.price / (denominator > 0 ? denominator : 1),
+        open,
         change: entry.change,
         dir: 0,
         tick: 0,
       };
+      if (entry.price > 0) {
+        seedQuotes[symbol] = {
+          price: entry.price,
+          previousClose: open,
+          change: entry.change,
+          delayed: false,
+          asOf: seedIso,
+          provider: source || "Live Market Seed",
+        };
+      }
+    }
+    if (Object.keys(seedQuotes).length > 0) {
+      setMarketData({}, seedQuotes);
     }
     return out;
-  }, [seed]);
+  }, [seed, source]);
 
   const [quotes, setQuotes] = useState<Record<string, Quote>>(initial);
   const [meta, setMeta] = useState<FeedMeta>({
@@ -93,6 +111,8 @@ export default function LivePricesProvider({
           setMeta((prev) => ({ ...prev, mode: "unavailable" }));
           return;
         }
+
+        setMarketData({}, data.quotes, data.telemetry);
 
         setMeta({
           mode: "live",

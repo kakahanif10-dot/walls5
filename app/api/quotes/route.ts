@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { ASSETS, ASSET_BY_SYMBOL, metricsFor } from "@/lib/market";
+import { ASSETS, type RealTelemetry } from "@/lib/market";
 import { ensureMarketData, type FeedQuote } from "@/lib/market-data";
 
 export const dynamic = "force-dynamic";
@@ -19,42 +19,22 @@ export async function GET(req: NextRequest) {
   const snap = await ensureMarketData(force);
   const timestampStr = new Date(snap.fetchedAt || Date.now()).toISOString();
 
-  const buildFallbackQuote = (sym: string): FeedQuote | null => {
-    const asset = ASSET_BY_SYMBOL[sym];
-    if (!asset) return null;
-    const m = metricsFor(asset);
-    const denom = 1 + m.change24h;
-    return {
-      price: m.last,
-      previousClose: denom > 0 ? m.last / denom : m.last,
-      change: m.change24h,
-      delayed: false,
-      provider: asset.kind === "stock" ? "NYSE/Nasdaq Live" : "Exchange Composite Live",
-      asOf: timestampStr,
-    };
-  };
+  const outputQuotes: Record<string, FeedQuote> = {};
+  const outputTelemetry: Record<string, RealTelemetry> = {};
 
-  let outputQuotes: Record<string, FeedQuote> = {};
+  const targetSymbols =
+    requestedSymbols && requestedSymbols.length > 0
+      ? requestedSymbols
+      : ASSETS.map((a) => a.symbol);
 
-  if (requestedSymbols && requestedSymbols.length > 0) {
-    for (const sym of requestedSymbols) {
-      const live = snap.quotes[sym];
-      if (live) {
-        outputQuotes[sym] = { ...live, delayed: false };
-      } else {
-        const fb = buildFallbackQuote(sym);
-        if (fb) outputQuotes[sym] = fb;
-      }
+  for (const sym of targetSymbols) {
+    const live = snap.quotes[sym];
+    if (live) {
+      outputQuotes[sym] = { ...live, delayed: false };
     }
-  } else {
-    for (const asset of ASSETS) {
-      const live = snap.quotes[asset.symbol];
-      if (live) {
-        outputQuotes[asset.symbol] = { ...live, delayed: false };
-      } else {
-        const fb = buildFallbackQuote(asset.symbol);
-        if (fb) outputQuotes[asset.symbol] = fb;
-      }
+    const tel = snap.telemetry[sym];
+    if (tel) {
+      outputTelemetry[sym] = tel;
     }
   }
 
@@ -63,12 +43,14 @@ export async function GET(req: NextRequest) {
       mode: "real-time",
       source: snap.sources.length
         ? snap.sources.join(" · ")
-        : "NYSE/Nasdaq Live · Binance · OKX · CoinGecko",
+        : "NYSE/Nasdaq Live · Binance · OKX · CoinGecko · DexScreener",
       asOf: timestampStr,
       delayed: false,
       totalAssetsCovered: Object.keys(outputQuotes).length,
       liveCovered: Object.keys(snap.quotes).length,
+      missingCount: snap.missing.length,
       quotes: outputQuotes,
+      telemetry: outputTelemetry,
     },
     {
       headers: {

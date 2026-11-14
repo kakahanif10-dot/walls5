@@ -55,8 +55,8 @@ export default function PrecisionQuantCalculator() {
   const [leverage, setLeverage] = useState<number>(5);
   const [atrMultiplier, setAtrMultiplier] = useState<number>(2.0);
   const [useAtrStop, setUseAtrStop] = useState<boolean>(true);
-  const [entryPriceUsd, setEntryPriceUsd] = useState<number>(138.4);
-  const [stopPriceUsd, setStopPriceUsd] = useState<number>(130.0);
+  const [entryPriceUsd, setEntryPriceUsd] = useState<number>(0);
+  const [stopPriceUsd, setStopPriceUsd] = useState<number>(0);
   const [targetRMultiple, setTargetRMultiple] = useState<number>(2.5);
   const [feeRateBps, setFeeRateBps] = useState<number>(5);
   const [holdingDays, setHoldingDays] = useState<number>(3);
@@ -70,12 +70,12 @@ export default function PrecisionQuantCalculator() {
 
   // Mode 3: DCA Ladder Builder Inputs
   const [dcaBudgetUsd, setDcaBudgetUsd] = useState<number>(15000);
-  const [dcaTopUsd, setDcaTopUsd] = useState<number>(138.4);
-  const [dcaBottomUsd, setDcaBottomUsd] = useState<number>(126.0);
+  const [dcaTopUsd, setDcaTopUsd] = useState<number>(0);
+  const [dcaBottomUsd, setDcaBottomUsd] = useState<number>(0);
   const [dcaTranches, setDcaTranches] = useState<number>(4);
   const [dcaScheme, setDcaScheme] = useState<WeightingScheme>("scale-down");
-  const [dcaTargetUsd, setDcaTargetUsd] = useState<number>(156.0);
-  const [dcaStopUsd, setDcaStopUsd] = useState<number>(120.0);
+  const [dcaTargetUsd, setDcaTargetUsd] = useState<number>(0);
+  const [dcaStopUsd, setDcaStopUsd] = useState<number>(0);
 
   const [copiedSummary, setCopiedSummary] = useState<boolean>(false);
 
@@ -277,7 +277,7 @@ export default function PrecisionQuantCalculator() {
               <span data-testid="feed-sources-label" className="font-mono text-[#10B981]">
                 {loadingFeed
                   ? "Syncing Binance / Yahoo / Frankfurter ECB..."
-                  : feed?.sources?.join(" + ") ?? "Exchange Composite Live"}
+                  : feed?.sources?.join(" + ") ?? (feedError ? "Live Feed Unavailable" : "Awaiting Live Feed")}
               </span>
             </div>
             <h2 className="mt-1 text-xl font-semibold tracking-tight sm:text-2xl">
@@ -447,8 +447,15 @@ export default function PrecisionQuantCalculator() {
         </div>
 
         {feedError && (
-          <div className="mt-3 rounded-lg border border-[#EF4444]/40 bg-[#EF4444]/10 px-3 py-2 text-xs text-[#EF4444]">
-            Live feed warning: {feedError} (using quantitative fallback telemetry)
+          <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-[#EF4444]/40 bg-[#EF4444]/10 px-3 py-2 text-xs text-[#EF4444]">
+            <span>Live market feed temporarily unavailable ({feedError}). No synthetic prices used.</span>
+            <button
+              type="button"
+              onClick={() => void fetchTelemetry(activeSymbol, true)}
+              className="rounded border border-[#EF4444]/40 px-2.5 py-0.5 font-mono text-[11px] font-semibold hover:bg-[#EF4444]/15"
+            >
+              Retry Live Sync
+            </button>
           </div>
         )}
       </div>

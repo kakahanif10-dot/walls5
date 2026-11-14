@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { ASSET_BY_SYMBOL, quoteFor } from "@/lib/market";
 import { ensureMarketData } from "@/lib/market-data";
 import type {
+  WSJEarningsEvent,
   WSJInsiderTrade,
   WSJMarketLeader,
   WSJSectorPerformance,
@@ -15,6 +16,7 @@ import type {
   PolymarketContract,
 } from "@/lib/neuberg-platform";
 import type { OpenBBMacroIndicator, OpenBBYieldPoint } from "@/lib/openbb-platform";
+import type { BISTAsset } from "@/lib/oraclex-platform";
 
 export const dynamic = "force-dynamic";
 
@@ -100,7 +102,7 @@ async function fetchTextSafe(url: string, init?: RequestInit, timeoutMs = 4000):
 type TvRow = { s: string; d: (string | number | null)[] };
 
 async function scanTradingView(
-  market: "america" | "global" | "cfd",
+  market: "america" | "global" | "cfd" | "turkey",
   body: Record<string, unknown>,
 ): Promise<TvRow[]> {
   const json = await fetchJsonSafe<{ data?: TvRow[] }>(
@@ -222,6 +224,58 @@ function rowToMarketLeader(row: TvRow): WSJMarketLeader {
   };
 }
 
+async function fetchNasdaqEarningsEvents(): Promise<WSJEarningsEvent[]> {
+  const now = new Date();
+  const day = now.getUTCDay();
+  const offsetDays = day === 6 ? 2 : day === 0 ? 1 : 0;
+  const target = new Date(now.getTime() + offsetDays * 86_400_000);
+  const dateStr = target.toISOString().slice(0, 10);
+
+  const json = await fetchJsonSafe<{
+    data?: {
+      rows?: Array<{
+        symbol?: string;
+        name?: string;
+        time?: string;
+        epsForecast?: string;
+        lastYearEPS?: string;
+        surprise?: string;
+      }>;
+    };
+  }>(`https://api.nasdaq.com/api/calendar/earnings?date=${dateStr}`, {
+    headers: { Accept: "application/json", "User-Agent": UA },
+  }, 4000);
+
+  const rows = json?.data?.rows ?? [];
+  return rows
+    .filter((r) => Boolean(r.symbol && r.name))
+    .slice(0, 12)
+    .map((r, i) => {
+      const sym = String(r.symbol ?? "").trim().toUpperCase();
+      const timeRaw = String(r.time ?? "").toLowerCase();
+      const timing: WSJEarningsEvent["timing"] =
+        timeRaw.includes("pre") || timeRaw.includes("before")
+          ? "Before Market Open (BMO)"
+          : "After Market Close (AMC)";
+      const surpriseRaw = String(r.surprise ?? "").trim();
+      const surpriseNum = toNum(surpriseRaw, 0);
+      const sentiment: WSJEarningsEvent["sentiment"] =
+        surpriseNum > 2 ? "Bullish Skew" : surpriseNum < -2 ? "Bearish Skew" : "Neutral Straddle";
+      return {
+        id: `nasdaq-ee-${dateStr}-${sym}-${i}`,
+        symbol: sym,
+        company: String(r.name ?? sym).trim(),
+        reportDate: dateStr,
+        timing,
+        consensusEPS: r.epsForecast && r.epsForecast !== "N/A" ? r.epsForecast : "—",
+        whisperEPS: r.lastYearEPS && r.lastYearEPS !== "N/A" ? `Prev ${r.lastYearEPS}` : "—",
+        impliedMove: "Live Session",
+        sentiment,
+        lastQuarterSurprise: surpriseRaw && surpriseRaw !== "N/A" ? `${surpriseRaw}%` : "—",
+      };
+    });
+}
+
 async function handleMarketCenter() {
   const cached = getCached<Record<string, unknown>>("market-center");
   if (cached) return NextResponse.json(cached);
@@ -243,7 +297,7 @@ async function handleMarketCenter() {
     "price_52_week_low",
   ];
 
-  const [activeRows, gainerRows, loserRows, sectorRows, secTrades] = await Promise.all([
+  const [activeRows, gainerRows, loserRows, sectorRows, secTrades, earningsEvents] = await Promise.all([
     scanTradingView("america", {
       filter: [
         { left: "exchange", operation: "in_range", right: ["NYSE", "NASDAQ"] },
@@ -282,6 +336,7 @@ async function handleMarketCenter() {
       columns: ["name", "close", "change", "Perf.W", "Perf.1M", "Perf.YTD", "price_earnings_ttm"],
     }),
     fetchSecForm4Trades(),
+    fetchNasdaqEarningsEvents(),
   ]);
 
   const sectorMap = new Map<string, (string | number | null)[]>();
@@ -300,19 +355,20 @@ async function handleMarketCenter() {
       changeYTD: Number(toNum(d?.[5]).toFixed(2)),
       leader: meta.leader,
       laggard: meta.laggard,
-      peAverage: Number(toNum(d?.[6], 21.5).toFixed(1)),
+      peAverage: Number(toNum(d?.[6], 0).toFixed(1)),
     };
   });
 
   const payload = {
     view: "market-center",
     asOf: new Date().toISOString(),
-    sources: ["NYSE/NASDAQ Real-Time Scanner", "SPDR Sector ETFs", "SEC EDGAR Form 4 Wire"],
+    sources: ["NYSE/NASDAQ Real-Time Scanner", "SPDR Sector ETFs", "SEC EDGAR Form 4 Wire", "Nasdaq Earnings Calendar"],
     mostActive: activeRows.map(rowToMarketLeader),
     topGainers: gainerRows.map(rowToMarketLeader),
     topLosers: loserRows.map(rowToMarketLeader),
     sectors,
     insiderTrades: secTrades,
+    earningsEvents,
   };
 
   setCached("market-center", payload, 15_000);
@@ -480,9 +536,14 @@ async function handleMacroPerps() {
   const [
     fngRes,
     tvGlobal,
+    tvPerpStocks,
     yieldResult,
     binancePrem,
     binance24h,
+    btcOiRes,
+    ethOiRes,
+    solOiRes,
+    hyperliquidMeta,
     polymarketRaw,
     liveNews,
     fxRes,
@@ -504,11 +565,19 @@ async function handleMacroPerps() {
           "COMEX:HG1!",
           "NYMEX:NG1!",
           "FX:EURUSD",
+          "TVC:US02Y",
           "TVC:US10Y",
         ],
         query: { types: [] },
       },
       columns: ["name", "close", "change", "change_abs", "SMA50", "SMA200"],
+    }),
+    scanTradingView("america", {
+      symbols: {
+        tickers: ["NASDAQ:NVDA", "NASDAQ:AAPL", "NASDAQ:TSLA"],
+        query: { types: [] },
+      },
+      columns: ["name", "close", "Value.Traded", "volume"],
     }),
     fetchTreasuryYieldCurve(),
     fetchJsonSafe<Array<{ symbol: string; markPrice: string; indexPrice: string; lastFundingRate: string }>>(
@@ -517,6 +586,19 @@ async function handleMacroPerps() {
     fetchJsonSafe<Array<{ symbol: string; quoteVolume: string }>>(
       "https://fapi.binance.com/fapi/v1/ticker/24hr",
     ),
+    fetchJsonSafe<{ openInterest: string }>("https://fapi.binance.com/fapi/v1/openInterest?symbol=BTCUSDT"),
+    fetchJsonSafe<{ openInterest: string }>("https://fapi.binance.com/fapi/v1/openInterest?symbol=ETHUSDT"),
+    fetchJsonSafe<{ openInterest: string }>("https://fapi.binance.com/fapi/v1/openInterest?symbol=SOLUSDT"),
+    fetchJsonSafe<
+      [
+        { universe?: Array<{ name: string }> },
+        Array<{ funding?: string; openInterest?: string; markPx?: string; oraclePx?: string; dayNtlVlm?: string }>,
+      ]
+    >("https://api.hyperliquid.xyz/info", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ type: "metaAndAssetCtxs" }),
+    }),
     fetchJsonSafe<
       Array<{
         id: string;
@@ -553,26 +635,35 @@ async function handleMacroPerps() {
   const copper = tvMap.get("COMEX:HG1!");
   const natgas = tvMap.get("NYMEX:NG1!");
   const eurUsd = tvMap.get("FX:EURUSD");
+  const us02yTv = tvMap.get("TVC:US02Y");
   const us10yTv = tvMap.get("TVC:US10Y");
 
-  const y2 = yieldResult.curve.find((p) => p.tenor === "2Y")?.rate ?? 4.1;
-  const y10 = yieldResult.curve.find((p) => p.tenor === "10Y")?.rate ?? us10yTv?.close ?? 4.3;
-  const spread10y2yBps = Math.round((y10 - y2) * 100);
+  const y2 = yieldResult.curve.find((p) => p.tenor === "2Y")?.rate ?? us02yTv?.close ?? null;
+  const y10 = yieldResult.curve.find((p) => p.tenor === "10Y")?.rate ?? us10yTv?.close ?? null;
+  const y10Prev =
+    yieldResult.curve.find((p) => p.tenor === "10Y")?.previousRate ??
+    (y10 !== null && us10yTv ? y10 - us10yTv.abs : y10);
+  const spread10y2yBps = y10 !== null && y2 !== null ? Math.round((y10 - y2) * 100) : null;
 
-  // Fear & Greed composite computed from live VIX, SPX vs SMA200/SMA50, and Alternative.me F&G
+  const vixVal = vix && vix.close > 0 ? vix.close : null;
+  const vixScore = vixVal !== null ? Math.max(5, Math.min(95, Math.round(100 - (vixVal - 11) * 3.1))) : null;
+  const spxMomScore =
+    spx && spx.sma200 > 0
+      ? Math.max(10, Math.min(95, Math.round(50 + ((spx.close - spx.sma200) / spx.sma200) * 350)))
+      : null;
+
   const fngEntries = fngRes?.data ?? [];
-  const fngNow = fngEntries[0] ? Number(fngEntries[0].value) : 52;
+  const hasLiveFng = fngEntries.length > 0 && Number.isFinite(Number(fngEntries[0]?.value));
+  const fngNow = hasLiveFng
+    ? Number(fngEntries[0].value)
+    : Math.round(((vixScore ?? 50) + (spxMomScore ?? 50)) / 2);
   const fngPrev = fngEntries[1] ? Number(fngEntries[1].value) : fngNow;
   const fngWeek = fngEntries[7] ? Number(fngEntries[7].value) : fngNow;
   const fngMonth = fngEntries[30] ? Number(fngEntries[30].value) : fngNow;
 
-  const vixVal = vix?.close ?? 18;
-  const vixScore = Math.max(5, Math.min(95, Math.round(100 - (vixVal - 11) * 3.1)));
-  const spxMomScore =
-    spx && spx.sma200 > 0
-      ? Math.max(10, Math.min(95, Math.round(50 + ((spx.close - spx.sma200) / spx.sma200) * 350)))
-      : fngNow;
-  const compositeScore = Math.round((fngNow * 0.4 + vixScore * 0.3 + spxMomScore * 0.3));
+  const effectiveVixScore = vixScore ?? fngNow;
+  const effectiveSpxScore = spxMomScore ?? fngNow;
+  const compositeScore = Math.round(fngNow * 0.4 + effectiveVixScore * 0.3 + effectiveSpxScore * 0.3);
   const rating: FearAndGreedData["rating"] =
     compositeScore <= 24
       ? "Extreme Fear"
@@ -587,35 +678,40 @@ async function handleMacroPerps() {
   const fearGreed: FearAndGreedData = {
     score: compositeScore,
     rating,
-    previousClose: Math.round((fngPrev * 0.4 + vixScore * 0.3 + spxMomScore * 0.3)),
-    oneWeekAgo: Math.round((fngWeek * 0.4 + vixScore * 0.3 + spxMomScore * 0.3)),
-    oneMonthAgo: Math.round((fngMonth * 0.4 + vixScore * 0.3 + spxMomScore * 0.3)),
+    previousClose: Math.round(fngPrev * 0.4 + effectiveVixScore * 0.3 + effectiveSpxScore * 0.3),
+    oneWeekAgo: Math.round(fngWeek * 0.4 + effectiveVixScore * 0.3 + effectiveSpxScore * 0.3),
+    oneMonthAgo: Math.round(fngMonth * 0.4 + effectiveVixScore * 0.3 + effectiveSpxScore * 0.3),
     factors: [
       {
-        name: `Crypto Sentiment (Alternative.me: ${fngNow}/100)`,
+        name: hasLiveFng
+          ? `Crypto Sentiment (Alternative.me: ${fngNow}/100)`
+          : "Live VIX & S&P Breadth Sentiment",
         score: fngNow,
         status: fngEntries[0]?.value_classification ?? rating,
       },
       {
-        name: `Market Volatility (CBOE VIX ${vixVal.toFixed(2)})`,
-        score: vixScore,
-        status: vixScore >= 55 ? "Greed" : vixScore >= 45 ? "Neutral" : "Fear",
+        name: `Market Volatility (CBOE VIX ${vixVal !== null ? vixVal.toFixed(2) : "—"})`,
+        score: effectiveVixScore,
+        status: effectiveVixScore >= 55 ? "Greed" : effectiveVixScore >= 45 ? "Neutral" : "Fear",
       },
       {
-        name: `S&P 500 vs 200-SMA (${spx?.close ? spx.close.toFixed(0) : "Live"})`,
-        score: spxMomScore,
-        status: spxMomScore >= 55 ? "Greed" : spxMomScore >= 45 ? "Neutral" : "Fear",
+        name: `S&P 500 vs 200-SMA (${spx?.close ? spx.close.toFixed(0) : "—"})`,
+        score: effectiveSpxScore,
+        status: effectiveSpxScore >= 55 ? "Greed" : effectiveSpxScore >= 45 ? "Neutral" : "Fear",
       },
       {
-        name: `10Y-2Y Curve Slope (${spread10y2yBps >= 0 ? "+" : ""}${spread10y2yBps} bps)`,
-        score: Math.max(15, Math.min(90, 50 + Math.round(spread10y2yBps * 0.4))),
-        status: spread10y2yBps >= 0 ? "Normalizing" : "Inverted",
+        name: `10Y-2Y Curve Slope (${spread10y2yBps !== null ? `${spread10y2yBps >= 0 ? "+" : ""}${spread10y2yBps} bps` : "—"})`,
+        score:
+          spread10y2yBps !== null
+            ? Math.max(15, Math.min(90, 50 + Math.round(spread10y2yBps * 0.4)))
+            : 50,
+        status: spread10y2yBps === null ? "Pending" : spread10y2yBps >= 0 ? "Normalizing" : "Inverted",
       },
     ],
   };
 
-  const growthScore = spx && spx.sma50 > 0 ? Math.max(-80, Math.min(80, Math.round(((spx.close - spx.sma50) / spx.sma50) * 600))) : 25;
-  const inflationScore = Math.max(-50, Math.min(80, Math.round((y10 - 3.6) * 35)));
+  const growthScore = spx && spx.sma50 > 0 ? Math.max(-80, Math.min(80, Math.round(((spx.close - spx.sma50) / spx.sma50) * 600))) : 0;
+  const inflationScore = y10 !== null ? Math.max(-50, Math.min(80, Math.round((y10 - 3.6) * 35))) : 0;
   const currentRegime: MacroRegimeQuadrant["currentRegime"] =
     growthScore >= 0 && inflationScore >= 0
       ? "Reflation"
@@ -635,44 +731,101 @@ async function handleMacroPerps() {
         : currentRegime === "Goldilocks"
           ? ["Growth Equities & AI Leaders", "High-Beta Digital Assets", "Investment Grade Duration"]
           : ["Short-Term Treasuries (T-Bills)", "Physical Gold & Hard Assets", "Defensive Staples & Healthcare"],
-    historicalTransition: `Derived live from S&P 500 50-SMA trend (${growthScore >= 0 ? "+" : ""}${growthScore}), US 10Y Treasury yield (${y10.toFixed(2)}%), and VIX volatility (${vixVal.toFixed(2)}).`,
+    historicalTransition: `Derived live from S&P 500 50-SMA trend (${growthScore >= 0 ? "+" : ""}${growthScore}), US 10Y Treasury yield (${y10 !== null ? `${y10.toFixed(2)}%` : "—"}), and VIX volatility (${vixVal !== null ? vixVal.toFixed(2) : "—"}).`,
   };
 
   const premMap = new Map((binancePrem ?? []).map((p) => [p.symbol, p]));
   const volMap = new Map((binance24h ?? []).map((p) => [p.symbol, toNum(p.quoteVolume)]));
+  const oiUnitsMap = new Map<string, number>([
+    ["BTC", toNum(btcOiRes?.openInterest)],
+    ["ETH", toNum(ethOiRes?.openInterest)],
+    ["SOL", toNum(solOiRes?.openInterest)],
+  ]);
+
+  // Index Hyperliquid live perp contexts
+  const hlMap = new Map<string, { fundingHourlyPct: number; oiUsd: number; volUsd: number; markPx: number; oraclePx: number }>();
+  if (Array.isArray(hyperliquidMeta) && hyperliquidMeta.length >= 2) {
+    const universe = hyperliquidMeta[0]?.universe ?? [];
+    const ctxs = hyperliquidMeta[1] ?? [];
+    for (let i = 0; i < Math.min(universe.length, ctxs.length); i++) {
+      const sym = universe[i]?.name?.toUpperCase();
+      const ctx = ctxs[i];
+      if (!sym || !ctx) continue;
+      const markPx = toNum(ctx.markPx);
+      const oraclePx = toNum(ctx.oraclePx, markPx);
+      const oiContracts = toNum(ctx.openInterest);
+      const volUsd = toNum(ctx.dayNtlVlm);
+      const fundingHourlyPct = toNum(ctx.funding) * 100;
+      hlMap.set(sym, {
+        fundingHourlyPct,
+        oiUsd: oiContracts * markPx,
+        volUsd,
+        markPx,
+        oraclePx,
+      });
+    }
+  }
+
+  const stockTvVolMap = new Map<string, { close: number; valTraded: number }>();
+  for (const r of tvPerpStocks) {
+    const sym = String(r.d?.[0] ?? "").toUpperCase();
+    const close = toNum(r.d?.[1]);
+    const valTraded = toNum(r.d?.[2]) || close * toNum(r.d?.[3]);
+    if (sym) stockTvVolMap.set(sym, { close, valTraded });
+  }
 
   const stockPerps: PerpetualContract[] = (["NVDA", "AAPL", "TSLA"] as const).map((sym) => {
     const q = quoteFor(sym);
-    const price = q?.price ?? 0;
+    const tvInfo = stockTvVolMap.get(sym);
+    const hl = hlMap.get(sym);
+    const price = hl?.markPx && hl.markPx > 0 ? hl.markPx : (q?.price && q.price > 0 ? q.price : (tvInfo?.close ?? 0));
+    const volUsdB = hl?.volUsd
+      ? Number((hl.volUsd / 1e9).toFixed(2))
+      : tvInfo && tvInfo.valTraded > 0
+        ? Number((tvInfo.valTraded / 1e9).toFixed(2))
+        : null;
     return {
       symbol: `${sym}-PERP`,
       underlying: `${ASSET_BY_SYMBOL[sym]?.name ?? sym} (Live Spot)`,
       type: "Stock Perp",
       markPrice: price,
-      indexPrice: price,
-      fundingRateHourlyPct: 0.0012,
-      openInterestBillion: sym === "TSLA" ? 1.95 : sym === "NVDA" ? 1.45 : 0.88,
-      volume24hBillion: sym === "TSLA" ? 5.42 : sym === "NVDA" ? 3.82 : 2.15,
+      indexPrice: hl?.oraclePx && hl.oraclePx > 0 ? hl.oraclePx : price,
+      fundingRateHourlyPct: hl ? Number(hl.fundingHourlyPct.toFixed(5)) : null,
+      openInterestBillion: hl && hl.oiUsd > 0 ? Number((hl.oiUsd / 1e9).toFixed(2)) : null,
+      volume24hBillion: volUsdB,
       maxLeverage: 10,
     };
   });
 
   const cryptoPerps: PerpetualContract[] = (["BTC", "SOL", "ETH"] as const).map((sym) => {
     const prem = premMap.get(`${sym}USDT`);
+    const hl = hlMap.get(sym);
     const q = quoteFor(sym);
-    const mark = prem ? toNum(prem.markPrice, q?.price ?? 0) : (q?.price ?? 0);
-    const index = prem ? toNum(prem.indexPrice, mark) : mark;
-    const hourlyPct = prem ? (toNum(prem.lastFundingRate) / 8) * 100 : 0.0012;
-    const volUsdB = (volMap.get(`${sym}USDT`) ?? 0) / 1e9;
+    const mark = prem ? toNum(prem.markPrice, q?.price ?? 0) : (hl?.markPx || q?.price || 0);
+    const index = prem ? toNum(prem.indexPrice, mark) : (hl?.oraclePx || mark);
+    const hourlyPct = prem
+      ? Number(((toNum(prem.lastFundingRate) / 8) * 100).toFixed(5))
+      : hl
+        ? Number(hl.fundingHourlyPct.toFixed(5))
+        : null;
+    const binanceVolUsd = volMap.get(`${sym}USDT`) ?? 0;
+    const volUsdB = binanceVolUsd > 0 ? binanceVolUsd / 1e9 : hl ? hl.volUsd / 1e9 : 0;
+    const binanceOiUnits = oiUnitsMap.get(sym) ?? 0;
+    const oiUsdB =
+      binanceOiUnits > 0 && mark > 0
+        ? Number(((binanceOiUnits * mark) / 1e9).toFixed(2))
+        : hl && hl.oiUsd > 0
+          ? Number((hl.oiUsd / 1e9).toFixed(2))
+          : null;
     return {
       symbol: `${sym}-PERP`,
       underlying: `${ASSET_BY_SYMBOL[sym]?.name ?? sym} Perpetual`,
       type: "Crypto Perp",
       markPrice: mark,
       indexPrice: index,
-      fundingRateHourlyPct: Number(hourlyPct.toFixed(5)),
-      openInterestBillion: sym === "BTC" ? 6.25 : sym === "ETH" ? 3.1 : 1.82,
-      volume24hBillion: Number(volUsdB.toFixed(2)),
+      fundingRateHourlyPct: hourlyPct,
+      openInterestBillion: oiUsdB,
+      volume24hBillion: volUsdB > 0 ? Number(volUsdB.toFixed(2)) : null,
       maxLeverage: 20,
     };
   });
@@ -704,7 +857,7 @@ async function handleMacroPerps() {
         id: `poly-${m.id}`,
         question: m.question,
         category,
-        volumeUsd: Math.round(m.volume24hr ?? m.volumeNum ?? 1_000_000),
+        volumeUsd: Math.round(m.volume24hr ?? m.volumeNum ?? 0),
         yesBid: Number(Math.max(0.01, mid - 0.01).toFixed(2)),
         yesAsk: Number(Math.min(0.99, mid + 0.01).toFixed(2)),
         probabilityYesPct: clamped,
@@ -729,22 +882,30 @@ async function handleMacroPerps() {
   ].filter((c) => c.price > 0);
 
   const macroIndicators: OpenBBMacroIndicator[] = [
-    {
-      metric: "US 10Y Treasury Yield",
-      current: `${y10.toFixed(2)}%`,
-      previous: `${(yieldResult.curve.find((p) => p.tenor === "10Y")?.previousRate ?? y10).toFixed(2)}%`,
-      change: `${Math.round((y10 - (yieldResult.curve.find((p) => p.tenor === "10Y")?.previousRate ?? y10)) * 100)} bps`,
-      impact: y10 <= 4.35 ? "Bullish" : "Neutral",
-      updated: yieldResult.source,
-    },
-    {
-      metric: "10Y - 2Y Treasury Spread",
-      current: `${spread10y2yBps >= 0 ? "+" : ""}${spread10y2yBps} bps`,
-      previous: `${y2.toFixed(2)}% (2Y) / ${y10.toFixed(2)}% (10Y)`,
-      change: spread10y2yBps >= 0 ? "Positive Slope" : "Inverted",
-      impact: spread10y2yBps >= 0 ? "Bullish" : "Bearish",
-      updated: yieldResult.source,
-    },
+    ...(y10 !== null && y10Prev !== null
+      ? [
+          {
+            metric: "US 10Y Treasury Yield",
+            current: `${y10.toFixed(2)}%`,
+            previous: `${y10Prev.toFixed(2)}%`,
+            change: `${Math.round((y10 - y10Prev) * 100)} bps`,
+            impact: (y10 <= y10Prev ? "Bullish" : "Neutral") as OpenBBMacroIndicator["impact"],
+            updated: yieldResult.source,
+          },
+        ]
+      : []),
+    ...(y10 !== null && y2 !== null && spread10y2yBps !== null
+      ? [
+          {
+            metric: "10Y - 2Y Treasury Spread",
+            current: `${spread10y2yBps >= 0 ? "+" : ""}${spread10y2yBps} bps`,
+            previous: `${y2.toFixed(2)}% (2Y) / ${y10.toFixed(2)}% (10Y)`,
+            change: spread10y2yBps >= 0 ? "Positive Slope" : "Inverted",
+            impact: (spread10y2yBps >= 0 ? "Bullish" : "Bearish") as OpenBBMacroIndicator["impact"],
+            updated: yieldResult.source,
+          },
+        ]
+      : []),
     {
       metric: "US Dollar Index (DXY)",
       current: dxy?.close ? dxy.close.toFixed(2) : "—",
@@ -753,14 +914,18 @@ async function handleMacroPerps() {
       impact: (dxy?.change ?? 0) <= 0 ? "Bullish" : "Neutral",
       updated: "ICE DXY Real-Time",
     },
-    {
-      metric: "CBOE Volatility Index (VIX)",
-      current: vixVal.toFixed(2),
-      previous: vix ? (vix.close - vix.abs).toFixed(2) : vixVal.toFixed(2),
-      change: vix ? `${vix.change >= 0 ? "+" : ""}${vix.change.toFixed(2)}%` : "0.00%",
-      impact: vixVal < 20 ? "Bullish" : vixVal < 28 ? "Neutral" : "Bearish",
-      updated: "CBOE VIX Live",
-    },
+    ...(vixVal !== null
+      ? [
+          {
+            metric: "CBOE Volatility Index (VIX)",
+            current: vixVal.toFixed(2),
+            previous: vix ? (vix.close - vix.abs).toFixed(2) : vixVal.toFixed(2),
+            change: vix ? `${vix.change >= 0 ? "+" : ""}${vix.change.toFixed(2)}%` : "0.00%",
+            impact: (vixVal < 20 ? "Bullish" : vixVal < 28 ? "Neutral" : "Bearish") as OpenBBMacroIndicator["impact"],
+            updated: "CBOE VIX Live",
+          },
+        ]
+      : []),
     {
       metric: "S&P 500 Benchmark (SPX)",
       current: spx?.close ? spx.close.toLocaleString("en-US", { maximumFractionDigits: 2 }) : "—",
@@ -779,56 +944,56 @@ async function handleMacroPerps() {
       sym: "SPX",
       name: "S&P 500 IDX",
       px: spx?.close ? spx.close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—",
-      chg: `${(spx?.change ?? 0) >= 0 ? "+" : ""}${(spx?.change ?? 0).toFixed(2)}%`,
+      chg: spx ? `${spx.change >= 0 ? "+" : ""}${spx.change.toFixed(2)}%` : "—",
       up: (spx?.change ?? 0) >= 0,
     },
     {
       sym: "IXIC",
       name: "NASDAQ COMP",
       px: ixic?.close ? ixic.close.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : "—",
-      chg: `${(ixic?.change ?? 0) >= 0 ? "+" : ""}${(ixic?.change ?? 0).toFixed(2)}%`,
+      chg: ixic ? `${ixic.change >= 0 ? "+" : ""}${ixic.change.toFixed(2)}%` : "—",
       up: (ixic?.change ?? 0) >= 0,
     },
     {
       sym: "TNX",
       name: "10Y YIELD",
-      px: `${y10.toFixed(2)}%`,
-      chg: `${(us10yTv?.change ?? 0) >= 0 ? "+" : ""}${(us10yTv?.change ?? 0).toFixed(2)}%`,
+      px: y10 !== null ? `${y10.toFixed(2)}%` : "—",
+      chg: us10yTv ? `${us10yTv.change >= 0 ? "+" : ""}${us10yTv.change.toFixed(2)}%` : "—",
       up: (us10yTv?.change ?? 0) >= 0,
     },
     {
       sym: "BTC",
       name: "BITCOIN",
       px: btcLive?.price ? `$${btcLive.price.toLocaleString("en-US", { maximumFractionDigits: 0 })}` : "—",
-      chg: `${(btcLive?.change ?? 0) >= 0 ? "+" : ""}${((btcLive?.change ?? 0) * 100).toFixed(2)}%`,
+      chg: btcLive ? `${btcLive.change >= 0 ? "+" : ""}${(btcLive.change * 100).toFixed(2)}%` : "—",
       up: (btcLive?.change ?? 0) >= 0,
     },
     {
       sym: "XAU",
       name: "GOLD BULLION",
       px: goldPrice > 0 ? `$${goldPrice.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}` : "—",
-      chg: `${(gold?.change ?? 0) >= 0 ? "+" : ""}${(gold?.change ?? 0).toFixed(2)}%`,
+      chg: gold ? `${gold.change >= 0 ? "+" : ""}${gold.change.toFixed(2)}%` : "—",
       up: (gold?.change ?? 0) >= 0,
     },
     {
       sym: "WTI",
       name: "WTI CRUDE",
       px: wtiPrice > 0 ? `$${wtiPrice.toFixed(2)}` : "—",
-      chg: `${(wti?.change ?? 0) >= 0 ? "+" : ""}${(wti?.change ?? 0).toFixed(2)}%`,
+      chg: wti ? `${wti.change >= 0 ? "+" : ""}${wti.change.toFixed(2)}%` : "—",
       up: (wti?.change ?? 0) >= 0,
     },
     {
       sym: "EUR",
       name: "EUR/USD",
       px: eurRate > 0 ? eurRate.toFixed(4) : "—",
-      chg: `${(eurUsd?.change ?? 0) >= 0 ? "+" : ""}${(eurUsd?.change ?? 0).toFixed(2)}%`,
+      chg: eurUsd ? `${eurUsd.change >= 0 ? "+" : ""}${eurUsd.change.toFixed(2)}%` : "—",
       up: (eurUsd?.change ?? 0) >= 0,
     },
     {
       sym: "DXY",
       name: "DOLLAR INDEX",
       px: dxy?.close ? dxy.close.toFixed(2) : "—",
-      chg: `${(dxy?.change ?? 0) >= 0 ? "+" : ""}${(dxy?.change ?? 0).toFixed(2)}%`,
+      chg: dxy ? `${dxy.change >= 0 ? "+" : ""}${dxy.change.toFixed(2)}%` : "—",
       up: (dxy?.change ?? 0) >= 0,
     },
   ];
@@ -839,8 +1004,8 @@ async function handleMacroPerps() {
     sources: [
       "TradingView Global Macro",
       yieldResult.source,
-      "Binance Perpetuals",
-      "Alternative.me F&G",
+      "Binance & Hyperliquid Perpetuals",
+      hasLiveFng ? "Alternative.me F&G" : "CBOE VIX & SPX Breadth",
       "Polymarket Gamma API",
     ],
     fearGreed,
@@ -858,10 +1023,211 @@ async function handleMacroPerps() {
   return NextResponse.json(payload);
 }
 
+function computeUtcSessionStatus(
+  openUtc: string,
+  closeUtc: string,
+  is247: boolean,
+  isFx245: boolean,
+  now = new Date(),
+): "OPEN" | "PRE-MARKET" | "AFTER-HOURS" | "CLOSED" {
+  const day = now.getUTCDay(); // 0 Sun .. 6 Sat
+  const mins = now.getUTCHours() * 60 + now.getUTCMinutes();
+
+  if (is247) return "OPEN";
+  if (isFx245) {
+    if (day === 6) return "CLOSED";
+    if (day === 0 && mins < 22 * 60) return "CLOSED";
+    if (day === 5 && mins >= 22 * 60) return "CLOSED";
+    return "OPEN";
+  }
+  if (day === 0 || day === 6) return "CLOSED";
+
+  const [oh, om] = openUtc.split(":").map(Number);
+  const [ch, cm] = closeUtc.split(":").map(Number);
+  const openMins = oh * 60 + om;
+  const closeMins = ch * 60 + cm;
+
+  if (mins >= openMins && mins < closeMins) return "OPEN";
+  if (mins >= openMins - 120 && mins < openMins) return "PRE-MARKET";
+  if (mins >= closeMins && mins < closeMins + 120) return "AFTER-HOURS";
+  return "CLOSED";
+}
+
+async function handleBistEquities() {
+  const cached = getCached<Record<string, unknown>>("bist");
+  if (cached) return NextResponse.json(cached);
+
+  const tickers = ["BIST:THYAO", "BIST:GARAN", "BIST:ASELS", "BIST:EREGL", "BIST:KCHOL", "BIST:BIMAS"];
+  const disclosures: Record<string, string> = {
+    THYAO: "KAP Live Feed · Borsa İstanbul Star Market Aerospace & Aviation",
+    GARAN: "KAP Live Feed · Borsa İstanbul Banking & Financial Services",
+    ASELS: "KAP Live Feed · Borsa İstanbul Defense Electronics",
+    EREGL: "KAP Live Feed · Borsa İstanbul Integrated Steel & Metals",
+    KCHOL: "KAP Live Feed · Borsa İstanbul Industrial Conglomerate",
+    BIMAS: "KAP Live Feed · Borsa İstanbul Consumer Retail",
+  };
+
+  const rows = await scanTradingView("turkey", {
+    symbols: { tickers, query: { types: [] } },
+    columns: ["name", "description", "close", "change", "price_earnings_ttm", "dividends_yield"],
+  });
+
+  const bistEquities: BISTAsset[] = rows
+    .map((r) => {
+      const sym = String(r.d?.[0] ?? "").toUpperCase();
+      const priceTRY = toNum(r.d?.[2]);
+      if (!sym || priceTRY <= 0) return null;
+      return {
+        symbol: sym,
+        name: String(r.d?.[1] ?? sym),
+        priceTRY: Number(priceTRY.toFixed(2)),
+        change24hPct: Number(toNum(r.d?.[3]).toFixed(2)),
+        peRatio: Number(toNum(r.d?.[4]).toFixed(1)),
+        dividendYieldPct: Number(toNum(r.d?.[5]).toFixed(2)),
+        kapLastDisclosure: disclosures[sym] ?? "KAP Live Disclosure Stream",
+      };
+    })
+    .filter((item): item is BISTAsset => item !== null);
+
+  const payload = {
+    view: "bist",
+    asOf: new Date().toISOString(),
+    sources: ["TradingView BIST Scanner"],
+    bistEquities,
+  };
+  setCached("bist", payload, 15_000);
+  return NextResponse.json(payload);
+}
+
+async function handleOpenStockMarkets() {
+  const cached = getCached<Record<string, unknown>>("openstock-markets");
+  if (cached) return NextResponse.json(cached);
+
+  const tickers = [
+    "SP:SPX",
+    "NSE:NIFTY",
+    "XETR:DAX",
+    "TSX:TSX",
+    "ASX:XJO",
+    "TADAWUL:TASI",
+    "GPW:WIG20",
+    "TVC:DXY",
+    "TVC:DJI",
+    "TVC:UKX",
+    "TVC:SMI",
+    "BIST:XU100",
+    "DFM:DFMGI",
+    "TVC:NI225",
+    "HSI:HSI",
+    "FTSE:STI",
+  ];
+
+  const [tvRows, cgGlobal] = await Promise.all([
+    scanTradingView("global", {
+      symbols: { tickers, query: { types: [] } },
+      columns: ["name", "close", "change"],
+    }),
+    fetchJsonSafe<{
+      data?: {
+        total_market_cap?: { usd?: number };
+        market_cap_change_percentage_24h_usd?: number;
+      };
+    }>("https://api.coingecko.com/api/v3/global"),
+  ]);
+
+  const tvBySym = new Map<string, { close: number; change: number }>();
+  for (const r of tvRows) {
+    const close = toNum(r.d?.[1]);
+    const change = toNum(r.d?.[2]);
+    if (close > 0) tvBySym.set(r.s, { close, change });
+  }
+
+  const now = new Date();
+  const regionConfigs = [
+    { id: "us", tv: "SP:SPX", open: "13:30", close: "20:00" },
+    { id: "in", tv: "NSE:NIFTY", open: "03:45", close: "10:00" },
+    { id: "de", tv: "XETR:DAX", open: "07:00", close: "15:30" },
+    { id: "ca", tv: "TSX:TSX", open: "13:30", close: "20:00" },
+    { id: "au", tv: "ASX:XJO", open: "00:00", close: "06:00" },
+    { id: "sa", tv: "TADAWUL:TASI", open: "07:00", close: "12:00" },
+    { id: "pl", tv: "GPW:WIG20", open: "07:00", close: "15:00" },
+    { id: "crypto", tv: "", open: "00:00", close: "24:00", is247: true },
+    { id: "forex", tv: "TVC:DXY", open: "22:00", close: "22:00", isFx245: true },
+  ];
+
+  const markets = regionConfigs.map((cfg) => {
+    const status = computeUtcSessionStatus(cfg.open, cfg.close, Boolean(cfg.is247), Boolean(cfg.isFx245), now);
+    if (cfg.id === "crypto") {
+      const mcapUsd = cgGlobal?.data?.total_market_cap?.usd ?? 0;
+      const mcapB = mcapUsd > 0 ? Number((mcapUsd / 1e9).toFixed(1)) : 0;
+      const chg = cgGlobal?.data?.market_cap_change_percentage_24h_usd ?? 0;
+      return {
+        id: cfg.id,
+        indexValue: mcapB,
+        indexChangePct: Number(chg.toFixed(2)),
+        status,
+      };
+    }
+    const hit = tvBySym.get(cfg.tv);
+    return {
+      id: cfg.id,
+      indexValue: hit ? Number(hit.close.toFixed(2)) : 0,
+      indexChangePct: hit ? Number(hit.change.toFixed(2)) : 0,
+      status,
+    };
+  });
+
+  const mapHubConfigs = [
+    { id: "nyse-nasdaq", tv: "TVC:DJI", open: "13:30", close: "20:00", ticker: "DOW" },
+    { id: "cme-chicago", tv: "SP:SPX", open: "23:00", close: "22:00", isFx245: true, ticker: "ES1!" },
+    { id: "lse-london", tv: "TVC:UKX", open: "07:00", close: "15:30", ticker: "UKX" },
+    { id: "frankfurt-deutsche-boerse", tv: "XETR:DAX", open: "07:00", close: "15:30", ticker: "DAX" },
+    { id: "six-swiss", tv: "TVC:SMI", open: "07:00", close: "15:30", ticker: "SMI" },
+    { id: "borsa-istanbul", tv: "BIST:XU100", open: "06:40", close: "15:10", ticker: "XU100" },
+    { id: "dubai-dfm", tv: "DFM:DFMGI", open: "06:00", close: "10:45", ticker: "DFMGI" },
+    { id: "tokyo-tse", tv: "TVC:NI225", open: "00:00", close: "06:00", ticker: "NI225" },
+    { id: "hong-kong-hkex", tv: "HSI:HSI", open: "01:30", close: "08:00", ticker: "HSI" },
+    { id: "singapore-sgx", tv: "FTSE:STI", open: "01:00", close: "09:00", ticker: "STI" },
+    { id: "sydney-asx", tv: "ASX:XJO", open: "00:00", close: "06:00", ticker: "XJO" },
+  ];
+
+  const tradingCenters = mapHubConfigs.map((hub) => {
+    const hit = tvBySym.get(hub.tv);
+    const status = computeUtcSessionStatus(hub.open, hub.close, false, Boolean(hub.isFx245), now);
+    const chg = hit ? hit.change : null;
+    return {
+      id: hub.id,
+      status,
+      indexValue: hit ? hit.close : null,
+      indexChange:
+        chg !== null
+          ? `${hub.ticker} ${chg >= 0 ? "+" : ""}${chg.toFixed(2)}%`
+          : `${hub.ticker} Live Offline`,
+      isPositive: (chg ?? 0) >= 0,
+    };
+  });
+
+  const payload = {
+    view: "openstock-markets",
+    asOf: now.toISOString(),
+    sources: ["TradingView Global Indices", "CoinGecko Global", "UTC Exchange Session Clock"],
+    markets,
+    tradingCenters,
+  };
+  setCached("openstock-markets", payload, 15_000);
+  return NextResponse.json(payload);
+}
+
 export async function GET(req: NextRequest) {
   const view = req.nextUrl.searchParams.get("view") ?? "market-center";
   if (view === "macro-perps") {
     return handleMacroPerps();
+  }
+  if (view === "bist") {
+    return handleBistEquities();
+  }
+  if (view === "openstock-markets") {
+    return handleOpenStockMarkets();
   }
   return handleMarketCenter();
 }

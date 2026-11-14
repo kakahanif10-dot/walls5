@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import {
   Activity,
   Layers,
@@ -20,8 +20,8 @@ import {
   computeLiquidityLadder,
   detectMarketDivergences,
   queryVectorMemory,
-  BIST_EQUITIES,
   VECTOR_KNOWLEDGE_STORE,
+  type BISTAsset,
   type OracleXRealm,
   type VectorRAGDocument,
 } from "@/lib/oraclex-platform";
@@ -37,6 +37,32 @@ export default function OracleXTerminal() {
   const [ragQuery, setRagQuery] = useState<string>("");
   const [selectedDoc, setSelectedDoc] = useState<VectorRAGDocument | null>(VECTOR_KNOWLEDGE_STORE[0]);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [bistEquities, setBistEquities] = useState<BISTAsset[]>([]);
+  const [bistLoading, setBistLoading] = useState<boolean>(true);
+  const [bistError, setBistError] = useState<string | null>(null);
+
+  const fetchLiveBist = useCallback(async () => {
+    setBistLoading(true);
+    setBistError(null);
+    try {
+      const res = await fetch("/api/live-terminal-data?view=bist", { cache: "no-store" });
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = (await res.json()) as { equities?: BISTAsset[] };
+      if (Array.isArray(data.equities) && data.equities.length > 0) {
+        setBistEquities(data.equities);
+      } else {
+        setBistError("Borsa İstanbul live feed returned empty.");
+      }
+    } catch {
+      setBistError("Unable to reach BIST live quote feed.");
+    } finally {
+      setBistLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchLiveBist();
+  }, [fetchLiveBist]);
 
   const internals = useMemo(() => {
     const base = computeOracleXMarketInternals();
@@ -130,7 +156,7 @@ export default function OracleXTerminal() {
   const handleRefresh = async () => {
     setIsRefreshing(true);
     try {
-      await fetch("/api/quotes", { cache: "no-store" });
+      await Promise.all([fetch("/api/quotes", { cache: "no-store" }), fetchLiveBist()]);
     } catch {
       // keep existing live stream
     } finally {
@@ -665,21 +691,39 @@ export default function OracleXTerminal() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/[0.05]">
-                {BIST_EQUITIES.map((eq) => (
-                  <tr key={eq.symbol} className="hover:bg-white/[0.03] transition">
-                    <td className="px-4 py-3 font-bold text-[#f0c979]">{eq.symbol}</td>
-                    <td className="px-4 py-3 text-stone-300">{eq.name}</td>
-                    <td className="px-4 py-3 font-bold text-[#f2efe8]">₺{eq.priceTRY.toFixed(2)}</td>
-                    <td className={`px-4 py-3 font-semibold ${eq.change24hPct >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
-                      {eq.change24hPct >= 0 ? `+${eq.change24hPct}%` : `${eq.change24hPct}%`}
-                    </td>
-                    <td className="px-4 py-3 text-[#f2efe8]">{eq.peRatio}x</td>
-                    <td className="px-4 py-3 text-[#f0c979]">{eq.dividendYieldPct}%</td>
-                    <td className="px-4 py-3 text-[11px] text-stone-300 max-w-xs truncate" title={eq.kapLastDisclosure}>
-                      {eq.kapLastDisclosure}
+                {bistLoading ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-8 text-center text-stone-400">
+                      Syncing live Borsa İstanbul quotes...
                     </td>
                   </tr>
-                ))}
+                ) : bistEquities.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-4 py-8 text-center text-rose-400">
+                      {bistError ?? "Borsa İstanbul live feed unavailable."}
+                    </td>
+                  </tr>
+                ) : (
+                  bistEquities.map((eq) => (
+                    <tr key={eq.symbol} className="hover:bg-white/[0.03] transition">
+                      <td className="px-4 py-3 font-bold text-[#f0c979]">{eq.symbol}</td>
+                      <td className="px-4 py-3 text-stone-300">{eq.name}</td>
+                      <td className="px-4 py-3 font-bold text-[#f2efe8]">₺{eq.priceTRY.toFixed(2)}</td>
+                      <td className={`px-4 py-3 font-semibold ${eq.change24hPct >= 0 ? "text-emerald-400" : "text-rose-400"}`}>
+                        {eq.change24hPct >= 0 ? `+${eq.change24hPct}%` : `${eq.change24hPct}%`}
+                      </td>
+                      <td className="px-4 py-3 text-[#f2efe8]">
+                        {eq.peRatio > 0 ? `${eq.peRatio}x` : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-[#f0c979]">
+                        {eq.dividendYieldPct > 0 ? `${eq.dividendYieldPct}%` : "—"}
+                      </td>
+                      <td className="px-4 py-3 text-[11px] text-stone-300 max-w-xs truncate" title={eq.kapLastDisclosure}>
+                        {eq.kapLastDisclosure}
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>

@@ -447,6 +447,8 @@ export interface OpenBBCommandResult {
 export function executeOpenBBCommand(
   rawInput: string,
   liveQuotes?: Record<string, { price: number; change: number }>,
+  liveYieldCurve?: OpenBBYieldPoint[],
+  liveMacroIndicators?: OpenBBMacroIndicator[],
 ): OpenBBCommandResult {
   const input = rawInput.trim();
   const lower = input.toLowerCase();
@@ -542,12 +544,21 @@ QUICK EXECUTABLE COMMANDS:
 
   // /economy/yieldcurve
   if (lower.includes("yield") || lower.includes("curve")) {
+    const curve = liveYieldCurve !== undefined ? liveYieldCurve : OPENBB_YIELD_CURVE;
+    if (curve.length === 0) {
+      return {
+        command: input,
+        type: "error",
+        title: "Macro Economy: US Treasury Yield Curve",
+        content: "Live US Treasury yield curve feed is currently syncing or unavailable.",
+      };
+    }
     return {
       command: input,
       type: "table",
       title: "Macro Economy: US Treasury Benchmark Yield Curve",
-      content: "Real-time rates across all standard constant maturity tenors (1M through 30Y).",
-      tableData: OPENBB_YIELD_CURVE.map((pt) => ({
+      content: "Real-time rates across standard constant maturity tenors (3M through 30Y).",
+      tableData: curve.map((pt) => ({
         Tenor: pt.tenor,
         Months: pt.months,
         "Current Yield (%)": `${pt.rate.toFixed(2)}%`,
@@ -560,12 +571,21 @@ QUICK EXECUTABLE COMMANDS:
 
   // /economy/macro
   if (lower.includes("macro") || lower.includes("cpi") || lower.includes("gdp")) {
+    const indicators = liveMacroIndicators !== undefined ? liveMacroIndicators : OPENBB_MACRO_INDICATORS;
+    if (indicators.length === 0) {
+      return {
+        command: input,
+        type: "error",
+        title: "Macro Economy: Core Macroeconomic Indicators",
+        content: "Live macroeconomic telemetry is currently syncing or unavailable.",
+      };
+    }
     return {
       command: input,
       type: "table",
       title: "Macro Economy: Core Macroeconomic Indicators",
-      content: "Federal Reserve rates, CPI inflation, Real GDP, and global liquidity tracking.",
-      tableData: OPENBB_MACRO_INDICATORS.map((m) => ({
+      content: "Live US Treasury curve spreads, inflation, and benchmark yields.",
+      tableData: indicators.map((m) => ({
         Indicator: m.metric,
         Reading: m.current,
         Previous: m.previous,
@@ -604,7 +624,13 @@ QUICK EXECUTABLE COMMANDS:
 
   // /portfolio/optimize
   if (lower.includes("portfolio") || lower.includes("optimize") || lower.includes("frontier")) {
-    const opt = computeOpenBBEfficientFrontier(["NVDA", "AAPL", "BTC", "SOL"]);
+    const livePriceMap: Record<string, number> = {};
+    if (liveQuotes) {
+      for (const [sym, q] of Object.entries(liveQuotes)) {
+        if (q?.price > 0) livePriceMap[sym] = q.price;
+      }
+    }
+    const opt = computeOpenBBEfficientFrontier(["NVDA", "AAPL", "BTC", "SOL"], livePriceMap);
     return {
       command: input,
       type: "table",
@@ -612,6 +638,7 @@ QUICK EXECUTABLE COMMANDS:
       content: `Optimal basket weighting for Maximum Sharpe Ratio (Sharpe: ${opt.maxSharpePoint.sharpe}) and Minimum Variance (Vol: ${opt.minVariancePoint.volatility}%).`,
       tableData: opt.allocations.map((a) => ({
         Asset: `${a.symbol} (${a.name})`,
+        "Live Price": `$${a.currentPrice.toFixed(2)}`,
         "Max Sharpe Allocation": `${a.maxSharpeWeight}%`,
         "Min Variance Allocation": `${a.minVarianceWeight}%`,
         "Equal Weight": `${a.equalWeight}%`,

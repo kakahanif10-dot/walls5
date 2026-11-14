@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { ASSET_BY_SYMBOL } from "@/lib/market";
 import {
   filterRealtimeArticles,
-  INITIAL_REALTIME_ARTICLES,
   type NewsArticle,
   type NewsCategory,
 } from "@/lib/realtime-news-api";
@@ -128,6 +127,20 @@ async function fetchLiveNewsWire(): Promise<NewsArticle[]> {
       fallbackTickers: ["SPY"],
       headers: SEC_HEADERS,
     },
+    {
+      url: "https://feeds.content.dowjones.io/public/rss/mw_topstories",
+      sourceId: "marketwatch",
+      sourceName: "MarketWatch Top Stories",
+      category: "Breaking",
+      fallbackTickers: ["SPY", "NVDA"],
+    },
+    {
+      url: "https://finance.yahoo.com/news/rssindex",
+      sourceId: "yahoo_finance",
+      sourceName: "Yahoo Finance Wire",
+      category: "Macro",
+      fallbackTickers: ["SPY", "QQQ"],
+    },
   ];
 
   const results = await Promise.allSettled(
@@ -222,12 +235,7 @@ export async function POST(req: NextRequest) {
     }
 
     const liveArticles = await fetchLiveNewsWire();
-    const seen = new Set(liveArticles.map((a) => a.title.toLowerCase().trim()));
-    const combined = [
-      ...liveArticles,
-      ...INITIAL_REALTIME_ARTICLES.filter((a) => !seen.has(a.title.toLowerCase().trim())),
-    ];
-    const filtered = filterRealtimeArticles(queryString || "", combined);
+    const filtered = filterRealtimeArticles(queryString || "", liveArticles);
 
     return NextResponse.json(filtered, {
       status: 200,

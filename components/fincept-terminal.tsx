@@ -26,6 +26,7 @@ import {
   computeBlackScholesGreeks,
   executeFinceptCommand,
   type FinceptAgent,
+  type FinceptLiveMacro,
   type DCFModelInputs,
   type DCFModelResult,
   type OptionsPricerInputs,
@@ -39,18 +40,18 @@ import WhopBadge from "@/components/whop-badge";
 
 type QuantDesk = "cli" | "agents" | "dcf" | "options" | "paper" | "connectors" | "node";
 
-function getAssetLastPrice(symbol: string, fallback = 187.4): number {
-  const asset = ASSET_BY_SYMBOL[symbol];
-  if (!asset) return fallback;
+function getAssetLastPrice(symbol: string): number {
+  const asset = ASSET_BY_SYMBOL[symbol] || ASSETS[0];
   return metricsFor(asset).last;
 }
 
 export default function FinceptTerminal() {
   const liveQuotes = useQuotes();
-  const liveLastPrice = (symbol: string, fallback = 187.4): number =>
-    liveQuotes[symbol]?.price ?? getAssetLastPrice(symbol, fallback);
+  const liveLastPrice = (symbol: string): number =>
+    liveQuotes[symbol]?.price ?? getAssetLastPrice(symbol);
 
   const [activeDesk, setActiveDesk] = useState<QuantDesk>("cli");
+  const [liveMacro, setLiveMacro] = useState<FinceptLiveMacro>({});
 
   // CLI Workstation State
   const [commandInput, setCommandInput] = useState("");
@@ -76,10 +77,10 @@ export default function FinceptTerminal() {
     return FINCEPT_AGENTS[0].evaluate("NVDA", m.last, 32.5, 0.45, 0.042, 1.35);
   });
 
-  // DCF Valuation State
-  const [dcfInputs, setDcfInputs] = useState<DCFModelInputs>({
+  // DCF Valuation State (initialized from live market feed)
+  const [dcfInputs, setDcfInputs] = useState<DCFModelInputs>(() => ({
     symbol: "NVDA",
-    currentPrice: 187.4,
+    currentPrice: getAssetLastPrice("NVDA"),
     revenueBaseBillion: 115,
     growthRatePct: 40,
     terminalGrowthPct: 3.0,
@@ -88,16 +89,20 @@ export default function FinceptTerminal() {
     waccPct: 9.2,
     sharesOutstandingMillion: 24500,
     netDebtBillion: -18,
-  });
+  }));
   const [dcfResult, setDcfResult] = useState<DCFModelResult>(() => computeFinceptDCF(dcfInputs));
 
-  // Options Greeks State
-  const [optionsInputs, setOptionsInputs] = useState<OptionsPricerInputs>({
-    stockPrice: 187.4,
-    strikePrice: 190.0,
-    timeToExpiryDays: 30,
-    riskFreeRatePct: 4.38,
-    volatilityPct: 45.0,
+  // Options Greeks State (riskFreeRatePct hydrated live from US10Y Treasury yield)
+  const [optionsPriceEdited, setOptionsPriceEdited] = useState(false);
+  const [optionsInputs, setOptionsInputs] = useState<OptionsPricerInputs>(() => {
+    const spot = getAssetLastPrice("NVDA");
+    return {
+      stockPrice: spot,
+      strikePrice: Math.round(spot),
+      timeToExpiryDays: 30,
+      riskFreeRatePct: 0,
+      volatilityPct: 45.0,
+    };
   });
   const [optionsResult, setOptionsResult] = useState<OptionsPricerResult>(() =>
     computeBlackScholesGreeks(optionsInputs)
@@ -139,16 +144,37 @@ export default function FinceptTerminal() {
   }, [liveQuotes, dcfInputs.symbol, dcfInputs.currentPrice, dcfPriceEdited]);
 
   useEffect(() => {
+    if (optionsPriceEdited) return;
+    const livePx = liveQuotes["NVDA"]?.price;
+    if (livePx && livePx > 0 && Math.abs(livePx - optionsInputs.stockPrice) > 0.001) {
+      setOptionsInputs((prev) => ({
+        ...prev,
+        stockPrice: livePx,
+        strikePrice: Math.round(livePx),
+      }));
+    }
+  }, [liveQuotes, optionsInputs.stockPrice, optionsPriceEdited]);
+
+  useEffect(() => {
     let active = true;
     fetch("/api/live-terminal-data?view=macro-perps", { cache: "no-store" })
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!active || !data?.yieldCurve) return;
-        const y10 = (data.yieldCurve as Array<{ tenor: string; rate: number }>).find(
-          (p) => p.tenor === "10Y",
-        );
-        if (y10 && y10.rate > 0) {
-          setOptionsInputs((prev) => ({ ...prev, riskFreeRatePct: Number(y10.rate.toFixed(2)) }));
+        if (!active || !data) return;
+        const curve = Array.isArray(data.yieldCurve)
+          ? (data.yieldCurve as Array<{ tenor: string; rate: number }>)
+          : [];
+        const y10 = curve.find((p) => p.tenor === "10Y")?.rate ?? null;
+        const y2 = curve.find((p) => p.tenor === "2Y")?.rate ?? null;
+        const spreadBps = y10 != null && y2 != null ? Math.round((y10 - y2) * 100) : null;
+        setLiveMacro({
+          us10y: y10,
+          us2y: y2,
+          spreadBps,
+          dxy: typeof data.dxy === "number" ? data.dxy : null,
+        });
+        if (y10 && y10 > 0) {
+          setOptionsInputs((prev) => ({ ...prev, riskFreeRatePct: Number(y10.toFixed(2)) }));
         }
       })
       .catch(() => {});
@@ -178,7 +204,7 @@ export default function FinceptTerminal() {
       return;
     }
 
-    const res = executeFinceptCommand(target);
+    const res = executeFinceptCommand(target, liveQuotes, liveMacro);
     setCliLogs((prev) => [...prev, res]);
     setCommandHistory((prev) => [...prev, target]);
     setHistoryIndex(-1);
@@ -241,12 +267,12 @@ export default function FinceptTerminal() {
   };
 
   const totalPositionsValue = positions.reduce(
-    (acc, p) => acc + p.shares * liveLastPrice(p.symbol, p.currentPrice),
+    (acc, p) => acc + p.shares * liveLastPrice(p.symbol),
     0
   );
   const totalPortfolioValue = cashBalance + totalPositionsValue;
   const totalUnrealizedPnL = positions.reduce(
-    (acc, p) => acc + (liveLastPrice(p.symbol, p.currentPrice) - p.entryPrice) * p.shares,
+    (acc, p) => acc + (liveLastPrice(p.symbol) - p.entryPrice) * p.shares,
     0
   );
 
@@ -885,9 +911,10 @@ export default function FinceptTerminal() {
                   max="600"
                   step="1"
                   value={optionsInputs.stockPrice}
-                  onChange={(e) =>
-                    setOptionsInputs((prev) => ({ ...prev, stockPrice: parseFloat(e.target.value) }))
-                  }
+                  onChange={(e) => {
+                    setOptionsPriceEdited(true);
+                    setOptionsInputs((prev) => ({ ...prev, stockPrice: parseFloat(e.target.value) }));
+                  }}
                   className="w-full accent-[#d8ab5a] mt-1"
                 />
               </div>
@@ -1218,7 +1245,7 @@ export default function FinceptTerminal() {
                   </thead>
                   <tbody className="divide-y divide-white/[0.05]">
                     {positions.map((pos) => {
-                      const curPrice = liveLastPrice(pos.symbol, pos.currentPrice);
+                      const curPrice = liveLastPrice(pos.symbol);
                       const pnl = (curPrice - pos.entryPrice) * pos.shares;
                       const pnlPct = ((curPrice - pos.entryPrice) / pos.entryPrice) * 100;
                       return (

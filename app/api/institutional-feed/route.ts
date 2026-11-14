@@ -10,7 +10,6 @@ import {
   type TechnicalCandle,
 } from "@/lib/institutional-tools-data";
 import {
-  buildFallbackHistory,
   computeSentimentStats,
   normalizeAlternativeMeEntries,
 } from "@/lib/crypto-fear-greed";
@@ -174,7 +173,7 @@ function extractLatestFact(
   return candidates[0].val;
 }
 
-async function fetchSecCompanyFactsSummary(symbol: string): Promise<{
+type SecFactsSummary = {
   symbol: string;
   name: string;
   sector: string;
@@ -185,21 +184,77 @@ async function fetchSecCompanyFactsSummary(symbol: string): Promise<{
   debtM: number;
   sharesOutM: number;
   liveSource: boolean;
-}> {
+};
+
+async function fetchTradingViewEquityFundamentals(
+  symbol: string,
+): Promise<{ price: number; changePct: number; facts: SecFactsSummary | null }> {
+  const meta = SEC_CIK_MAP[symbol] ?? { name: symbol, sector: "US Equities", cik: "" };
+  try {
+    const res = await fetchJsonSafe<{ data?: Array<{ d?: Array<string | number | null> }> }>(
+      "https://scanner.tradingview.com/america/scan",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "User-Agent": "Mozilla/5.0" },
+        body: JSON.stringify({
+          filter: [{ left: "name", operation: "equal", right: symbol }],
+          columns: [
+            "name",
+            "description",
+            "sector",
+            "close",
+            "change",
+            "total_revenue_ttm",
+            "ebitda_ttm",
+            "net_income_ttm",
+            "total_debt",
+            "cash_n_short_term_invest",
+            "total_shares_outstanding_fundamental",
+          ],
+          range: [0, 3],
+        }),
+      },
+      4000,
+    );
+    const d = res?.data?.[0]?.d;
+    if (!d) return { price: 0, changePct: 0, facts: null };
+    const price = typeof d[3] === "number" ? d[3] : 0;
+    const changePct = typeof d[4] === "number" ? d[4] : 0;
+    const rev = typeof d[5] === "number" ? d[5] : 0;
+    const ebitda = typeof d[6] === "number" ? d[6] : 0;
+    const netInc = typeof d[7] === "number" ? d[7] : 0;
+    const debt = typeof d[8] === "number" ? d[8] : 0;
+    const cash = typeof d[9] === "number" ? d[9] : 0;
+    const shares = typeof d[10] === "number" ? d[10] : 0;
+
+    if (rev > 0 && shares > 0) {
+      return {
+        price,
+        changePct,
+        facts: {
+          symbol,
+          name: typeof d[1] === "string" && d[1] ? d[1] : meta.name,
+          sector: typeof d[2] === "string" && d[2] ? d[2] : meta.sector,
+          revenueM: Math.round(rev / 1e6),
+          operatingIncomeM: Math.round((ebitda > 0 ? ebitda * 0.85 : netInc * 1.15) / 1e6),
+          netIncomeM: Math.round(netInc / 1e6),
+          cashM: Math.round(cash / 1e6),
+          debtM: Math.round(debt / 1e6),
+          sharesOutM: Math.round(shares / 1e6),
+          liveSource: true,
+        },
+      };
+    }
+    return { price, changePct, facts: null };
+  } catch {
+    return { price: 0, changePct: 0, facts: null };
+  }
+}
+
+async function fetchSecCompanyFactsSummary(symbol: string): Promise<SecFactsSummary | null> {
   const meta = SEC_CIK_MAP[symbol] ?? SEC_CIK_MAP.NVDA;
   const cacheKey = `sec-facts:${symbol}`;
-  const hit = getCached<{
-    symbol: string;
-    name: string;
-    sector: string;
-    revenueM: number;
-    operatingIncomeM: number;
-    netIncomeM: number;
-    cashM: number;
-    debtM: number;
-    sharesOutM: number;
-    liveSource: boolean;
-  }>(cacheKey);
+  const hit = getCached<SecFactsSummary>(cacheKey);
   if (hit) return hit;
 
   const json = await fetchJsonSafe<{
@@ -236,8 +291,8 @@ async function fetchSecCompanyFactsSummary(symbol: string): Promise<{
       extractLatestFact(gaap, ["CommonStockSharesOutstanding", "WeightedAverageNumberOfDilutedSharesOutstanding"], "shares") ??
       extractLatestFact(dei, ["EntityCommonStockSharesOutstanding"], "shares");
 
-    if (rev && netInc) {
-      const out = {
+    if (rev && netInc && shares) {
+      const out: SecFactsSummary = {
         symbol,
         name: json?.entityName ?? meta.name,
         sector: meta.sector,
@@ -246,7 +301,7 @@ async function fetchSecCompanyFactsSummary(symbol: string): Promise<{
         netIncomeM: Math.round(netInc / 1e6),
         cashM: Math.round((cash ?? 0) / 1e6),
         debtM: Math.round((debt ?? 0) / 1e6),
-        sharesOutM: shares ? Math.round(shares / 1e6) : 1000,
+        sharesOutM: Math.round(shares / 1e6),
         liveSource: true,
       };
       setCached(cacheKey, out, 300_000);
@@ -254,54 +309,58 @@ async function fetchSecCompanyFactsSummary(symbol: string): Promise<{
     }
   }
 
-  // Fallback baseline GAAP snapshot if SEC rate limits
-  const baselines: Record<string, { rev: number; op: number; net: number; cash: number; debt: number; shares: number }> = {
-    NVDA: { rev: 130497, op: 81453, net: 72880, cash: 43210, debt: 8463, shares: 24490 },
-    AAPL: { rev: 391035, op: 123216, net: 93736, cash: 65171, debt: 96662, shares: 15116 },
-    MSFT: { rev: 245122, op: 109433, net: 88136, cash: 75543, debt: 42688, shares: 7434 },
-    AMZN: { rev: 637959, op: 68593, net: 59248, cash: 78779, debt: 52623, shares: 10510 },
-    META: { rev: 164501, op: 69380, net: 62360, cash: 77815, debt: 28826, shares: 2530 },
-    GOOGL: { rev: 350018, op: 112390, net: 100118, cash: 95657, debt: 10883, shares: 12210 },
-    TSLA: { rev: 97690, op: 7076, net: 7091, cash: 36563, debt: 5757, shares: 3210 },
-    JPM: { rev: 177556, op: 72100, net: 58471, cash: 469000, debt: 401000, shares: 2810 },
-    GS: { rev: 53512, op: 18400, net: 14276, cash: 182000, debt: 252000, shares: 324 },
-    COIN: { rev: 6564, op: 2290, net: 2579, cash: 8540, debt: 4230, shares: 252 },
-    AMD: { rev: 25785, op: 1900, net: 1641, cash: 5132, debt: 1721, shares: 1625 },
-  };
-  const b = baselines[symbol] ?? baselines.NVDA;
-  return {
-    symbol,
-    name: meta.name,
-    sector: meta.sector,
-    revenueM: b.rev,
-    operatingIncomeM: b.op,
-    netIncomeM: b.net,
-    cashM: b.cash,
-    debtM: b.debt,
-    sharesOutM: b.shares,
-    liveSource: false,
-  };
+  const tvBackup = await fetchTradingViewEquityFundamentals(symbol);
+  if (tvBackup.facts) {
+    setCached(cacheKey, tvBackup.facts, 300_000);
+    return tvBackup.facts;
+  }
+
+  return null;
+}
+
+async function fetchTradingViewYieldMap(tickers: string[]): Promise<Map<string, { price: number; changeAbs: number }>> {
+  const out = new Map<string, { price: number; changeAbs: number }>();
+  const tv = await fetchJsonSafe<{ data?: Array<{ s: string; d: Array<string | number | null> }> }>(
+    "https://scanner.tradingview.com/global/scan",
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "User-Agent": "Mozilla/5.0" },
+      body: JSON.stringify({
+        symbols: { tickers, query: { types: [] } },
+        columns: ["name", "close", "change_abs"],
+      }),
+    },
+    3500,
+  );
+  for (const r of tv?.data ?? []) {
+    const close = typeof r.d?.[1] === "number" ? r.d[1] : 0;
+    const abs = typeof r.d?.[2] === "number" ? r.d[2] : 0;
+    if (close > 0) out.set(r.s, { price: close, changeAbs: abs });
+  }
+  return out;
 }
 
 async function handleBloombergDesk() {
   const symbols = ["SPY", "QQQ", "NVDA", "AAPL", "MSFT", "TSLA", "JPM", "COIN"];
   const yieldSyms = [
-    { label: "US 3M", sym: "^IRX" },
-    { label: "US 5Y", sym: "^FVX" },
-    { label: "US 10Y", sym: "^TNX" },
-    { label: "US 30Y", sym: "^TYX" },
+    { label: "US 3M", sym: "^IRX", tv: "TVC:US03MY" },
+    { label: "US 5Y", sym: "^FVX", tv: "TVC:US05Y" },
+    { label: "US 10Y", sym: "^TNX", tv: "TVC:US10Y" },
+    { label: "US 30Y", sym: "^TYX", tv: "TVC:US30Y" },
   ];
 
-  const [, equities, yields, binanceTickers, fxData, secFeed] = await Promise.all([
+  const [, equities, yields, tvYields, binanceTickers, fxPrimary, fxBackup, secFeed] = await Promise.all([
     ensureMarketData(),
     Promise.all(symbols.map((s) => fetchYahooQuote(s))),
     Promise.all(yieldSyms.map((y) => fetchYahooQuote(y.sym))),
+    fetchTradingViewYieldMap(yieldSyms.map((y) => y.tv)),
     fetchJsonSafe<Array<{ symbol: string; lastPrice: string; priceChangePercent: string; quoteVolume: string }>>(
       'https://api.binance.com/api/v3/ticker/24hr?symbols=["BTCUSDT","ETHUSDT","SOLUSDT"]',
     ),
     fetchJsonSafe<{ rates?: Record<string, number> }>(
       "https://api.frankfurter.app/latest?from=USD&to=EUR,GBP,JPY,CHF,SGD",
     ),
+    fetchJsonSafe<{ rates?: Record<string, number> }>("https://open.er-api.com/v6/latest/USD"),
     fetchJsonSafe<{
       entityName?: string;
       filings?: { recent?: { form?: string[]; filingDate?: string[]; primaryDocDescription?: string[]; accessionNumber?: string[]; primaryDocument?: string[] } };
@@ -318,22 +377,62 @@ async function handleBloombergDesk() {
     })
     .filter((e): e is NonNullable<typeof e> => e !== null);
 
-  const yieldCurve = yieldSyms.map((y, idx) => ({
-    tenor: y.label,
-    yieldPct: yields[idx]?.price ?? [4.32, 4.18, 4.35, 4.54][idx],
-    changeBps: (yields[idx]?.changePct ?? 0.4) * 10,
-  }));
+  const yieldCurve = yieldSyms
+    .map((y, idx) => {
+      const yf = yields[idx];
+      if (yf && yf.price > 0) {
+        return {
+          tenor: y.label,
+          yieldPct: yf.price,
+          changeBps: yf.changePct * 10,
+        };
+      }
+      const tvHit = tvYields.get(y.tv);
+      if (tvHit && tvHit.price > 0) {
+        return {
+          tenor: y.label,
+          yieldPct: tvHit.price,
+          changeBps: tvHit.changeAbs * 100,
+        };
+      }
+      return null;
+    })
+    .filter((y): y is NonNullable<typeof y> => y !== null);
 
-  const cryptoRows = (binanceTickers ?? []).map((t) => ({
+  let cryptoRows = (binanceTickers ?? []).map((t) => ({
     symbol: t.symbol.replace("USDT", ""),
     price: Number.parseFloat(t.lastPrice),
     changePct: Number.parseFloat(t.priceChangePercent),
     volumeUsd: Number.parseFloat(t.quoteVolume),
   }));
 
-  const fxRows = Object.entries(fxData?.rates ?? { EUR: 0.92, GBP: 0.78, JPY: 154.2, CHF: 0.88 }).map(
-    ([ccy, rate]) => ({ pair: `USD/${ccy}`, rate }),
-  );
+  if (cryptoRows.length === 0) {
+    cryptoRows = ["BTC", "ETH", "SOL"]
+      .map((sym) => {
+        const q = quoteFor(sym);
+        if (!q || q.price <= 0) return null;
+        return { symbol: sym, price: q.price, changePct: q.change * 100, volumeUsd: 0 };
+      })
+      .filter((c): c is NonNullable<typeof c> => c !== null);
+  }
+
+  const fxSourceRates = fxPrimary?.rates?.EUR
+    ? fxPrimary.rates
+    : fxBackup?.rates?.EUR
+      ? {
+          EUR: fxBackup.rates.EUR,
+          GBP: fxBackup.rates.GBP,
+          JPY: fxBackup.rates.JPY,
+          CHF: fxBackup.rates.CHF,
+          SGD: fxBackup.rates.SGD,
+        }
+      : null;
+
+  const fxRows = fxSourceRates
+    ? Object.entries(fxSourceRates)
+        .filter(([, rate]) => typeof rate === "number" && Number.isFinite(rate) && rate > 0)
+        .map(([ccy, rate]) => ({ pair: `USD/${ccy}`, rate }))
+    : [];
 
   const recent = secFeed?.filings?.recent;
   const headlines: Array<{ time: string; source: string; headline: string; url: string }> = [];
@@ -355,9 +454,9 @@ async function handleBloombergDesk() {
   return NextResponse.json({
     tool: "bloomberg-desk",
     sources: [
-      equities.some(Boolean) ? "Yahoo Finance Live" : "Exchange Composite Live",
-      binanceTickers ? "Binance 24h" : "Multi-Venue Crypto Live",
-      fxData ? "Frankfurter ECB FX" : "G10 FX Reference",
+      equities.some(Boolean) ? "Yahoo Finance Live" : "Multi-Venue Market Feed",
+      binanceTickers && binanceTickers.length > 0 ? "Binance 24h" : "Multi-Venue Crypto Live",
+      fxPrimary?.rates ? "Frankfurter ECB FX" : fxBackup?.rates ? "ExchangeRate-API Live FX" : "FX Feed Offline",
       headlines.length ? "SEC EDGAR 8-K Wire" : "SEC EDGAR Direct",
     ],
     asOf: new Date().toISOString(),
@@ -371,23 +470,37 @@ async function handleBloombergDesk() {
 
 async function handleExcelDcf(symbol: string) {
   const sym = SEC_CIK_MAP[symbol] ? symbol : "NVDA";
-  const [, facts, quote, tnx] = await Promise.all([
+  const [, facts, quote, tnx, tvBackup, tvYields] = await Promise.all([
     ensureMarketData(),
     fetchSecCompanyFactsSummary(sym),
     fetchYahooQuote(sym),
     fetchYahooQuote("^TNX"),
+    fetchTradingViewEquityFundamentals(sym),
+    fetchTradingViewYieldMap(["TVC:US10Y"]),
   ]);
 
   const liveQ = quoteFor(sym);
-  const currentPriceUsd = quote?.price ?? liveQ?.price ?? 138.4;
-  const riskFreeRatePct = tnx?.price ?? 4.35;
+  const currentPriceUsd =
+    quote?.price && quote.price > 0
+      ? quote.price
+      : liveQ?.price && liveQ.price > 0
+        ? liveQ.price
+        : tvBackup.price;
+  const riskFreeRatePct = tnx?.price ?? tvYields.get("TVC:US10Y")?.price ?? null;
+
+  if (!facts || currentPriceUsd <= 0 || riskFreeRatePct === null) {
+    return NextResponse.json(
+      { error: `Live SEC XBRL fundamentals or spot market quotes unavailable for ${sym}.` },
+      { status: 503 },
+    );
+  }
 
   return NextResponse.json({
     tool: "excel-dcf",
     sources: [
-      facts.liveSource ? "SEC EDGAR XBRL CompanyFacts" : "SEC XBRL GAAP",
-      quote || liveQ ? "Live Spot Quote" : "Exchange Composite Live",
-      tnx ? "US 10Y Treasury (^TNX)" : "US Treasury 10Y",
+      "SEC EDGAR XBRL CompanyFacts",
+      quote ? "Yahoo Finance Live Spot" : liveQ ? "Multi-Venue Market Feed" : "TradingView Live Scanner",
+      tnx ? "US 10Y Treasury (^TNX)" : "TradingView US 10Y Yield",
     ],
     asOf: new Date().toISOString(),
     symbol: sym,
@@ -409,29 +522,41 @@ async function handleCapitalIq() {
   await ensureMarketData();
   const results = await Promise.all(
     peerSymbols.map(async (sym) => {
-      const [facts, quote] = await Promise.all([fetchSecCompanyFactsSummary(sym), fetchYahooQuote(sym)]);
+      const [facts, quote, tvBackup] = await Promise.all([
+        fetchSecCompanyFactsSummary(sym),
+        fetchYahooQuote(sym),
+        fetchTradingViewEquityFundamentals(sym),
+      ]);
       const liveQ = quoteFor(sym);
-      const price = quote?.price ?? liveQ?.price ?? 150;
-      const changePct = quote?.changePct ?? (liveQ ? liveQ.change * 100 : 0);
-      const mcapM = price * facts.sharesOutM;
-      const evM = mcapM + facts.debtM - facts.cashM;
-      const ebitdaM = facts.operatingIncomeM + facts.revenueM * 0.035;
+      const price =
+        quote?.price && quote.price > 0
+          ? quote.price
+          : liveQ?.price && liveQ.price > 0
+            ? liveQ.price
+            : tvBackup.price;
+      const effectiveFacts = facts ?? tvBackup.facts;
+      if (!effectiveFacts || price <= 0) return null;
+
+      const changePct = quote?.changePct ?? (liveQ ? liveQ.change * 100 : tvBackup.changePct);
+      const mcapM = price * effectiveFacts.sharesOutM;
+      const evM = mcapM + effectiveFacts.debtM - effectiveFacts.cashM;
+      const ebitdaM = effectiveFacts.operatingIncomeM + effectiveFacts.revenueM * 0.035;
       return {
         symbol: sym,
-        name: facts.name,
-        sector: facts.sector,
+        name: effectiveFacts.name,
+        sector: effectiveFacts.sector,
         price,
         changePct,
         mcapM,
         evM,
-        revenueM: facts.revenueM,
+        revenueM: effectiveFacts.revenueM,
         ebitdaM,
-        netIncomeM: facts.netIncomeM,
-        evToRev: evM / Math.max(1, facts.revenueM),
+        netIncomeM: effectiveFacts.netIncomeM,
+        evToRev: evM / Math.max(1, effectiveFacts.revenueM),
         evToEbitda: evM / Math.max(1, ebitdaM),
-        peRatio: facts.netIncomeM > 0 ? mcapM / facts.netIncomeM : 0,
-        ebitdaMarginPct: (ebitdaM / Math.max(1, facts.revenueM)) * 100,
-        liveSec: facts.liveSource,
+        peRatio: effectiveFacts.netIncomeM > 0 ? mcapM / effectiveFacts.netIncomeM : 0,
+        ebitdaMarginPct: (ebitdaM / Math.max(1, effectiveFacts.revenueM)) * 100,
+        liveSec: effectiveFacts.liveSource,
       };
     }),
   );
@@ -440,7 +565,7 @@ async function handleCapitalIq() {
     tool: "capital-iq",
     sources: ["SEC EDGAR XBRL CompanyFacts", "NYSE/Nasdaq Real-Time Spot"],
     asOf: new Date().toISOString(),
-    peers: results,
+    peers: results.filter((r): r is NonNullable<typeof r> => r !== null),
   });
 }
 
@@ -632,7 +757,22 @@ async function handleTradingViewScreener(symbol: string) {
 }
 
 async function handleGlassnodeOnchain() {
-  const [fees, mempool, blocks, diff, hashrate, btcPrem, btcOi, ethPrem] = await Promise.all([
+  const [
+    ,
+    fees,
+    mempool,
+    blocks,
+    blockstreamBlocks,
+    diff,
+    hashrate,
+    blockchainStats,
+    btcPrem,
+    btcOi,
+    ethPrem,
+    bybitBtc,
+    bybitEth,
+  ] = await Promise.all([
+    ensureMarketData(),
     fetchJsonSafe<{ fastestFee: number; halfHourFee: number; hourFee: number; economyFee: number; minimumFee: number }>(
       "https://mempool.space/api/v1/fees/recommended",
     ),
@@ -640,12 +780,16 @@ async function handleGlassnodeOnchain() {
     fetchJsonSafe<Array<{ id: string; height: number; timestamp: number; tx_count: number; size: number; extras?: { pool?: { name?: string }; totalFees?: number } }>>(
       "https://mempool.space/api/v1/blocks",
     ),
+    fetchJsonSafe<Array<{ id: string; height: number; timestamp: number; tx_count: number; size: number }>>(
+      "https://blockstream.info/api/blocks",
+    ),
     fetchJsonSafe<{ progressPercent: number; difficultyChange: number; remainingBlocks: number; remainingTime: number }>(
       "https://mempool.space/api/v1/difficulty-adjustment",
     ),
     fetchJsonSafe<{ currentHashrate: number; currentDifficulty: number; hashrates?: Array<{ timestamp: number; avgHashrate: number }> }>(
       "https://mempool.space/api/v1/mining/hashrate/1m",
     ),
+    fetchJsonSafe<{ hash_rate?: number }>("https://api.blockchain.info/stats"),
     fetchJsonSafe<{ markPrice: string; lastFundingRate: string; indexPrice: string }>(
       "https://fapi.binance.com/fapi/v1/premiumIndex?symbol=BTCUSDT",
     ),
@@ -653,40 +797,97 @@ async function handleGlassnodeOnchain() {
     fetchJsonSafe<{ markPrice: string; lastFundingRate: string }>(
       "https://fapi.binance.com/fapi/v1/premiumIndex?symbol=ETHUSDT",
     ),
+    fetchJsonSafe<{ result?: { list?: Array<{ markPrice?: string; fundingRate?: string; openInterestValue?: string }> } }>(
+      "https://api.bybit.com/v5/market/tickers?category=linear&symbol=BTCUSDT",
+    ),
+    fetchJsonSafe<{ result?: { list?: Array<{ markPrice?: string; fundingRate?: string }> } }>(
+      "https://api.bybit.com/v5/market/tickers?category=linear&symbol=ETHUSDT",
+    ),
   ]);
 
-  const btcPrice = btcPrem?.markPrice ? Number.parseFloat(btcPrem.markPrice) : 68500;
-  const btcOiUnits = btcOi?.openInterest ? Number.parseFloat(btcOi.openInterest) : 85000;
+  const bybitBtcRow = bybitBtc?.result?.list?.[0];
+  const bybitEthRow = bybitEth?.result?.list?.[0];
+  const btcLiveQ = quoteFor("BTC");
+  const ethLiveQ = quoteFor("ETH");
+
+  const btcPrice = btcPrem?.markPrice
+    ? Number.parseFloat(btcPrem.markPrice)
+    : bybitBtcRow?.markPrice
+      ? Number.parseFloat(bybitBtcRow.markPrice)
+      : btcLiveQ?.price ?? null;
+  const btcOiUnits = btcOi?.openInterest ? Number.parseFloat(btcOi.openInterest) : null;
+  const btcOiUsd =
+    btcOiUnits !== null && btcPrice !== null
+      ? btcOiUnits * btcPrice
+      : bybitBtcRow?.openInterestValue
+        ? Number.parseFloat(bybitBtcRow.openInterestValue)
+        : null;
+
+  const ethMarkPrice = ethPrem?.markPrice
+    ? Number.parseFloat(ethPrem.markPrice)
+    : bybitEthRow?.markPrice
+      ? Number.parseFloat(bybitEthRow.markPrice)
+      : ethLiveQ?.price ?? null;
+
+  const currentHashrateEh = hashrate?.currentHashrate
+    ? hashrate.currentHashrate / 1e18
+    : blockchainStats?.hash_rate
+      ? blockchainStats.hash_rate / 1e9
+      : null;
+
+  const effectiveBlocks =
+    blocks && blocks.length > 0
+      ? blocks.slice(0, 8).map((b) => ({
+          height: b.height,
+          txCount: b.tx_count,
+          sizeMb: Number((b.size / 1e6).toFixed(2)),
+          pool: b.extras?.pool?.name ?? "Unknown Pool",
+          feesBtc: typeof b.extras?.totalFees === "number" ? Number((b.extras.totalFees / 1e8).toFixed(4)) : null,
+          timestamp: new Date(b.timestamp * 1000).toISOString(),
+        }))
+      : (blockstreamBlocks ?? []).slice(0, 8).map((b) => ({
+          height: b.height,
+          txCount: b.tx_count,
+          sizeMb: Number((b.size / 1e6).toFixed(2)),
+          pool: "Bitcoin Blockstream Node",
+          feesBtc: null,
+          timestamp: new Date(b.timestamp * 1000).toISOString(),
+        }));
+
+  const btcFunding8hPct = btcPrem?.lastFundingRate
+    ? Number.parseFloat(btcPrem.lastFundingRate) * 100
+    : bybitBtcRow?.fundingRate
+      ? Number.parseFloat(bybitBtcRow.fundingRate) * 100
+      : null;
+
+  const ethFunding8hPct = ethPrem?.lastFundingRate
+    ? Number.parseFloat(ethPrem.lastFundingRate) * 100
+    : bybitEthRow?.fundingRate
+      ? Number.parseFloat(bybitEthRow.fundingRate) * 100
+      : null;
 
   return NextResponse.json({
     tool: "glassnode-onchain",
     sources: [
-      mempool ? "Mempool.space Bitcoin Node" : "Bitcoin Mempool Direct",
-      btcPrem ? "Binance Perpetuals Futures" : "Binance Futures Direct",
+      mempool || fees ? "Mempool.space Bitcoin Node" : effectiveBlocks.length > 0 ? "Blockstream Bitcoin Node" : "Bitcoin Node Offline",
+      btcPrem ? "Binance Perpetuals Futures" : bybitBtcRow ? "Bybit Perpetuals Futures" : "Multi-Venue Crypto Spot",
     ],
     asOf: new Date().toISOString(),
-    fees: fees ?? { fastestFee: 14, halfHourFee: 11, hourFee: 8, economyFee: 5, minimumFee: 2 },
-    mempool: mempool ?? { count: 42810, vsize: 38_400_000, total_fee: 482_000_000 },
-    difficulty: diff ?? { progressPercent: 64.2, difficultyChange: 2.8, remainingBlocks: 720, remainingTime: 432000000 },
-    currentHashrateEh: hashrate?.currentHashrate ? hashrate.currentHashrate / 1e18 : 742.5,
+    fees: fees ?? null,
+    mempool: mempool ?? null,
+    difficulty: diff ?? null,
+    currentHashrateEh,
     hashrateSeries: (hashrate?.hashrates ?? []).slice(-20).map((h) => ({
       date: new Date(h.timestamp * 1000).toISOString().slice(5, 10),
       ehPerSec: Number((h.avgHashrate / 1e18).toFixed(1)),
     })),
-    recentBlocks: (blocks ?? []).slice(0, 8).map((b) => ({
-      height: b.height,
-      txCount: b.tx_count,
-      sizeMb: Number((b.size / 1e6).toFixed(2)),
-      pool: b.extras?.pool?.name ?? "Unknown Pool",
-      feesBtc: b.extras?.totalFees ? Number((b.extras.totalFees / 1e8).toFixed(4)) : 0.18,
-      timestamp: new Date(b.timestamp * 1000).toISOString(),
-    })),
+    recentBlocks: effectiveBlocks,
     derivatives: {
       btcMarkPrice: btcPrice,
-      btcFunding8hPct: btcPrem?.lastFundingRate ? Number.parseFloat(btcPrem.lastFundingRate) * 100 : 0.0085,
-      btcOpenInterestUsd: btcOiUnits * btcPrice,
-      ethMarkPrice: ethPrem?.markPrice ? Number.parseFloat(ethPrem.markPrice) : 2650,
-      ethFunding8hPct: ethPrem?.lastFundingRate ? Number.parseFloat(ethPrem.lastFundingRate) * 100 : 0.0091,
+      btcFunding8hPct,
+      btcOpenInterestUsd: btcOiUsd,
+      ethMarkPrice,
+      ethFunding8hPct,
     },
   });
 }
@@ -1179,8 +1380,8 @@ async function handleCryptoFearGreed() {
   const rawEntries = fngRes?.data ?? [];
   const parsedHistory = normalizeAlternativeMeEntries(rawEntries);
   const liveFngOk = parsedHistory.length > 0;
-  const history = liveFngOk ? parsedHistory : buildFallbackHistory(90);
-  const stats = computeSentimentStats(history);
+  const history = liveFngOk ? parsedHistory : [];
+  const stats = liveFngOk ? computeSentimentStats(parsedHistory) : null;
 
   const rawNextUpdate = Number(rawEntries[0]?.time_until_update);
   const timeUntilUpdateSec =
@@ -1193,7 +1394,7 @@ async function handleCryptoFearGreed() {
 
   const sources: string[] = [];
   if (liveFngOk) sources.push("Alternative.me F&G Index");
-  else sources.push("Multi-Factor Sentiment Composite");
+  else sources.push("Alternative.me F&G Offline");
   if (binance24hRes && binance24hRes.length > 0) sources.push("Binance Spot & Perps");
   if (globalRes?.data) sources.push("CoinGecko Global");
 

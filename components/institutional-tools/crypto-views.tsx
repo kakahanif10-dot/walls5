@@ -25,30 +25,38 @@ function useCryptoStyles(isLight: boolean) {
 interface GlassnodeData {
   sources: string[];
   asOf: string;
-  fees: { fastestFee: number; halfHourFee: number; hourFee: number; economyFee: number; minimumFee: number };
-  mempool: { count: number; vsize: number; total_fee: number };
-  difficulty: { progressPercent: number; difficultyChange: number; remainingBlocks: number };
-  currentHashrateEh: number;
+  fees: { fastestFee: number; halfHourFee: number; hourFee: number; economyFee: number; minimumFee: number } | null;
+  mempool: { count: number; vsize: number; total_fee: number } | null;
+  difficulty: { progressPercent: number; difficultyChange: number; remainingBlocks: number } | null;
+  currentHashrateEh: number | null;
   hashrateSeries: Array<{ date: string; ehPerSec: number }>;
-  recentBlocks: Array<{ height: number; txCount: number; sizeMb: number; pool: string; feesBtc: number; timestamp: string }>;
+  recentBlocks: Array<{ height: number; txCount: number; sizeMb: number; pool: string; feesBtc: number | null; timestamp: string }>;
   derivatives: {
-    btcMarkPrice: number;
-    btcFunding8hPct: number;
-    btcOpenInterestUsd: number;
-    ethMarkPrice: number;
-    ethFunding8hPct: number;
+    btcMarkPrice: number | null;
+    btcFunding8hPct: number | null;
+    btcOpenInterestUsd: number | null;
+    ethMarkPrice: number | null;
+    ethFunding8hPct: number | null;
   };
 }
 
 export function GlassnodeOnchainView() {
   const [data, setData] = useState<GlassnodeData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const res = await fetch("/api/institutional-feed?tool=glassnode-onchain", { cache: "no-store" });
-      if (res.ok) setData(await res.json());
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `Live on-chain feed error (${res.status})`);
+      }
+      setData(await res.json());
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Live on-chain telemetry unavailable");
     } finally {
       setLoading(false);
     }
@@ -89,42 +97,60 @@ export function GlassnodeOnchainView() {
         const s = useCryptoStyles(isLight);
         return (
           <div className="space-y-5">
+            {fetchError && !loading && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+                <span>Live Bitcoin on-chain telemetry temporarily unavailable ({fetchError}).</span>
+                <button
+                  type="button"
+                  onClick={() => void load()}
+                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
             {/* KPI Telemetry Strip */}
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
               <div className={`rounded-xl border p-3.5 ${s.card}`}>
                 <div className={`text-[11px] ${s.muted}`}>Network Hashrate</div>
                 <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
-                  {data ? `${data.currentHashrateEh.toFixed(1)} EH/s` : "—"}
+                  {data?.currentHashrateEh !== null && data?.currentHashrateEh !== undefined
+                    ? `${data.currentHashrateEh.toFixed(1)} EH/s`
+                    : "—"}
                 </div>
               </div>
               <div className={`rounded-xl border p-3.5 ${s.card}`}>
                 <div className={`text-[11px] ${s.muted}`}>Mempool Pending</div>
                 <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
-                  {data ? data.mempool.count.toLocaleString() : "—"}
+                  {data?.mempool ? data.mempool.count.toLocaleString() : "—"}
                 </div>
               </div>
               <div className={`rounded-xl border p-3.5 ${s.card}`}>
                 <div className={`text-[11px] ${s.muted}`}>Fastest Fee Rate</div>
                 <div className="mt-1 font-mono text-lg font-semibold text-amber-500 tabular-nums">
-                  {data ? `${data.fees.fastestFee} sat/vB` : "—"}
+                  {data?.fees ? `${data.fees.fastestFee} sat/vB` : "—"}
                 </div>
               </div>
               <div className={`rounded-xl border p-3.5 ${s.card}`}>
                 <div className={`text-[11px] ${s.muted}`}>Difficulty Progress</div>
                 <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
-                  {data ? `${data.difficulty.progressPercent.toFixed(1)}%` : "—"}
+                  {data?.difficulty ? `${data.difficulty.progressPercent.toFixed(1)}%` : "—"}
                 </div>
               </div>
               <div className={`rounded-xl border p-3.5 ${s.card}`}>
                 <div className={`text-[11px] ${s.muted}`}>BTC Perp Open Int.</div>
                 <div className="mt-1 font-mono text-lg font-semibold text-emerald-500 tabular-nums">
-                  {data ? formatCompactCurrency(data.derivatives.btcOpenInterestUsd) : "—"}
+                  {data?.derivatives?.btcOpenInterestUsd !== null && data?.derivatives?.btcOpenInterestUsd !== undefined
+                    ? formatCompactCurrency(data.derivatives.btcOpenInterestUsd)
+                    : "—"}
                 </div>
               </div>
               <div className={`rounded-xl border p-3.5 ${s.card}`}>
                 <div className={`text-[11px] ${s.muted}`}>BTC 8h Funding</div>
                 <div className="mt-1 font-mono text-lg font-semibold tabular-nums">
-                  {data ? `${data.derivatives.btcFunding8hPct.toFixed(4)}%` : "—"}
+                  {data?.derivatives?.btcFunding8hPct !== null && data?.derivatives?.btcFunding8hPct !== undefined
+                    ? `${data.derivatives.btcFunding8hPct.toFixed(4)}%`
+                    : "—"}
                 </div>
               </div>
             </div>
@@ -136,20 +162,26 @@ export function GlassnodeOnchainView() {
                 <div className="grid grid-cols-2 gap-2.5 font-mono text-xs tabular-nums">
                   <div className={`rounded-lg border p-3 ${s.subCard}`}>
                     <div className={s.muted}>Next Block</div>
-                    <div className="mt-1 text-base font-semibold">{data?.fees.fastestFee ?? "—"} sat/vB</div>
+                    <div className="mt-1 text-base font-semibold">
+                      {data?.fees ? `${data.fees.fastestFee} sat/vB` : "—"}
+                    </div>
                   </div>
                   <div className={`rounded-lg border p-3 ${s.subCard}`}>
                     <div className={s.muted}>30 Min Target</div>
-                    <div className="mt-1 text-base font-semibold">{data?.fees.halfHourFee ?? "—"} sat/vB</div>
+                    <div className="mt-1 text-base font-semibold">
+                      {data?.fees ? `${data.fees.halfHourFee} sat/vB` : "—"}
+                    </div>
                   </div>
                   <div className={`rounded-lg border p-3 ${s.subCard}`}>
                     <div className={s.muted}>1 Hour Target</div>
-                    <div className="mt-1 text-base font-semibold">{data?.fees.hourFee ?? "—"} sat/vB</div>
+                    <div className="mt-1 text-base font-semibold">
+                      {data?.fees ? `${data.fees.hourFee} sat/vB` : "—"}
+                    </div>
                   </div>
                   <div className={`rounded-lg border p-3 ${s.subCard}`}>
                     <div className={s.muted}>Mempool Size</div>
                     <div className="mt-1 text-base font-semibold">
-                      {data ? `${(data.mempool.vsize / 1e6).toFixed(1)} vMB` : "—"}
+                      {data?.mempool ? `${(data.mempool.vsize / 1e6).toFixed(1)} vMB` : "—"}
                     </div>
                   </div>
                 </div>
@@ -188,7 +220,9 @@ export function GlassnodeOnchainView() {
                           <td className="py-2 px-3 font-sans">{b.pool}</td>
                           <td className="py-2 px-3 text-right">{b.txCount.toLocaleString()}</td>
                           <td className="py-2 px-3 text-right">{b.sizeMb.toFixed(2)} MB</td>
-                          <td className="py-2 px-3 text-right">{b.feesBtc.toFixed(4)} BTC</td>
+                          <td className="py-2 px-3 text-right">
+                            {b.feesBtc !== null ? `${b.feesBtc.toFixed(4)} BTC` : "—"}
+                          </td>
                         </tr>
                       ))}
                     </tbody>
@@ -242,15 +276,23 @@ export function ChainalysisAmlView() {
   const [addressInput, setAddressInput] = useState(SAMPLE_WALLETS[1].addr);
   const [data, setData] = useState<ChainalysisData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const inspectAddress = useCallback(async (addr: string) => {
     setLoading(true);
+    setFetchError(null);
     try {
       const res = await fetch(
         `/api/institutional-feed?tool=chainalysis-aml&address=${encodeURIComponent(addr.trim())}`,
         { cache: "no-store" },
       );
-      if (res.ok) setData(await res.json());
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `AML RPC feed error (${res.status})`);
+      }
+      setData(await res.json());
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Live blockchain AML RPC feed unavailable");
     } finally {
       setLoading(false);
     }
@@ -280,6 +322,18 @@ export function ChainalysisAmlView() {
 
         return (
           <div className="space-y-5">
+            {fetchError && !loading && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+                <span>Live address forensics RPC temporarily unavailable ({fetchError}).</span>
+                <button
+                  type="button"
+                  onClick={() => void inspectAddress(addressInput)}
+                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
             {/* Address Forensic Search Bar */}
             <form
               onSubmit={(e) => {
@@ -455,13 +509,21 @@ interface MessariData {
 export function MessariResearchView() {
   const [data, setData] = useState<MessariData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [govFilter, setGovFilter] = useState<"all" | "active" | "closed">("all");
 
   const load = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const res = await fetch("/api/institutional-feed?tool=messari-research", { cache: "no-store" });
-      if (res.ok) setData(await res.json());
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `Messari feed error (${res.status})`);
+      }
+      setData(await res.json());
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Live protocol tokenomics feed unavailable");
     } finally {
       setLoading(false);
     }
@@ -486,6 +548,19 @@ export function MessariResearchView() {
       {({ isLight }) => {
         const s = useCryptoStyles(isLight);
         return (
+          <div className="space-y-4">
+            {fetchError && !loading && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+                <span>Live protocol intelligence temporarily unavailable ({fetchError}).</span>
+                <button
+                  type="button"
+                  onClick={() => void load()}
+                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
           <div className="grid gap-5 lg:grid-cols-12">
             {/* Supply & FDV Schedules */}
             <div className={`lg:col-span-7 rounded-xl border p-4 space-y-3 ${s.card}`}>
@@ -573,6 +648,7 @@ export function MessariResearchView() {
               </div>
             </div>
           </div>
+          </div>
         );
       }}
     </InstitutionalToolShell>
@@ -594,12 +670,20 @@ interface NansenData {
 export function NansenArkhamView() {
   const [data, setData] = useState<NansenData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const load = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const res = await fetch("/api/institutional-feed?tool=nansen-arkham", { cache: "no-store" });
-      if (res.ok) setData(await res.json());
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `Smart money feed error (${res.status})`);
+      }
+      setData(await res.json());
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Live smart money flow feed unavailable");
     } finally {
       setLoading(false);
     }
@@ -620,6 +704,19 @@ export function NansenArkhamView() {
       {({ isLight }) => {
         const s = useCryptoStyles(isLight);
         return (
+          <div className="space-y-4">
+            {fetchError && !loading && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+                <span>Live whale flow telemetry temporarily unavailable ({fetchError}).</span>
+                <button
+                  type="button"
+                  onClick={() => void load()}
+                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
           <div className="grid gap-5 lg:grid-cols-12">
             {/* Stablecoin Liquidity Flows */}
             <div className={`lg:col-span-4 rounded-xl border p-4 space-y-3 ${s.card}`}>
@@ -713,6 +810,7 @@ export function NansenArkhamView() {
               </div>
             </div>
           </div>
+          </div>
         );
       }}
     </InstitutionalToolShell>
@@ -746,14 +844,22 @@ interface DefillamaData {
 export function DefillamaTerminalView() {
   const [data, setData] = useState<DefillamaData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
   const [cat, setCat] = useState("ALL");
   const [query, setQuery] = useState("");
 
   const load = useCallback(async () => {
     setLoading(true);
+    setFetchError(null);
     try {
       const res = await fetch("/api/institutional-feed?tool=defillama-terminal", { cache: "no-store" });
-      if (res.ok) setData(await res.json());
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `DeFiLlama feed error (${res.status})`);
+      }
+      setData(await res.json());
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Live DeFi TVL & fee feed unavailable");
     } finally {
       setLoading(false);
     }
@@ -794,6 +900,18 @@ export function DefillamaTerminalView() {
         const s = useCryptoStyles(isLight);
         return (
           <div className="space-y-5">
+            {fetchError && !loading && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+                <span>Live DeFiLlama TVL &amp; fee feed temporarily unavailable ({fetchError}).</span>
+                <button
+                  type="button"
+                  onClick={() => void load()}
+                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
             {/* Global Chain Dominance Strip */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
               {(data?.chains ?? []).slice(0, 5).map((c) => (
@@ -913,14 +1031,22 @@ export function CoinMetricsKaikoView() {
   const [symbol, setSymbol] = useState<"BTC" | "ETH" | "SOL">("BTC");
   const [data, setData] = useState<KaikoData | null>(null);
   const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState<string | null>(null);
 
   const load = useCallback(async (sym: string) => {
     setLoading(true);
+    setFetchError(null);
     try {
       const res = await fetch(`/api/institutional-feed?tool=coinmetrics-kaiko&symbol=${encodeURIComponent(sym)}`, {
         cache: "no-store",
       });
-      if (res.ok) setData(await res.json());
+      if (!res.ok) {
+        const body = await res.json().catch(() => null);
+        throw new Error(body?.error || `Orderbook feed error (${res.status})`);
+      }
+      setData(await res.json());
+    } catch (err) {
+      setFetchError(err instanceof Error ? err.message : "Live multi-venue orderbook feed unavailable");
     } finally {
       setLoading(false);
     }
@@ -942,6 +1068,18 @@ export function CoinMetricsKaikoView() {
         const s = useCryptoStyles(isLight);
         return (
           <div className="space-y-5">
+            {fetchError && !loading && (
+              <div className="flex items-center justify-between gap-3 rounded-xl border border-rose-500/40 bg-rose-500/10 px-4 py-3 text-xs text-rose-300">
+                <span>Live multi-venue orderbook feed temporarily unavailable ({fetchError}).</span>
+                <button
+                  type="button"
+                  onClick={() => void load(symbol)}
+                  className="rounded-lg border border-rose-400/40 px-2.5 py-1 font-medium hover:bg-rose-500/20"
+                >
+                  Retry
+                </button>
+              </div>
+            )}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div className="flex items-center gap-1.5">
                 {(["BTC", "ETH", "SOL"] as const).map((sym) => (

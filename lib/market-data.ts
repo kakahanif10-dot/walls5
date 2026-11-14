@@ -64,6 +64,27 @@ const COINGECKO_IDS: Record<string, string> = {
   POPCAT: "popcat",
   BRETT: "based-brett",
   DEGEN: "degen-base",
+  FIGRHELOC: "figure-heloc",
+  USDINFRA: "usd-infra",
+  UNCOMMONGOODS: "uncommon-goods",
+  KRA: "kirakuru",
+  INF8: "infinity-gaming",
+  BSU: "baby-shark-universe",
+  NACHO: "nacho-the-kat",
+  LOAF: "loaf-token",
+  DOGZ: "dogz",
+};
+
+const EXPLICIT_CG_SIMPLE_IDS: Record<string, string> = {
+  FIGRHELOC: "figure-heloc",
+  USDINFRA: "usd-infra",
+  UNCOMMONGOODS: "uncommon-goods",
+  KRA: "kirakuru",
+  INF8: "infinity-gaming",
+  BSU: "baby-shark-universe",
+  NACHO: "nacho-the-kat",
+  LOAF: "loaf-token",
+  DOGZ: "dogz",
 };
 
 const SYMBOL_ALIASES: Record<string, string> = {
@@ -87,7 +108,7 @@ async function getJson<T>(
 ): Promise<T> {
   const response = await fetch(url, {
     headers: { "User-Agent": UA, Accept: "application/json", ...headers },
-    next: { revalidate },
+    ...(revalidate >= 300 ? { next: { revalidate } } : { cache: "no-store" as const }),
     signal: AbortSignal.timeout(TIMEOUT_MS),
   });
   if (!response.ok) throw new Error(`${response.status} ${url}`);
@@ -158,7 +179,7 @@ async function fetchTradingViewStocksBulk(): Promise<{
         sort: { sortBy: "market_cap_basic", sortOrder: "desc" },
         range,
       }),
-      next: { revalidate: 10 },
+      cache: "no-store",
       signal: AbortSignal.timeout(TIMEOUT_MS),
     });
     if (!res.ok) throw new Error(`TradingView ${res.status}`);
@@ -222,6 +243,104 @@ async function fetchTradingViewStocksBulk(): Promise<{
       low52: toNumber(d[13]) ?? undefined,
       vol: volD !== null && volD > 0 ? (volD / 100) * Math.sqrt(252) : undefined,
     };
+  }
+
+  return { quotes, telemetry };
+}
+
+async function fetchTradingViewCryptoBulk(): Promise<{
+  quotes: Record<string, FeedQuote>;
+  telemetry: Record<string, RealTelemetry>;
+}> {
+  const quotes: Record<string, FeedQuote> = {};
+  const telemetry: Record<string, RealTelemetry> = {};
+  const nowIso = new Date().toISOString();
+
+  const scanCrypto = async (currency: "USD" | "USDT", sortBy: string) => {
+    const res = await fetch("https://scanner.tradingview.com/crypto/scan", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "User-Agent": UA,
+      },
+      body: JSON.stringify({
+        filter: [{ left: "currency", operation: "equal", right: currency }],
+        columns: [
+          "base_currency",
+          "close",
+          "change",
+          "change_abs",
+          "RSI",
+          "SMA20",
+          "SMA50",
+          "SMA200",
+          "Perf.W",
+          "Perf.1M",
+          "Perf.3M",
+          "Perf.Y",
+          "price_52_week_high",
+          "price_52_week_low",
+          "Volatility.D",
+        ],
+        sort: { sortBy, sortOrder: "desc" },
+        range: [0, 8000],
+      }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(6000),
+    });
+    if (!res.ok) throw new Error(`TradingView Crypto ${res.status}`);
+    return (await res.json()) as TvScanResponse;
+  };
+
+  const results = await Promise.allSettled([
+    scanCrypto("USDT", "24h_vol_cmc"),
+    scanCrypto("USD", "market_cap_calc"),
+  ]);
+
+  for (const res of results) {
+    if (res.status !== "fulfilled") continue;
+    for (const item of res.value.data ?? []) {
+      const d = item.d ?? [];
+      const sym = typeof d[0] === "string" ? d[0].toUpperCase() : "";
+      const close = toNumber(d[1]);
+      if (!sym || !close || close <= 0 || quotes[sym]) continue;
+
+      const changePct = toNumber(d[2]);
+      const changeAbs = toNumber(d[3]);
+      const change = changePct !== null ? changePct / 100 : 0;
+      const prevClose =
+        changeAbs !== null && close - changeAbs > 0
+          ? close - changeAbs
+          : 1 + change > 0
+            ? close / (1 + change)
+            : close;
+
+      quotes[sym] = {
+        price: close,
+        previousClose: prevClose,
+        change,
+        delayed: false,
+        asOf: nowIso,
+        provider: "TradingView Crypto Live",
+      };
+
+      const volD = toNumber(d[14]);
+      telemetry[sym] = {
+        price: close,
+        change24h: change,
+        rsi: toNumber(d[4]) ?? undefined,
+        sma20: toNumber(d[5]) ?? undefined,
+        sma50: toNumber(d[6]) ?? undefined,
+        sma200: toNumber(d[7]) ?? undefined,
+        change7d: toNumber(d[8]) !== null ? toNumber(d[8])! / 100 : undefined,
+        change30d: toNumber(d[9]) !== null ? toNumber(d[9])! / 100 : undefined,
+        change90d: toNumber(d[10]) !== null ? toNumber(d[10])! / 100 : undefined,
+        change1y: toNumber(d[11]) !== null ? toNumber(d[11])! / 100 : undefined,
+        high52: toNumber(d[12]) ?? undefined,
+        low52: toNumber(d[13]) ?? undefined,
+        vol: volD !== null && volD > 0 ? (volD / 100) * Math.sqrt(365) : undefined,
+      };
+    }
   }
 
   return { quotes, telemetry };
@@ -444,6 +563,99 @@ async function fetchMexcBulk(): Promise<Record<string, FeedQuote>> {
   return out;
 }
 
+async function fetchBitgetBulk(): Promise<Record<string, FeedQuote>> {
+  const payload = await getJson<{
+    data?: Array<{ symbol?: string; lastPr?: string; openUtc?: string; changeUtc24h?: string }>;
+  }>("https://api.bitget.com/api/v2/spot/market/tickers", {}, 15);
+
+  const nowIso = new Date().toISOString();
+  const out: Record<string, FeedQuote> = {};
+  for (const row of payload.data ?? []) {
+    if (!row.symbol?.endsWith("USDT")) continue;
+    const sym = row.symbol.slice(0, -4).toUpperCase();
+    if (out[sym]) continue;
+    const price = Number(row.lastPr);
+    if (!Number.isFinite(price) || price <= 0) continue;
+    const change = Number(row.changeUtc24h);
+    const open = Number(row.openUtc);
+    const ratio = Number.isFinite(change) ? change : open > 0 ? price / open - 1 : 0;
+    out[sym] = {
+      price,
+      previousClose: open > 0 ? open : 1 + ratio > 0 ? price / (1 + ratio) : price,
+      change: ratio,
+      delayed: false,
+      asOf: nowIso,
+      provider: "Bitget Live",
+    };
+  }
+  return out;
+}
+
+async function fetchHtxBulk(): Promise<Record<string, FeedQuote>> {
+  const payload = await getJson<{
+    data?: Array<{ symbol?: string; close?: number; open?: number }>;
+  }>("https://api.huobi.pro/market/tickers", {}, 15);
+
+  const nowIso = new Date().toISOString();
+  const out: Record<string, FeedQuote> = {};
+  for (const row of payload.data ?? []) {
+    if (!row.symbol?.endsWith("usdt")) continue;
+    const sym = row.symbol.slice(0, -4).toUpperCase();
+    if (out[sym]) continue;
+    const price = Number(row.close);
+    if (!Number.isFinite(price) || price <= 0) continue;
+    const open = Number(row.open);
+    const ratio = open > 0 ? price / open - 1 : 0;
+    out[sym] = {
+      price,
+      previousClose: open > 0 ? open : price,
+      change: ratio,
+      delayed: false,
+      asOf: nowIso,
+      provider: "HTX Live",
+    };
+  }
+  return out;
+}
+
+let coinPaprikaCache: { quotes: Record<string, FeedQuote>; ts: number } | null = null;
+
+async function fetchCoinPaprikaBulkCached(): Promise<Record<string, FeedQuote>> {
+  if (coinPaprikaCache && Date.now() - coinPaprikaCache.ts < COINGECKO_TTL) {
+    return coinPaprikaCache.quotes;
+  }
+  const rows = await getJson<
+    Array<{
+      symbol?: string;
+      quotes?: { USD?: { price?: number; percent_change_24h?: number } };
+    }>
+  >("https://api.coinpaprika.com/v1/tickers?limit=2500", {}, 60);
+
+  const nowIso = new Date().toISOString();
+  const out: Record<string, FeedQuote> = {};
+  if (Array.isArray(rows)) {
+    for (const row of rows) {
+      const sym = row.symbol?.toUpperCase();
+      const price = row.quotes?.USD?.price;
+      if (!sym || !price || !Number.isFinite(price) || price <= 0 || out[sym]) continue;
+      const pct = row.quotes?.USD?.percent_change_24h ?? 0;
+      const ratio = Number.isFinite(pct) ? pct / 100 : 0;
+      out[sym] = {
+        price,
+        previousClose: 1 + ratio > 0 ? price / (1 + ratio) : price,
+        change: ratio,
+        delayed: false,
+        asOf: nowIso,
+        provider: "CoinPaprika Live",
+      };
+    }
+  }
+  if (Object.keys(out).length > 0) {
+    coinPaprikaCache = { quotes: out, ts: Date.now() };
+  }
+  return out;
+}
+
 type CoinGeckoMarket = {
   id: string;
   symbol: string;
@@ -473,12 +685,17 @@ async function fetchCoinGeckoBulkCached(): Promise<{
   const urls = [
     "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=1&price_change_percentage=24h,7d,30d",
     "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=2&price_change_percentage=24h,7d,30d",
-    "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=3&price_change_percentage=24h,7d,30d",
-    "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&order=market_cap_desc&per_page=250&page=4&price_change_percentage=24h,7d,30d",
-    "https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&category=meme-token&order=market_cap_desc&per_page=250&page=1&price_change_percentage=24h,7d,30d",
   ];
 
-  const results = await Promise.allSettled(urls.map((u) => getJson<CoinGeckoMarket[]>(u, {}, 60)));
+  const simpleIdsUrl = `https://api.coingecko.com/api/v3/simple/price?ids=${Object.values(EXPLICIT_CG_SIMPLE_IDS).join(",")}&vs_currencies=usd&include_24hr_change=true`;
+
+  const [results, simpleRes] = await Promise.all([
+    Promise.allSettled(urls.map((u) => getJson<CoinGeckoMarket[]>(u, {}, 60))),
+    getJson<Record<string, { usd?: number; usd_24h_change?: number | null }>>(simpleIdsUrl, {}, 60).catch(
+      () => ({} as Record<string, { usd?: number; usd_24h_change?: number | null }>),
+    ),
+  ]);
+
   const quotes: Record<string, FeedQuote> = {};
   const telemetry: Record<string, RealTelemetry> = {};
   const nowIso = new Date().toISOString();
@@ -519,10 +736,127 @@ async function fetchCoinGeckoBulkCached(): Promise<{
     }
   }
 
+  for (const [sym, id] of Object.entries(EXPLICIT_CG_SIMPLE_IDS)) {
+    const entry = simpleRes?.[id];
+    const price = entry?.usd;
+    if (price && Number.isFinite(price) && price > 0 && !quotes[sym]) {
+      const chg = (entry.usd_24h_change ?? 0) / 100;
+      quotes[sym] = {
+        price,
+        previousClose: 1 + chg > 0 ? price / (1 + chg) : price,
+        change: Number.isFinite(chg) ? chg : 0,
+        delayed: false,
+        asOf: nowIso,
+        provider: "CoinGecko Live",
+      };
+      telemetry[sym] = { price, change24h: Number.isFinite(chg) ? chg : 0 };
+    }
+  }
+
   if (Object.keys(quotes).length > 0) {
     coinGeckoCache = { quotes, telemetry, ts: Date.now() };
   }
   return { quotes, telemetry };
+}
+
+const DEX_FALLBACK_TTL = 180_000;
+const dexFallbackCache = new Map<string, CacheEntry<FeedQuote>>();
+
+async function resolveDexTokenFallback(asset: Asset): Promise<FeedQuote | null> {
+  const cached = dexFallbackCache.get(asset.symbol);
+  if (cached && Date.now() - cached.ts < DEX_FALLBACK_TTL) {
+    return cached.value;
+  }
+
+  const nowIso = new Date().toISOString();
+  // Try CoinGecko simple price if mapped first
+  const cgId = EXPLICIT_CG_SIMPLE_IDS[asset.symbol] ?? COINGECKO_IDS[asset.symbol];
+  if (cgId) {
+    try {
+      const j = await getJson<Record<string, { usd?: number; usd_24h_change?: number | null }>>(
+        `https://api.coingecko.com/api/v3/simple/price?ids=${encodeURIComponent(cgId)}&vs_currencies=usd&include_24hr_change=true`,
+        {},
+        120,
+      );
+      const price = j?.[cgId]?.usd;
+      if (price && Number.isFinite(price) && price > 0) {
+        const chg = (j[cgId].usd_24h_change ?? 0) / 100;
+        const quote: FeedQuote = {
+          price,
+          previousClose: 1 + chg > 0 ? price / (1 + chg) : price,
+          change: Number.isFinite(chg) ? chg : 0,
+          delayed: false,
+          asOf: nowIso,
+          provider: "CoinGecko Live",
+        };
+        dexFallbackCache.set(asset.symbol, { value: quote, ts: Date.now() });
+        return quote;
+      }
+    } catch {
+      // continue to DexScreener
+    }
+  }
+
+  // Try DexScreener by symbol and name
+  for (const query of [asset.symbol, asset.name]) {
+    try {
+      const ds = await getJson<{
+        pairs?: Array<{
+          baseToken?: { symbol?: string; name?: string };
+          priceUsd?: string;
+          priceChange?: { h24?: number };
+          liquidity?: { usd?: number };
+        }>;
+      }>(`https://api.dexscreener.com/latest/dex/search?q=${encodeURIComponent(query)}`, {}, 120);
+      const pairs = (ds.pairs ?? []).filter((p) => Number(p.priceUsd) > 0);
+      if (pairs.length > 0) {
+        const exact =
+          pairs.find((p) => p.baseToken?.symbol?.toUpperCase() === asset.symbol) ??
+          pairs.find((p) => p.baseToken?.name?.toLowerCase() === asset.name.toLowerCase()) ??
+          pairs[0];
+        const price = Number(exact.priceUsd);
+        if (Number.isFinite(price) && price > 0) {
+          const chg = (exact.priceChange?.h24 ?? 0) / 100;
+          const quote: FeedQuote = {
+            price,
+            previousClose: 1 + chg > 0 ? price / (1 + chg) : price,
+            change: Number.isFinite(chg) ? chg : 0,
+            delayed: false,
+            asOf: nowIso,
+            provider: "DexScreener Live",
+          };
+          dexFallbackCache.set(asset.symbol, { value: quote, ts: Date.now() });
+          return quote;
+        }
+      }
+    } catch {
+      // try next query / GeckoTerminal
+    }
+  }
+
+  // Try GeckoTerminal search
+  try {
+    const gt = await getJson<{
+      data?: Array<{ attributes?: { name?: string; base_token_price_usd?: string } }>;
+    }>(`https://api.geckoterminal.com/api/v2/search/pools?query=${encodeURIComponent(asset.symbol)}`, {}, 120);
+    const pool = (gt.data ?? []).find((p) => Number(p.attributes?.base_token_price_usd) > 0);
+    const price = Number(pool?.attributes?.base_token_price_usd);
+    if (Number.isFinite(price) && price > 0) {
+      const quote: FeedQuote = {
+        price,
+        previousClose: price,
+        change: 0,
+        delayed: false,
+        asOf: nowIso,
+        provider: "GeckoTerminal Live",
+      };
+      dexFallbackCache.set(asset.symbol, { value: quote, ts: Date.now() });
+      return quote;
+    }
+  } catch {
+    // exhausted DEX venues
+  }
+  return cached?.value ?? null;
 }
 
 /* ----------------------- Per-Symbol Daily History ------------------------ */
@@ -673,16 +1007,21 @@ async function loadAllLiveQuotes(): Promise<{
   telemetry: Record<string, RealTelemetry>;
   sources: string[];
 }> {
-  const [tvRes, binRes, okxRes, bybitRes, kucoinRes, gateRes, mexcRes, cgRes] = await Promise.allSettled([
-    fetchTradingViewStocksBulk(),
-    fetchBinanceBulk(),
-    fetchOkxBulk(),
-    fetchBybitBulk(),
-    fetchKucoinBulk(),
-    fetchGateBulk(),
-    fetchMexcBulk(),
-    fetchCoinGeckoBulkCached(),
-  ]);
+  const [tvRes, tvCryptoRes, binRes, okxRes, bybitRes, kucoinRes, gateRes, mexcRes, bitgetRes, htxRes, paprikaRes, cgRes] =
+    await Promise.allSettled([
+      fetchTradingViewStocksBulk(),
+      fetchTradingViewCryptoBulk(),
+      fetchBinanceBulk(),
+      fetchOkxBulk(),
+      fetchBybitBulk(),
+      fetchKucoinBulk(),
+      fetchGateBulk(),
+      fetchMexcBulk(),
+      fetchBitgetBulk(),
+      fetchHtxBulk(),
+      fetchCoinPaprikaBulkCached(),
+      fetchCoinGeckoBulkCached(),
+    ]);
 
   const quotes: Record<string, FeedQuote> = {};
   const telemetry: Record<string, RealTelemetry> = {};
@@ -706,18 +1045,27 @@ async function loadAllLiveQuotes(): Promise<{
     }
   }
 
-  // Crypto precedence: Binance > OKX > Bybit > KuCoin > Gate > CoinGecko > MEXC
+  // Crypto precedence: Binance > OKX > Bybit > KuCoin > Gate > CoinGecko > MEXC > Bitget > HTX > TradingView Crypto > CoinPaprika
+  const tvCrypto = tvCryptoRes.status === "fulfilled" ? tvCryptoRes.value : { quotes: {}, telemetry: {} };
   const binance = binRes.status === "fulfilled" ? binRes.value : {};
   const okx = okxRes.status === "fulfilled" ? okxRes.value : {};
   const bybit = bybitRes.status === "fulfilled" ? bybitRes.value : {};
   const kucoin = kucoinRes.status === "fulfilled" ? kucoinRes.value : {};
   const gate = gateRes.status === "fulfilled" ? gateRes.value : {};
   const mexc = mexcRes.status === "fulfilled" ? mexcRes.value : {};
+  const bitget = bitgetRes.status === "fulfilled" ? bitgetRes.value : {};
+  const htx = htxRes.status === "fulfilled" ? htxRes.value : {};
+  const paprika = paprikaRes.status === "fulfilled" ? paprikaRes.value : {};
   const cg = cgRes.status === "fulfilled" ? cgRes.value : { quotes: {}, telemetry: {} };
 
   if (Object.keys(binance).length > 0) sources.add("Binance Live");
   if (Object.keys(okx).length > 0) sources.add("OKX Live");
+  if (Object.keys(tvCrypto.quotes).length > 0) sources.add("TradingView Crypto Live");
   if (Object.keys(cg.quotes).length > 0) sources.add("CoinGecko Live");
+  if (Object.keys(bitget).length > 0) sources.add("Bitget Live");
+  if (Object.keys(paprika).length > 0) sources.add("CoinPaprika Live");
+
+  const stillMissingCrypto: Asset[] = [];
 
   for (const asset of ASSETS) {
     if (asset.kind === "stock") continue;
@@ -729,16 +1077,19 @@ async function loadAllLiveQuotes(): Promise<{
       kucoin[sym] ??
       gate[sym] ??
       cg.quotes[sym] ??
-      mexc[sym];
+      mexc[sym] ??
+      bitget[sym] ??
+      htx[sym] ??
+      tvCrypto.quotes[sym] ??
+      paprika[sym];
 
     if (q) {
       quotes[sym] = q;
     } else {
-      const cached = quoteCache.get(sym);
-      if (cached) quotes[sym] = cached.value;
+      stillMissingCrypto.push(asset);
     }
 
-    const tel = cg.telemetry[sym];
+    const tel = cg.telemetry[sym] ?? tvCrypto.telemetry[sym];
     if (tel) {
       telemetry[sym] = {
         ...tel,
@@ -751,6 +1102,31 @@ async function loadAllLiveQuotes(): Promise<{
         change24h: q.change,
       };
     }
+  }
+
+  // Batch cached DEX/on-chain fallback for all remaining long-tail crypto/meme tokens
+  if (stillMissingCrypto.length > 0) {
+    const dexBatch = stillMissingCrypto.slice(0, 120);
+    let dexCount = 0;
+    const chunkSize = 20;
+    for (let start = 0; start < dexBatch.length; start += chunkSize) {
+      const slice = dexBatch.slice(start, start + chunkSize);
+      const dexResults = await Promise.allSettled(slice.map((a) => resolveDexTokenFallback(a)));
+      for (let i = 0; i < slice.length; i++) {
+        const asset = slice[i];
+        const res = dexResults[i];
+        const dq = res.status === "fulfilled" ? res.value : null;
+        if (dq) {
+          quotes[asset.symbol] = dq;
+          telemetry[asset.symbol] = { price: dq.price, change24h: dq.change };
+          dexCount++;
+        } else {
+          const cached = quoteCache.get(asset.symbol);
+          if (cached) quotes[asset.symbol] = cached.value;
+        }
+      }
+    }
+    if (dexCount > 0) sources.add("DexScreener Live");
   }
 
   const nowTs = Date.now();
@@ -844,7 +1220,7 @@ async function buildSnapshot(): Promise<MarketSnapshot> {
   }
 }
 
-const COLD_START_BUDGET_MS = 4500;
+const COLD_START_BUDGET_MS = 12000;
 
 export async function ensureMarketData(force = false): Promise<MarketSnapshot> {
   if (!force && snapshot && Date.now() - snapshot.fetchedAt < QUOTE_TTL) return snapshot;

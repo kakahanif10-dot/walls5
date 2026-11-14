@@ -51,7 +51,7 @@ import {
   type ChatMessage,
 } from "@/lib/ai-moderator";
 import { ASSETS } from "@/lib/market-assets";
-import { fmtPrice } from "@/lib/market";
+import { ASSET_BY_SYMBOL, fmtPrice, metricsFor } from "@/lib/market";
 import { useQuotes } from "@/components/live-prices";
 import { useAuth } from "@/lib/auth-context";
 import { useWhop } from "@/lib/whop-context";
@@ -127,10 +127,28 @@ export default function DiscordLiveChat() {
   const [showSignalModal, setShowSignalModal] = useState(false);
   const [sigSymbol, setSigSymbol] = useState("NVDA");
   const [sigStance, setSigStance] = useState<MinutePrediction["stance"]>("STRONG BUY / LONG");
-  const [sigPrice, setSigPrice] = useState("187.40");
-  const [sigTarget, setSigTarget] = useState("198.00");
-  const [sigStop, setSigStop] = useState("182.50");
+  const [sigPrice, setSigPrice] = useState("");
+  const [sigTarget, setSigTarget] = useState("");
+  const [sigStop, setSigStop] = useState("");
   const [sigNotes, setSigNotes] = useState("Breaking above 20-EMA on 15m volume expansion.");
+
+  useEffect(() => {
+    if (!showSignalModal) return;
+    const sym = sigSymbol.trim().toUpperCase();
+    const asset = ASSET_BY_SYMBOL[sym];
+    const livePx = liveQuotes[sym]?.price ?? (asset ? metricsFor(asset).last : 0);
+    if (livePx > 0) {
+      const dec = livePx < 1 ? 6 : 2;
+      const isShort = sigStance.includes("AVOID") || sigStance.includes("TRIM");
+      setSigPrice(livePx.toFixed(dec));
+      setSigTarget((livePx * (isShort ? 0.94 : 1.06)).toFixed(dec));
+      setSigStop((livePx * (isShort ? 1.035 : 0.965)).toFixed(dec));
+    } else {
+      setSigPrice("");
+      setSigTarget("");
+      setSigStop("");
+    }
+  }, [showSignalModal, sigSymbol, sigStance, liveQuotes]);
 
   // Clocks and countdown
   const [timeData, setTimeData] = useState(() => formatTimeZones());
@@ -559,6 +577,10 @@ export default function DiscordLiveChat() {
 
   const handlePostSignal = (e: React.FormEvent) => {
     e.preventDefault();
+    const parsedPrice = Number(sigPrice);
+    if (!Number.isFinite(parsedPrice) || parsedPrice <= 0) return;
+    const parsedTarget = Number(sigTarget);
+    const parsedStop = Number(sigStop);
     const date = new Date();
     const { wibTime, utcTime } = formatTimeZones(date);
 
@@ -568,12 +590,12 @@ export default function DiscordLiveChat() {
       name: ASSETS.find((a) => a.symbol === sigSymbol.toUpperCase())?.name || sigSymbol.toUpperCase(),
       kind: ASSETS.find((a) => a.symbol === sigSymbol.toUpperCase())?.kind || "stock",
       group: ASSETS.find((a) => a.symbol === sigSymbol.toUpperCase())?.group || "Equities / Crypto",
-      currentPrice: Number(sigPrice) || 100,
+      currentPrice: parsedPrice,
       stance: sigStance,
       confidence: 88,
-      target1: Number(sigTarget) || Number(sigPrice) * 1.05,
-      target2: Number(sigTarget) * 1.05 || Number(sigPrice) * 1.1,
-      invalidationLevel: Number(sigStop) || Number(sigPrice) * 0.95,
+      target1: Number.isFinite(parsedTarget) && parsedTarget > 0 ? parsedTarget : parsedPrice * 1.05,
+      target2: Number.isFinite(parsedTarget) && parsedTarget > 0 ? parsedTarget * 1.05 : parsedPrice * 1.1,
+      invalidationLevel: Number.isFinite(parsedStop) && parsedStop > 0 ? parsedStop : parsedPrice * 0.95,
       technicalMechanism: sigNotes || "User member setup: technical consolidation breakout with defined risk-reward.",
       timeHorizon: "1h Momentum",
       catalystAlert: "Technical order flow breakout",
@@ -1096,28 +1118,36 @@ export default function DiscordLiveChat() {
                         <div className="rounded-lg bg-ink-950/70 p-2 border border-line/60">
                           <span className="text-[10px] text-muted uppercase">Spot Price</span>
                           <p className="font-bold text-bone">
-                            ${pred.currentPrice >= 1 ? pred.currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 }) : pred.currentPrice.toFixed(5)}
+                            {Number.isFinite(pred.currentPrice)
+                              ? `$${pred.currentPrice >= 1 ? pred.currentPrice.toLocaleString(undefined, { maximumFractionDigits: 2 }) : pred.currentPrice.toFixed(5)}`
+                              : "—"}
                           </p>
                         </div>
 
                         <div className="rounded-lg bg-ink-950/70 p-2 border border-line/60">
                           <span className="text-[10px] text-muted uppercase">Target 1</span>
                           <p className="font-bold text-emerald-400">
-                            ${pred.target1 >= 1 ? pred.target1.toLocaleString(undefined, { maximumFractionDigits: 2 }) : pred.target1.toFixed(5)}
+                            {Number.isFinite(pred.target1)
+                              ? `$${pred.target1 >= 1 ? pred.target1.toLocaleString(undefined, { maximumFractionDigits: 2 }) : pred.target1.toFixed(5)}`
+                              : "—"}
                           </p>
                         </div>
 
                         <div className="rounded-lg bg-ink-950/70 p-2 border border-line/60">
                           <span className="text-[10px] text-muted uppercase">Target 2</span>
                           <p className="font-bold text-emerald-300">
-                            ${pred.target2 >= 1 ? pred.target2.toLocaleString(undefined, { maximumFractionDigits: 2 }) : pred.target2.toFixed(5)}
+                            {Number.isFinite(pred.target2)
+                              ? `$${pred.target2 >= 1 ? pred.target2.toLocaleString(undefined, { maximumFractionDigits: 2 }) : pred.target2.toFixed(5)}`
+                              : "—"}
                           </p>
                         </div>
 
                         <div className="rounded-lg bg-ink-950/70 p-2 border border-line/60">
                           <span className="text-[10px] text-rose-400 uppercase font-semibold">Invalidation Stop</span>
                           <p className="font-bold text-rose-400">
-                            ${pred.invalidationLevel >= 1 ? pred.invalidationLevel.toLocaleString(undefined, { maximumFractionDigits: 2 }) : pred.invalidationLevel.toFixed(5)}
+                            {Number.isFinite(pred.invalidationLevel)
+                              ? `$${pred.invalidationLevel >= 1 ? pred.invalidationLevel.toLocaleString(undefined, { maximumFractionDigits: 2 }) : pred.invalidationLevel.toFixed(5)}`
+                              : "—"}
                           </p>
                         </div>
                       </div>
